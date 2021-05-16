@@ -41,42 +41,59 @@ class Server {
                 // exit handling here
                 exit(EXIT_FAILURE);
             }
-
-            // hold queue
+            
+            // queue blocking
             if (listen(sockfd, queuelim) < 0) {
                 std::cout << "Error on listen: " << errno << std::endl;
                 // exit handling here
                 exit(EXIT_FAILURE);
             }
-        }
+        };
 
-        void handle() {
-            // testing with one connection rn, will add actual handling later
-            auto addrlen = sizeof(sockaddr);
+        // Block Connection
+        class Block {
+            private:
+                // setting 'global' vars
+                int connection;
+                char buffer[256];
+            public:
+                // constructor is just pulling a new connection from queue
+                Block () {
+                    // pickup the next connection in queue
+                    auto addrlen = sizeof(sockaddr);
 
-            // fixing accept
-            int connection = accept(sockfd, (struct sockaddr *) &sockaddr, (socklen_t*)&addrlen);
+                    // accept new connection
+                    connection = accept(sockfd, (struct sockaddr *) &sockaddr, (socklen_t*)&addrlen);
 
-            if (connection < 0) {
-                std::cout << "Error while grabbing connection: " << errno << std::endl;
-                // exit handling here
-                exit(EXIT_FAILURE);
-            }
+                    if (connection < 0) {
+                        std::cout << "Error while grabbing connection: " << errno << std::endl;
+                        // exit handling here
+                        exit(EXIT_FAILURE);
+                    }
 
-            // read connection
-            char buffer[256];
-            auto bytesread = read(connection, buffer, 255);
-            std::cout << "Received: " << buffer;
+                    // read connection
+                    auto bytesread = read(connection, buffer, 255);
+                    
+                    // debugging
+                    std::cout << "Received: " << buffer;
+                }
 
-            // confirm receipt
-            std::string resp = "We don't have status codes but we got ur message";
-            send(connection, resp.c_str(), resp.size(), 0);
+                // sanitization + timestamping + chain update + receipt confirmation
+                void handle() {
 
-            // close connection
-            close(connection);
-        }
+
+
+                    // confirm receipt
+                    std::string resp = "We don't have status codes but we got ur message";
+                    send(connection, resp.c_str(), resp.size(), 0);
+
+                    // close the buffer connection
+                    close(connection);
+                }
+
+        };
 
         void shutdown() {
             close(sockfd);
-        }
+        };
 };
