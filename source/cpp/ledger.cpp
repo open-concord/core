@@ -5,7 +5,7 @@ class Ledger {
 
     public:
         // clean block input
-        char[255] clean_block(char[255] block) {
+        char clean_block(char block) {
             // check for harmful strings or smth idk
 
             // translate to xml

@@ -53,17 +53,22 @@ class Server {
         // Block Connection
         class Block {
             private:
+                // pointer to parent hub
+                Server * hub;
                 // setting 'global' vars
                 int connection;
                 char buffer[256];
             public:
-                // constructor is just pulling a new connection from queue
-                Block () {
+                // each block object represents a connection to the hub from a user
+                // each block is created from the parent hub's connection queue
+                // basically hoisting the parent hub each time a new block is made
+                Block (Server * h) : hub(h) {
+
                     // pickup the next connection in queue
-                    auto addrlen = sizeof(sockaddr);
+                    auto addrlen = sizeof(hub->sockaddr);
 
                     // accept new connection
-                    connection = accept(sockfd, (struct sockaddr *) &sockaddr, (socklen_t*)&addrlen);
+                    connection = accept(hub->sockfd, (struct sockaddr *) &hub->sockaddr, (socklen_t*)&addrlen);
 
                     if (connection < 0) {
                         std::cout << "Error while grabbing connection: " << errno << std::endl;
