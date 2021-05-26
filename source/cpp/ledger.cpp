@@ -2,23 +2,16 @@
 
 class Ledger {
     private:
-
+        Server mynetworking;
     public:
-        // clean block input
-        char clean_block(char block) {
-            // check for harmful strings or smth idk
-
-            // translate to xml
-
-            // check for same timestamped block already in blockchain? (might make search times fucked)
-            // timestamp block
-            // add block to folder
-        }
         void start() {
-
+            // run hub
+            mynetworking.create_socket();
+            mynetworking.open_listening();
+            mynetworking.handle_next();
         }
         void shutdown() {
-
+            mynetworking.shutdown();
         }
 
 };

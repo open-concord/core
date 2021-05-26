@@ -1,2 +1,3 @@
 # ledger
-ledger boilerplate for op3n guilds
+This is the ledger boilerplate for Concord clusters
+

@@ -34,7 +34,7 @@ class Server {
             }
         }
 
-        void start_listen() {
+        void open_listening() {
             // testing port
             if (bind(sockfd, (struct sockaddr *) &sockaddr, sizeof(sockaddr)) < 0) {
                 std::cout << "Error while binding to port: " << errno << std::endl;
@@ -55,7 +55,7 @@ class Server {
             private:
                 // pointer to parent hub
                 Server * hub;
-                // setting 'global' vars
+                // setting 'important' vars
                 int connection;
                 char buffer[256];
             public:
@@ -78,15 +78,15 @@ class Server {
 
                     // read connection
                     auto bytesread = read(connection, buffer, 255);
-                    
-                    // debugging
-                    std::cout << "Received: " << buffer;
                 }
+
 
                 // sanitization + timestamping + chain update + receipt confirmation
                 void handle() {
 
-
+                    // sanitize message
+                    std::cout << "Received: " << buffer;
+                    //std::string clean_message = sanitize(buffer);
 
                     // confirm receipt
                     std::string resp = "We don't have status codes but we got ur message";
@@ -97,7 +97,13 @@ class Server {
                 }
 
         };
+        void handle_next() {
+            // handle new block
+            Block new_connection(this);
+            // not sure if consstructor is blocking
+            new_connection.handle();
 
+        };
         void shutdown() {
             close(sockfd);
         };
