@@ -35,7 +35,7 @@ class tree {
             std::string hash = calc_hash(false, (cat+time));
 
             // time#content|hash$prevhash
-            return time+"#"+h1+"|"+hash+"$"+h0;
+            return time+"#"+h1+"|"+hash+"$"+h0.value();
         }
 
         // gonna leave this for 1u to figure out
