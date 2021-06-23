@@ -1,4 +1,7 @@
 # main
-This is the main client of Concord
+Concord is a distributed messaging protocol (?)
 
-It essentially runs as both a ledger and lite client, with the combined benefits of both.
+This is currently the Pre-Alpha build, RunAtYourOwnRisk (or not at all)
+
+Register to become a beta tester; @0xuTon on the funni bird app
+
