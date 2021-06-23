@@ -23,5 +23,5 @@ std::string get_time() {
 
 // Converts given time (UTC) to local
 std::string convert_to_local() {
-    return;
+    return "";
 }
