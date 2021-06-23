@@ -23,9 +23,9 @@ class tree {
         // where h1 is the new(our) content, and h0 is prev hash
         std::string generate_branch(std::optional<std::string> h0, std::string h1) {
             // h0 doesn't exist, so use duplicated h1
-            if (!h0) {h0 = h1;}
+            if (!h0.has_value()) {h0.value() = h1;}
             // concatenation of h0+h1/h0
-            std::string cat = h0+h1;
+            std::string cat = h0.value()+h1;
 
             // debugging
             std::cout << "Catted String: " << cat << "\n";
