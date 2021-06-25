@@ -16,7 +16,7 @@ class Server {
         int portaddr; // port address of server instance        
         int queuelim; // prospective limits on connection queue
         int family = AF_INET; // default connection family is INET
-        int sockaddr; // socket obj
+        struct sockaddr; // socket obj
         int sockfd; // socket
 
         // socket initation
@@ -74,12 +74,35 @@ class Server {
                 // each client object represents a connection to the hub from a user
                 // each client is created from the parent hub's connection queue
                 // basically hoisting the parent hub each time a new client is made
-                Client (Server * h) : hub(h);
+                Client (Server * h) : hub(h) {
+
+                    // pickup the next connection in queue
+                    auto addrlen = sizeof(hub->sockaddr);
+
+                    // accept new connection
+                    this->connection = accept(hub->sockfd, (struct sockaddr *) &hub->sockaddr, (socklen_t*)&addrlen);
+
+                    if (this->connection < 0) {
+                        std::cout << "Error while grabbing connection: " << errno << std::endl;
+                        // exit handling here
+                        exit(EXIT_FAILURE);
+                    }
+
+                    // read connection
+                    auto bytesread = read(connection, buffer, 255);
+                }
 
                 // overwrite this function to take over input handling
-                void handle();
+                void handle() {
+                    std::cout << "Received: " << buffer;
+                }
 
-                void close_connection(std::string receipt);
+                void close_connection(std::string receipt) {
+                    // end communication w/ receipt
+                    send(connection, receipt.c_str(), receipt.size(), 0);
+                    // close socket connection
+                    close(connection);
+                }
 
 
         };
