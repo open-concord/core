@@ -38,11 +38,13 @@ std::string Tree::generate_branch(bool debug_info, Miner& local_miner, std::stri
 
     std::string hash = calc_hash(false, cat + time + (char *) nonce);
 
+    if (h0 == "") h0 = std::string(64, '0'); //Take up the same length as a full hash, but be entirely 0s.
+
     // time#prevhash#hash#content
     // all but content have limited chars
     std::string fullBlock = time+h0+hash+(char *) nonce+c1;
 
-    if (debug_info) std::cout << fullBlock.length() << std::endl; //Should be a total of 4(#) + 2*64=128 (hashes) + 22 (timestamp) + 16 (nonce) + messagelength
+    if (debug_info) std::cout << fullBlock.length() << std::endl; //Should be a total of message length + 166=2*64=128 (hashes) + 22 (timestamp) + 16 (nonce)
 
     return fullBlock;
 }
