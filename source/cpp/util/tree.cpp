@@ -8,6 +8,7 @@
  */
 
 #include <string>
+#include <vector>
 
 // remove after debug
 #include <iostream>
@@ -27,22 +28,23 @@ std::string Tree::generate_branch(bool debug_info, Miner& local_miner, std::stri
 
     // concatenation of h0+h1/h0
     std::string cat = h0+c1;
-    unsigned char nonce[16];
+    std::string nonce;
 
     // debugging
-    std::cout << "Catted String: " << cat << "\n";
+    if (debug_info) std::cout << "Catted String: " << cat << "\n";
 
     // hashing w/ timestamp of h1
     std::string time = get_time();
-    local_miner.generate_valid_nonce(debug_info, cat + time, nonce);
 
-    std::string hash = calc_hash(false, cat + time + (char *) nonce);
+    nonce = local_miner.generate_valid_nonce(debug_info, cat + time);
+
+    std::string hash = calc_hash(false, cat + time + nonce);
 
     if (h0 == "") h0 = std::string(64, '0'); //Take up the same length as a full hash, but be entirely 0s.
 
     // time#prevhash#hash#content
     // all but content have limited chars
-    std::string fullBlock = time+h0+hash+(char *) nonce+c1;
+    std::string fullBlock = time+h0+hash+nonce+c1;
 
     if (debug_info) std::cout << fullBlock.length() << std::endl; //Should be a total of message length + 166=2*64=128 (hashes) + 22 (timestamp) + 16 (nonce)
 

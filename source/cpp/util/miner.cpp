@@ -21,23 +21,27 @@ bool Miner::check_valid_hash(std::string hash) {
     return true;
 };
 
-// genning hash and nonce
-int Miner::generate_valid_nonce(bool debug_info, std::string content, unsigned char* nonce) {
-    std::string rhash = calc_hash(false, content); //hash init
-    //unsigned char* hashInput;
-    unsigned char working_nonce[16]; // nonce buffer
+std::string Miner::generate_nonce() {
+    unsigned char nonce[16];
 
-    //hashInput = malloc(16);
+    RAND_bytes(nonce, sizeof(nonce));
+
+    return std::string((char *) nonce);
+}
+
+// genning hash and nonce
+std::string Miner::generate_valid_nonce(bool debug_info, std::string content) {
+    std::string rhash = calc_hash(false, content); //hash init
+    std::string nonce;
 
     while (!this->check_valid_hash(rhash)) {
         // TODO: add error handling
-        RAND_bytes(working_nonce, sizeof(working_nonce));
-        rhash = calc_hash(false, content + (char*) working_nonce);
-        if (debug_info) std::cout << "Used nonce " << working_nonce << " to generate hash " << rhash << std::endl;
+        nonce = generate_nonce();
+        rhash = calc_hash(false, content + nonce);
+        if (debug_info) std::cout << "Used nonce " << nonce << " to generate hash " << rhash << std::endl;
     }
 
-    if (debug_info) std::cout << "Succeeded on " << working_nonce << std::endl;
-    memcpy(nonce, working_nonce, sizeof(working_nonce) + 1); //16 + the termination char.
+    if (debug_info) std::cout << "Succeeded on " << nonce << std::endl;
 
-    return 1;
+    return nonce;
 };
