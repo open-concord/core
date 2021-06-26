@@ -5,6 +5,9 @@
 #include <fstream>
 #include <sstream>
 #include <iomanip>
+#include <iostream>
+
+#include "../utils.h"
 
 // read from file or raw      
 std::string calc_hash (bool use_disk, std::string target) {
@@ -38,5 +41,6 @@ std::string calc_hash (bool use_disk, std::string target) {
     for (int i=0; i<SHA256_DIGEST_LENGTH; i++) {
         strs << std::hex << std::setw(2) << std::setfill('0') << (int)outhash[i];
     }
+
     return strs.str();
 };

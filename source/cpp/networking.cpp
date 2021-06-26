@@ -23,7 +23,8 @@ class Server {
         }
 
     public:
-        int create_socket() {
+        //changed to void since it wouldn't return an int
+        void create_socket() {
             this->start_socket();
             sockfd = socket (AF_INET, SOCK_STREAM, 0);
             if (sockfd == -1) {
@@ -32,6 +33,7 @@ class Server {
                 std::cout << EXIT_FAILURE << std::endl;
                 exit(EXIT_FAILURE);
             }
+            //return an int, maybe?
         }
 
         void open_listening() {

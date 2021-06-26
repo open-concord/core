@@ -2,6 +2,8 @@
 #include <ctime>
 #include <string>
 
+#include "../utils.h"
+
 /** 
 * I genuinely hate messing w/ timestamping
 * I'm dumping all the ugly code into these functions

@@ -9,39 +9,45 @@
 
 #include <string>
 
-#include "timewizard.cpp"
-#include "hash.cpp"
-
 // remove after debug
 #include <iostream>
 
-class Tree {
-    private:
+#include "../utils.h"
+#include "../tree.h"
 
-    public:
-        // where h1 is the new(our) content, and h0 is prev hash
-        std::string generate_branch(std::string h1, std::string h0 = "") {
-            // h0 doesn't exist, so use duplicated h1
-            if (h0.empty()) {h0 = h1;}
-            // concatenation of h0+h1/h0
-            std::string cat = h0+h1;
+/*Tree::Tree(int pow_min) {
+    this->pow = pow_min;
+    (this->local_miner).set_pow_req(this->pow);
+}*/
 
-            // debugging
-            std::cout << "Catted String: " << cat << "\n";
+// where h1 is the new content, and h0 is prev hash
+std::string Tree::generate_branch(bool debug_info, Miner& local_miner, std::string c1, std::string h0 = "") {
+    // don't use h0 if it's not given
+    // previously this used a duplicate of c1, but that adds nothing.
 
-            // hashing w/ timestamp of h1
-            std::string time = get_time();
-            std::string hash = calc_hash(false, (cat+time));
+    // concatenation of h0+h1/h0
+    std::string cat = h0+c1;
+    unsigned char nonce[16];
 
-            // if h0 = h1, hash(h0) == hash(h1)
-            if (h0 == h1) {h0 = hash;}
+    // debugging
+    std::cout << "Catted String: " << cat << "\n";
 
-            // time#content|hash$prevhash
-            return time+"#"+h1+"|"+hash+"$"+h0;
-        }
+    // hashing w/ timestamp of h1
+    std::string time = get_time();
+    local_miner.generate_valid_nonce(debug_info, cat + time, nonce);
 
-        // where h0 and h1 are child nodes, and h01 is block to be checked
-        bool verify_integrity(std::string h0, std::string h1, std::string h01) {
-            return false;
-        }
-};
+    std::string hash = calc_hash(false, cat + time + (char *) nonce);
+
+    // time#prevhash#hash#content
+    // all but content have limited chars
+    std::string fullBlock = time+h0+hash+(char *) nonce+c1;
+
+    if (debug_info) std::cout << fullBlock.length() << std::endl; //Should be a total of 4(#) + 2*64=128 (hashes) + 22 (timestamp) + 16 (nonce) + messagelength
+
+    return fullBlock;
+}
+
+// where h0 and h1 are child nodes, and h01 is block to be checked
+bool Tree::verify_integrity(std::string h0, std::string h1, std::string h01) {
+    return false;
+}
