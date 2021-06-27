@@ -9,6 +9,7 @@
 
 #include <string>
 #include <vector>
+#include <array>
 
 // remove after debug
 #include <iostream>
@@ -22,11 +23,11 @@
 }*/
 
 // where h1 is the new content, and h0 is prev hash
-std::string Tree::generate_branch(bool debug_info, Miner& local_miner, std::string c1, std::string h0 = "") {
-    // don't use h0 if it's not given
-    // previously this used a duplicate of c1, but that adds nothing.
-
+void Tree::generate_branch(bool debug_info, Miner& local_miner, std::string c1) {
     // concatenation of h0+h1/h0
+    std::string h0 = ((this->localChain).size() > 0) ? (this->localChain).back()[2] : std::string(64, '0');
+    if (debug_info) std::cout << "Old hash: " << h0 << std::endl;
+
     std::string cat = h0+c1;
     std::string nonce;
 
@@ -40,15 +41,9 @@ std::string Tree::generate_branch(bool debug_info, Miner& local_miner, std::stri
 
     std::string hash = calc_hash(false, cat + time + nonce);
 
-    if (h0 == "") h0 = std::string(64, '0'); //Take up the same length as a full hash, but be entirely 0s.
+    std::array<std::string, 5> out_block = {time, h0, hash, nonce, c1};
 
-    // time#prevhash#hash#content
-    // all but content have limited chars
-    std::string fullBlock = time+h0+hash+nonce+c1;
-
-    if (debug_info) std::cout << fullBlock.length() << std::endl; //Should be a total of message length + 166=2*64=128 (hashes) + 22 (timestamp) + 16 (nonce)
-
-    return fullBlock;
+    (this->localChain).push_back(out_block);
 }
 
 // where h0 and h1 are child nodes, and h01 is block to be checked
