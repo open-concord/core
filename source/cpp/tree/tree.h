@@ -1,6 +1,6 @@
 #include <vector>
 #include <array>
-#include "utils.h"
+#include "../mining/mining.h"
 
 #pragma once
 

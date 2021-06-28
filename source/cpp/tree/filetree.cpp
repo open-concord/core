@@ -1,5 +1,5 @@
 #include "tree.h"
-#include "utils.h"
+#include "../mining/mining.h"
 #include <array>
 #include <fstream>
 #include <iostream>

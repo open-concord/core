@@ -7,7 +7,7 @@
 //debugging
 #include <iostream>
 
-#include "../utils.h"
+#include "mining.h"
 
 Miner::Miner(int POW_req) {
     this->pow = POW_req;

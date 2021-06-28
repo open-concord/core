@@ -2,7 +2,7 @@
 #include <ctime>
 #include <string>
 
-#include "../utils.h"
+#include "util.h"
 
 /** 
 * I genuinely hate messing w/ timestamping

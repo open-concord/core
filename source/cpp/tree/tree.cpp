@@ -14,8 +14,9 @@
 // remove after debug
 #include <iostream>
 
-#include "../utils.h"
-#include "../tree.h"
+#include "../mining/mining.h"
+#include "../util/util.h"
+#include "tree.h"
 
 /*Tree::Tree(int pow_min) {
     this->pow = pow_min;
