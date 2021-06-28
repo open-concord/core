@@ -1,6 +1,8 @@
 #include <string>
 #include <openssl/rand.h>
 #include <cstring>
+#include <sstream>
+#include <iomanip>
 
 //debugging
 #include <iostream>
@@ -26,7 +28,12 @@ std::string Miner::generate_nonce() {
 
     RAND_bytes(nonce, sizeof(nonce));
 
-    return std::string((char *) nonce);
+    std::stringstream strs;
+    for (size_t i = 0; i < 16; i++) {
+        strs << std::hex << std::setw(2) << std::setfill('0') << (int)nonce[i];
+    }
+
+    return strs.str();
 }
 
 // genning hash and nonce
