@@ -1,4 +1,3 @@
-#include "ledger.cpp"
 #include "tree.h"
 #include <string>
 #include <vector>

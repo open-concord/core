@@ -1,4 +1,4 @@
-#include "networking.cpp"
+#include "utils.h"
 
 class Ledger {
     private:
@@ -6,7 +6,7 @@ class Ledger {
     public:
         void start() {
             // run hub
-            mynetworking.create_socket();
+            mynetworking.initiate_socket();
             mynetworking.open_listening();
             mynetworking.handle_next();
         }

@@ -34,7 +34,7 @@ class Server {
         int sockfd; // socket
 
         // socket initation
-        void intiate_socket();
+        void initiate_socket();
 
     public:
         Server(int portaddr, int queuelim, bool local);
@@ -53,7 +53,7 @@ class Server {
                 // each client object represents a connection to the hub from a user
                 // each client is created from the parent hub's connection queue
                 // basically hoisting the parent hub each time a new client is made
-                Client (Server * h) : hub(h);
+                Client (Server * h);
 
                 // overwrite this function to take over input handling
                 void handle();
