@@ -16,19 +16,18 @@ class Server {
         int portaddr; // port address of server instance        
         int queuelim; // prospective limits on connection queue
         int family = AF_INET; // default connection family is INET
-        struct sockaddr; // socket obj
+        struct sockaddr_in addr; // socket obj
         int sockfd; // socket
 
         // socket initation
         void intiate_socket() {
             struct sockaddr_in serv_addr, cli_addr;
-            sockaddr_in sockaddr;
 
-            sockaddr.sin_family = this->family;
-            sockaddr.sin_addr.s_addr = INADDR_ANY;
-            sockaddr.sin_port = htons(this->portaddr);
+            addr.sin_family = family;
+            addr.sin_addr.s_addr = INADDR_ANY;
+            addr.sin_port = htons(portaddr);
 
-            sockfd = socket (this->family, SOCK_STREAM, 0);
+            this->sockfd = socket (family, SOCK_STREAM, 0);
 
             if (this->sockfd < 0) {
                 std::cout << "Error while creating socket: " << errno << std::endl;
@@ -42,13 +41,13 @@ class Server {
         Server(int portaddr, int queuelim, bool local) {
             this->portaddr = portaddr;
             this->queuelim = queuelim;
-            if (local) {this->family = AF_LOCAL;}
+            if (local) {family = AF_LOCAL;}
             this->intiate_socket();
         };
 
         void open_listening() {
             // binding port
-            if (bind(sockfd, (struct sockaddr *) &sockaddr, sizeof(sockaddr)) < 0) {
+            if (bind(sockfd, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
                 std::cout << "Error while binding to port: " << errno << std::endl;
                 // exit handling here
                 exit(EXIT_FAILURE);
@@ -77,10 +76,10 @@ class Server {
                 Client (Server * h) : hub(h) {
 
                     // pickup the next connection in queue
-                    auto addrlen = sizeof(hub->sockaddr);
+                    auto addrlen = sizeof(hub->addr);
 
                     // accept new connection
-                    this->connection = accept(hub->sockfd, (struct sockaddr *) &hub->sockaddr, (socklen_t*)&addrlen);
+                    this->connection = accept(hub->sockfd, (struct sockaddr *) &hub->addr, (socklen_t*)&addrlen);
 
                     if (this->connection < 0) {
                         std::cout << "Error while grabbing connection: " << errno << std::endl;
