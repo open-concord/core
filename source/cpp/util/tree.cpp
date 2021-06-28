@@ -41,8 +41,6 @@ void Tree::generate_branch(bool debug_info, Miner& local_miner, std::string c1) 
 
     std::string hash = calc_hash(false, cat + time + nonce);
 
-    std::cout << "NSIZE: " << nonce.length() << std::endl;
-
     std::array<std::string, 5> out_block = {time, h0, hash, nonce, c1};
 
     (this->local_chain).push_back(out_block);
@@ -52,7 +50,21 @@ std::vector<std::array<std::string, 5>> Tree::get_chain() {
     return (this->local_chain);
 }
 
-// where h0 and h1 are child nodes, and h01 is block to be checked
-bool Tree::verify_integrity(std::string h0, std::string h1, std::string h01) {
-    return false;
+bool Tree::verify_block(std::array<std::string, 5> block, int pow_min) {
+    std::string result_hash = calc_hash(false, block[1] + block[4] + block[0] + block[3]);
+    if (result_hash != block[2]) return false;
+    for (size_t i = 0; i < pow_min; i++) {
+        if (result_hash.at(i) != '0') return false;
+    }
+    return true;
+}
+
+bool Tree::verify_chain(int pow_min) {
+    for (size_t i = 0; i < (this->local_chain).size(); i++) {
+        if (!verify_block((this->local_chain)[i], pow_min)) return false; //make sure every hash is valid.
+        if (i != 0) {
+            if ((this->local_chain)[i][1] != (this->local_chain)[i - 1][2]) return false; //for blocks beyond the first, ensure hashes chain correctly.
+        }
+    }
+    return true;
 }

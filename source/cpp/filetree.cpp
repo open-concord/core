@@ -3,10 +3,20 @@
 #include <array>
 #include <fstream>
 #include <iostream>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <stdexcept>
+
+struct stat info;
 
 FileTree::FileTree(std::string dir) {
     this->target_dir = dir;
     if ((this->target_dir).back() != '/') this->target_dir += "/";
+
+    if ((stat( (this->target_dir).c_str(), &info ) != 0) || !(info.st_mode & S_IFDIR) ) {
+        throw std::invalid_argument("Directory is not accessible.");
+    }
+
     for (size_t i = 0; true; i++) {
         std::ifstream saved_block((this->target_dir) + std::to_string(i) + ".block");
         if (saved_block) {
@@ -15,7 +25,6 @@ FileTree::FileTree(std::string dir) {
             block_data.resize(saved_block.tellg()); //expand string based on stream end position
             saved_block.seekg(0, std::ios::beg);
             saved_block.read(&block_data[0], block_data.size());
-            std::cout << block_data.length() << std:: endl;
             (this->target_tree).local_chain.push_back({
                 block_data.substr(0, 22), //22 chars of datetime
                 block_data.substr(22, 64), //64 chars of last hash
@@ -40,10 +49,14 @@ void FileTree::generate_branch(bool debug_info, Miner& local_miner, std::string 
     block_file.close();
 }
 
-bool FileTree::verify_integrity(std::string h0, std::string h1, std::string h01) {
-    return (this->target_tree).verify_integrity(h0, h1, h01);
-}
-
 std::vector<std::array<std::string, 5>> FileTree::get_chain() {
     return (this->target_tree).get_chain();
+}
+
+bool FileTree::verify_block(std::array<std::string, 5> block, int pow_min) {
+    return (this->target_tree).verify_block(block, pow_min);
+}
+
+bool FileTree::verify_chain(int pow_min) {
+    return (this->target_tree).verify_chain(pow_min);
 }

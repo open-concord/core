@@ -17,8 +17,9 @@ class Tree {
 
         std::vector<std::array<std::string, 5>> get_chain();
 
-        // where h0 and h1 are child nodes, and h01 is block to be checked
-        bool verify_integrity(std::string h0, std::string h1, std::string h01);
+        bool verify_block(std::array<std::string, 5> block, int pow_min = 0);
+
+        bool verify_chain(int pow_min = 0);
 };
 
 class FileTree {
@@ -35,5 +36,7 @@ class FileTree {
 
         std::vector<std::array<std::string, 5>> get_chain();
         
-        bool verify_integrity(std::string h0, std::string h1, std::string h01);
+        bool verify_block(std::array<std::string, 5> block, int pow_min = 0);
+
+        bool verify_chain(int pow_min = 0);
 };
