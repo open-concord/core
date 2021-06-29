@@ -16,6 +16,7 @@
 Server::Server(int portaddr, int queuelim, bool local) {
     this->portaddr = portaddr;
     this->queuelim = queuelim;
+    int family = AF_INET;
     if (local) {family = AF_LOCAL;}
     
     // initate socket

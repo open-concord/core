@@ -5,7 +5,7 @@ void handler(std::string msg) {
 }
 
 int main () {
-    Server test(1339, 20, true);
+    Server test(1339, 20, false);
     test.open_listening();
     // initating new client off the Server's incoming connection stack
     Client next_client(&test);
