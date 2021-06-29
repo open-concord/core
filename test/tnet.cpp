@@ -1,8 +1,14 @@
-#include "../source/cpp/util/net.cpp"
+#include "../source/cpp/net/net.h"
+#include <iostream>
+void handler(std::string msg) {
+    std::cout << "MSG: " << msg << "\n";
+}
 
 int main () {
-    Server test(1337, 20, true);
+    Server test(1339, 20, true);
     test.open_listening();
-    test.handle_next();
+    // initating new client off the Server's incoming connection stack
+    Client next_client(&test);
+    next_client.handle(handler);
     return 0;
 }
