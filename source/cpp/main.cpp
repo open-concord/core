@@ -1,4 +1,4 @@
-#include "tree/tree.h"
+#include "tree.h"
 #include <string>
 #include <vector>
 #include <iostream>
