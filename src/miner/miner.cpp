@@ -7,8 +7,8 @@
 //debugging
 #include <iostream>
 
-#include "miner.h"
-#include "hash.h"
+#include "../../inc/miner.h"
+#include "../../inc/hash.h"
 
 Miner::Miner(int POW_req) {
     this->pow = POW_req;

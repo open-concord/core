@@ -1,4 +1,4 @@
-#include "../net/net.h"
+#include "net.h"
 
 #pragma once
 class Ledger {

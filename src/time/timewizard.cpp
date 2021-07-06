@@ -2,7 +2,7 @@
 #include <ctime>
 #include <string>
 
-#include "timewizard.h"
+#include "../../inc/timewizard.h"
 
 /** 
 * I genuinely hate messing w/ timestamping

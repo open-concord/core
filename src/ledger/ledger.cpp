@@ -2,15 +2,16 @@
 #include <iostream>
 
 
-#include "../net/net.h"
-#include "ledger.h"
+#include "../../inc/net.h"
+#include "../../inc/ledger.h"
 
+/**
 Ledger::Ledger() : ninet(Server(1337, 20, false)) : nlocal(Server(1338, 2, true) : {
     Server ninet = Server(1337, 20, false);
     Server nlocal = Server(1338, 2, true);
     Server::Client& GUI(Server nlocal);
 }
-
+*/
 /**
 class Ledger {
     private:
@@ -36,3 +37,4 @@ class Ledger {
         }
 
 };
+*/

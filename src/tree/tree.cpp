@@ -17,10 +17,10 @@
 #include <sys/stat.h>
 #include <stdexcept>
 
-#include "miner.h"
-#include "hash.h"
-#include "timewizard.h"
-#include "tree.h"
+#include "../../inc/miner.h"
+#include "../../inc/hash.h"
+#include "../../inc/timewizard.h"
+#include "../../inc/tree.h"
 
 // where h1 is the new content, and h0 is prev hash
 void Tree::generate_branch(bool debug_info, Miner& local_miner, std::string c1) {

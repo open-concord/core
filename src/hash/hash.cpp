@@ -7,7 +7,7 @@
 #include <iomanip>
 #include <iostream>
 
-#include "hash.h"
+#include "../../inc/hash.h"
 
 // read from file or raw      
 std::string calc_hash (bool use_disk, std::string target) {

@@ -4,7 +4,7 @@
 #include <unistd.h> // For read
 #include <string>
 
-#include "net.h"
+#include "../../inc/net.h"
 
 /**
  * Initiation of a Server instance
