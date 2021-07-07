@@ -4,8 +4,30 @@
 #include <boost/beast/core.hpp>
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
+#include <nlohmann/json.hpp>
 #include <iostream>
 #include <thread>
+
+using json = nlohmann::json;
+
+std::string sock_read(boost::asio::ip::tcp::socket& sock) {
+    //THIS IS USING A STRING EOM, NEEDS TO BE CHANGED!
+    boost::asio::streambuf buffer;
+    boost::asio::ip::read(
+        sock, 
+        buffer, 
+        boost::asio::transfer_all()
+    );
+    return buffer_cast<const char*>(buf.data());
+}
+
+void sock_write(boost::asio::ip::tcp::socket& sock, std::string data) {
+    boost::asio::write(
+            sock,
+            boost::asio::buffer(data.c_str(), data.size()), 
+            boost::asio::transfer_all()
+    );
+}
 
 Node::Node() {
     (this->local_io_service).run();
@@ -29,5 +51,7 @@ void Node::start_accept() {
 void Node::handle(boost::asio::ip::tcp::socket& sock) {
     start_accept(); //make sure new requests also get handled.
 
-    //handling time
+    sock_write(sock, "CONCORDID:HOST"); //identify role
+    if (sock_read(sock) != "CONCORDID:CLIENT") return;
+    sock_write(sock, "CONCORDCHAIN:READY"); //communicate readiness
 }
