@@ -7,6 +7,7 @@
 //debugging
 #include <iostream>
 
+#include "../../hexstr.h"
 #include "../../inc/miner.h"
 #include "../../inc/hash.h"
 
@@ -29,12 +30,7 @@ std::string Miner::generate_nonce() {
 
     RAND_bytes(nonce, sizeof(nonce));
 
-    std::stringstream strs;
-    for (size_t i = 0; i < 16; i++) {
-        strs << std::hex << std::setw(2) << std::setfill('0') << (int)nonce[i];
-    }
-
-    return strs.str();
+    return to_hexstr(nonce, 16);
 }
 
 // genning hash and nonce

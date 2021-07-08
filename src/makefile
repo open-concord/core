@@ -15,25 +15,43 @@ CC = g++
 # compile-time flags
 CFLAGS = -g -Wall $(IN_DIR)
 # lib flags
-LFLAGS = -lssl -lcrypt -lcrypto
+LFLAGS = -lssl -lcrypt -lcrypto #-lboost #-lnlohmann
 
 # object file sub-dir of src
 BIN = _bin/
 
 # objects
-OBJ = $(BIN)hash.o \
+OBJ = $(BIN)hexstr.o \
+	$(BIN)rawcrypt.o \
+	$(BIN)highcrypt.o \
+	$(BIN)hexcrypt.o \
+	$(BIN)hash.o \
 	$(BIN)ledger.o \
 	$(BIN)miner.o \
-	$(BIN)net.o \
+	$(BIN)client.o \
+	$(BIN)server.o \
 	$(BIN)time.o \
 	$(BIN)tree.o \
 	$(BIN)main.o
 
 # returns executable to root
+
 ../main: $(OBJ)
 	$(CC) $(CFLAGS) $(OBJ) $(LFLAGS) -o $@
 
 $(BIN)main.o: main.cpp
+	$(CC) -c $(CFLAGS) $< -o $@
+
+$(BIN)hexstr.o: hexstr/hexstr.cpp ../inc/hexstr.h
+	$(CC) -c $(CFLAGS) $< -o $@
+
+$(BIN)rawcrypt.o: crypt/rawcrypt.cpp ../inc/crypt.h
+	$(CC) -c $(CFLAGS) $< -o $@
+
+$(BIN)highcrypt.o: crypt/highcrypt.cpp ../inc/crypt.h
+	$(CC) -c $(CFLAGS) $< -o $@
+
+$(BIN)hexcrypt.o: crypt/hexcrypt.cpp ../inc/crypt.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
 $(BIN)hash.o: hash/hash.cpp ../inc/hash.h
@@ -45,7 +63,10 @@ $(BIN)ledger.o: ledger/ledger.cpp ../inc/ledger.h
 $(BIN)miner.o: miner/miner.cpp ../inc/miner.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
-$(BIN)net.o: net/server.cpp net/client.cpp ../inc/net.h
+$(BIN)client.o: net/client.cpp ../inc/net.h
+	$(CC) -c $(CFLAGS) $< -o $@
+
+$(BIN)server.o: net/server.cpp ../inc/net.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
 $(BIN)time.o: time/timewizard.cpp ../inc/timewizard.h
