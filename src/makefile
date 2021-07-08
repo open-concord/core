@@ -21,7 +21,11 @@ LFLAGS = -lssl -lcrypt -lcrypto -pthread
 BIN = _bin/
 
 # objects
-OBJ = $(BIN)hash.o \
+OBJ = $(BIN)hexstr.o \
+	$(BIN)rawcrypt.o \
+	$(BIN)highcrypt.o \
+	$(BIN)hexcrypt.o \
+	$(BIN)hash.o \
 	$(BIN)ledger.o \
 	$(BIN)miner.o \
 	$(BIN)time.o \
@@ -30,10 +34,23 @@ OBJ = $(BIN)hash.o \
 	$(BIN)main.o
 
 # returns executable to root
+
 ../main: $(OBJ)
 	$(CC) $(CFLAGS) $(OBJ) $(LFLAGS) -o $@
 
 $(BIN)main.o: main.cpp
+	$(CC) -c $(CFLAGS) $< -o $@
+
+$(BIN)hexstr.o: hexstr/hexstr.cpp ../inc/hexstr.h
+	$(CC) -c $(CFLAGS) $< -o $@
+
+$(BIN)rawcrypt.o: crypt/rawcrypt.cpp ../inc/crypt.h
+	$(CC) -c $(CFLAGS) $< -o $@
+
+$(BIN)highcrypt.o: crypt/highcrypt.cpp ../inc/crypt.h
+	$(CC) -c $(CFLAGS) $< -o $@
+
+$(BIN)hexcrypt.o: crypt/hexcrypt.cpp ../inc/crypt.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
 $(BIN)hash.o: hash/hash.cpp ../inc/hash.h

@@ -2,12 +2,10 @@
 #include <openssl/rand.h>
 
 #include <string>
-#include <fstream>
-#include <sstream>
-#include <iomanip>
 #include <iostream>
 
 #include "../../inc/hash.h"
+#include "../../inc/hexstr.h"
 
 // read from file or raw      
 std::string calc_hash (bool use_disk, std::string target) {
@@ -36,11 +34,6 @@ std::string calc_hash (bool use_disk, std::string target) {
     // finishing sha
     SHA256_Update(&context, outstr.c_str(), outstr.size());
     SHA256_Final(outhash, &context);
-    std::stringstream strs;
-    // bytearray to stringstream
-    for (int i=0; i<SHA256_DIGEST_LENGTH; i++) {
-        strs << std::hex << std::setw(2) << std::setfill('0') << (int)outhash[i];
-    }
-
-    return strs.str();
+    
+    return to_hexstr(outhash, SHA256_DIGEST_LENGTH);
 };
