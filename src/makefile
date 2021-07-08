@@ -9,13 +9,13 @@ SHELL = /bin/sh
 default: ../main
 
 # flag for /include dir
-IN_DIR = -I../include/
+IN_DIR = -I../include/ -I/usr/include/boost
 # c/cpp standard
 CC = g++
 # compile-time flags
 CFLAGS = -g -Wall $(IN_DIR)
 # lib flags
-LFLAGS = -lssl -lcrypt -lcrypto
+LFLAGS = -lssl -lcrypt -lcrypto -pthread
 
 # object file sub-dir of src
 BIN = _bin/
@@ -24,9 +24,9 @@ BIN = _bin/
 OBJ = $(BIN)hash.o \
 	$(BIN)ledger.o \
 	$(BIN)miner.o \
-	$(BIN)net.o \
 	$(BIN)time.o \
 	$(BIN)tree.o \
+	$(BIN)node.o \
 	$(BIN)main.o
 
 # returns executable to root
@@ -45,14 +45,13 @@ $(BIN)ledger.o: ledger/ledger.cpp ../inc/ledger.h
 $(BIN)miner.o: miner/miner.cpp ../inc/miner.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
-$(BIN)net.o: net/server.cpp net/client.cpp ../inc/net.h
-	$(CC) -c $(CFLAGS) $< -o $@
-
 $(BIN)time.o: time/timewizard.cpp ../inc/timewizard.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
 $(BIN)tree.o: tree/tree.cpp ../inc/tree.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
+$(BIN)node.o: node/node.cpp ../inc/node.h
+	$(CC) -c $(CFLAGS) $< -o $@
 clean:
 	cd $(BIN); rm -rf *o main
