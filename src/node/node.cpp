@@ -6,6 +6,7 @@
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/hof/placeholders.hpp>
+#include <boost/asio/spawn.hpp>
 
 // std
 #include <string>
@@ -15,31 +16,6 @@
 #include <thread>
 #include <functional>
 #include "../../inc/node.h"
-
-// Connection instance
-
-Conn::Conn(boost::asio::io_context& io_ctx) : tsock(io_ctx) {}
-
-Conn::ptr Conn::create(boost::asio::io_context& io_ctx) {
-    return ptr(new Conn(io_ctx));
-}
-boost::asio::ip::tcp::socket& Conn::socket() {
-    return this->tsock;
-}
-void Conn::handle() {
-    // https://www.boost.org/doc/libs/develop/libs/beast/doc/html/beast/ref/boost__beast__tcp_stream.html
-
-    // support for async read
-
-    // HANDLE HERE
-
-    // NOTE
-    // make sure to add the socket's info to this->khosts
-}
-// this is really jank, we should have seperate error handlers for each function
-void Conn::error_handle(const boost::system::error_code& err) {
-    // error handling here
-}
 
 // overarching node instance
 Node::Node(unsigned short int queue, unsigned short int port) {
@@ -76,22 +52,23 @@ void Node::begin_next() {
 // util func for async-call timing
 void Node::handle_accept(Conn::ptr new_conn, const boost::system::error_code& err) {
     if (!err) {
-        new_conn->handle();
+        new_conn->read();
         begin_next();
     } else {
-        // kinda jank, we should really write seperate error handlers for each function
-        new_conn->error_handle(err);
+        std::cout << err << "\n";
     }
 };
 
 // intiates contact with another ws
-void Node::contact(std::string content, std::string ip, int port) {
+void Node::contact(std::string initial_content, std::string ip, int port) {
     // target info
     boost::asio::ip::tcp::endpoint ep(boost::asio::ip::address::from_string(ip), port);
     // socket creation
-    boost::beast::ssl_stream<boost::beast::tcp_stream> sock {io_ctx, ssl_ctx};
-
-    sock.next_layer().connect(ep);
-
-    // can use sock.next_layer to send stuff (may be sync, idk about async outgoing)
+    Conn::ptr new_conn = Conn::create(this->io_ctx);
+    // not capable of doing async mental gymnastics to get async_connect hooked up
+    // but I also don't want to write a helper func
+    // *fix in alpha*
+    new_conn->socket().connect(ep);
+    new_conn->initiate_comms(initial_content);
 };
+

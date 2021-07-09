@@ -15,16 +15,24 @@
 class Conn : public boost::enable_shared_from_this<Conn> {
     private:
         Conn(boost::asio::io_context& io_ctx);
-        boost::asio::ip::tcp::socket tsock;
-        std::string incoming_msg;
+        boost::asio::ip::tcp::socket tsock;   
     public:
+        // util vars
+        std::string incoming_msg;
+        bool done; // close socket (for use in logic function)
+
         // basically just a shared_ptr of self
         typedef std::shared_ptr<Conn> ptr;
         static ptr create(boost::asio::io_context& io_ctx);
         boost::asio::ip::tcp::socket& socket();
+        // async util func
+        void initiate_comms(std::string msg);
+        void read();
+        void send_done(const boost::system::error_code& err, std::size_t bytes);
         void handle();
-        void error_handle(const boost::system::error_code& err);
 };
+
+std::string message_logic(Conn *conn_obj);
 
 class Node {
     private:
@@ -68,5 +76,5 @@ class Node {
         void handle_accept(Conn::ptr new_conn, const boost::system::error_code& err);
         
         // active communication (eg traditional client role)
-        void contact(std::string content, std::string ip, int port);
+        void contact(std::string initial_content, std::string ip, int port);
 };

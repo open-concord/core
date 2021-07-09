@@ -68,7 +68,7 @@ $(BIN)time.o: time/timewizard.cpp ../inc/timewizard.h
 $(BIN)tree.o: tree/tree.cpp ../inc/tree.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
-$(BIN)node.o: node/node.cpp ../inc/node.h
+$(BIN)node.o: node/logic.cpp node/conn.cpp node/node.cpp ../inc/node.h
 	$(CC) -c $(CFLAGS) $< -o $@
 clean:
 	cd $(BIN); rm -rf *o main
