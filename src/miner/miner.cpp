@@ -7,7 +7,7 @@
 //debugging
 #include <iostream>
 
-#include "../../hexstr.h"
+#include "../../inc/hexstr.h"
 #include "../../inc/miner.h"
 #include "../../inc/hash.h"
 

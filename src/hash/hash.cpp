@@ -3,6 +3,7 @@
 
 #include <string>
 #include <iostream>
+#include <fstream>
 
 #include "../../inc/hash.h"
 #include "../../inc/hexstr.h"

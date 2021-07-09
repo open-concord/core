@@ -1,14 +1,4 @@
-#include "net.h"
+#include "node.h"
 
 #pragma once
-class Ledger {
-    private:
-        Server ninet;
-        Server nlocal;
-        //Server::Client& GUI;
-    public:
-        Ledger();
-        void on_message();
-        void start();
-        void shutdown();
-};
+class Ledger {};
