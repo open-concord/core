@@ -5,7 +5,6 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "../../inc/hexstr.h"
 #include "../../inc/crypt.h"
 
 int lockmessage(const char* plaintext, unsigned char* ciphertext, size_t* ciphertextlen, EVP_PKEY* userprikey, unsigned char* serversecret) {
