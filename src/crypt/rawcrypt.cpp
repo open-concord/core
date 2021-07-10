@@ -120,7 +120,7 @@ int keygen_a(EVP_PKEY* key) {
     return ret;
 }
 
-int encrypt(unsigned char* plaintext, size_t plaintextlen, unsigned char* key,
+int symm_encrypt(unsigned char* plaintext, size_t plaintextlen, unsigned char* key,
     unsigned char* iv, unsigned char* ciphertext, size_t* ciphertextlen)
 {
     EVP_CIPHER_CTX* ctx;
@@ -158,7 +158,7 @@ int encrypt(unsigned char* plaintext, size_t plaintextlen, unsigned char* key,
     return ret;
 }
 
-int decrypt(unsigned char* ciphertext, size_t ciphertextlen, unsigned char* key,
+int symm_decrypt(unsigned char* ciphertext, size_t ciphertextlen, unsigned char* key,
     unsigned char* iv, unsigned char* plaintext, size_t* plaintextlen)
 {
     int ret = 0;
@@ -195,4 +195,8 @@ int decrypt(unsigned char* ciphertext, size_t ciphertextlen, unsigned char* key,
     EVP_CIPHER_CTX_free(ctx);
 
     return 1;
+}
+
+int asymm_encrypt() {
+
 }

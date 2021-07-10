@@ -50,6 +50,7 @@ std::string hex_unlock(std::string data, std::string secret, std::string pubkey)
     unsigned char unlocked_chars[(data.length() / 2) - 2 - 64 - 16 - 128];
     size_t unlocked_chars_len = NULL;
     if (!from_hexstr(data, locked_chars, &locked_chars_len)) return NULL;
+    if (!symm_decrypt())
     if (!unlockmessage(locked_chars, locked_chars_len - 128, unlocked_chars, &unlocked_chars_len, evp_pubkey, (unsigned char*) secret.c_str())) return NULL; //remove 128 from size to account for IV
     return std::string((const char*) unlocked_chars);
 }
