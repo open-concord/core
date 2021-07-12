@@ -38,3 +38,9 @@ std::string calc_hash (bool use_disk, std::string target) {
     
     return to_hexstr(outhash, SHA256_DIGEST_LENGTH);
 };
+
+std::string gen_trip(size_t len) {
+    unsigned char rawbytes[16];
+    if (!RAND_bytes(rawbytes, 16)) return NULL;
+    return to_hexstr(rawbytes, 16);
+}

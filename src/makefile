@@ -30,6 +30,7 @@ OBJ = $(BIN)hexstr.o \
 	$(BIN)miner.o \
 	$(BIN)time.o \
 	$(BIN)tree.o \
+	$(BIN)filetree.o \
 	$(BIN)node.o \
 	$(BIN)main.o
 
@@ -63,6 +64,9 @@ $(BIN)miner.o: miner/miner.cpp ../inc/miner.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
 $(BIN)time.o: time/timewizard.cpp ../inc/timewizard.h
+	$(CC) -c $(CFLAGS) $< -o $@
+
+$(BIN)filetree.o: tree/filetree.cpp ../inc/tree.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
 $(BIN)tree.o: tree/tree.cpp ../inc/tree.h
