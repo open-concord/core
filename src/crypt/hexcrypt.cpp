@@ -3,10 +3,11 @@
 #include <string.h>
 #include <openssl/bio.h>
 #include <openssl/evp.h>
- #include <openssl/bio.h>
-  #include <openssl/pem.h>
+#include <openssl/bio.h>
+#include <openssl/pem.h>
 #include "../../inc/hexstr.h"
 #include "../../inc/crypt.h"
+#include <iostream>
 
 //this file should be overhauled, as there are *much* more secure ways of transmitting keys than symmetrically-encrypted strings.
 //code here just keeps with the string-focused architecture we have at this early stage.
@@ -27,37 +28,64 @@ int set_BIO_data(BIO*& bio, std::string data_hex_str) {
     return 1;
 }
 
-std::string hex_lock(std::string data, std::string secret, std::string prikey) {
-    BIO* pribuf;
-    if (!set_BIO_data(pribuf, prikey)) return NULL;
-    EVP_PKEY* evp_prikey = PEM_read_bio_PrivateKey(pribuf, NULL, NULL, NULL);
-
-    unsigned char locked_chars[((strlen(data.c_str()) + 2 + 64 + 16) & (~15)) + 128];
+std::string hex_lock(std::string data, std::string sigprikey, bool use_asymm, std::string encpubkey, std::string secret) {
+    BIO* dsa_pribuf;
+    if (!set_BIO_data(dsa_pribuf, sigprikey)) return NULL;
+    EVP_PKEY* evp_dsa_prikey = PEM_read_bio_PrivateKey(dsa_pribuf, NULL, NULL, NULL);
+    EVP_PKEY* evp_rsa_pubkey;
+    if (use_asymm) {
+        BIO* rsa_pubbuf;
+        if (!set_BIO_data(rsa_pubbuf, encpubkey)) return NULL;
+        evp_rsa_pubkey = PEM_read_bio_PUBKEY(rsa_pubbuf, NULL, NULL, NULL);
+    }
+    unsigned char* locked_chars;
     size_t locked_chars_len = NULL;
+    std::cout << "REACHED OP" << std::endl;
+    if (!lockmessage(data.c_str(), locked_chars, &locked_chars_len, evp_dsa_prikey, 
+        use_asymm, evp_rsa_pubkey, (unsigned char*) secret.c_str())) return NULL;
+    std::cout << locked_chars_len << std::endl;
 
-    if (!lockmessage(data.c_str(), locked_chars, &locked_chars_len, evp_prikey, (unsigned char*) secret.c_str())) return NULL;
-
-    return to_hexstr(locked_chars, locked_chars_len + 128); // add 128 to account for IV
+    return to_hexstr(locked_chars, locked_chars_len + 16); // add 128 to account for IV
 }
 
-std::string hex_unlock(std::string data, std::string secret, std::string pubkey) {
-    BIO* pubbuf;
-    if (!set_BIO_data(pubbuf, pubkey)) return NULL;
-    EVP_PKEY* evp_pubkey = PEM_read_bio_PUBKEY(pubbuf, NULL, NULL, NULL);
+std::array<std::string, 2> hex_unlock(std::string data, bool use_asymm, std::string encprikey, std::string secret) {
+    EVP_PKEY* evp_rsa_prikey;
+    if (use_asymm) {
+        BIO* rsa_pribuf;
+        if (!set_BIO_data(rsa_pribuf, encprikey)) return {NULL, NULL};
+        evp_rsa_prikey = PEM_read_bio_PrivateKey(rsa_pribuf, NULL, NULL, NULL);
+    }
     unsigned char* locked_chars;
     size_t locked_chars_len = NULL;
 
-    unsigned char unlocked_chars[(data.length() / 2) - 2 - 64 - 16 - 128];
+    unsigned char* unlocked_chars;
     size_t unlocked_chars_len = NULL;
-    if (!from_hexstr(data, locked_chars, &locked_chars_len)) return NULL;
-    if (!symm_decrypt())
-    if (!unlockmessage(locked_chars, locked_chars_len - 128, unlocked_chars, &unlocked_chars_len, evp_pubkey, (unsigned char*) secret.c_str())) return NULL; //remove 128 from size to account for IV
-    return std::string((const char*) unlocked_chars);
+
+    unsigned char* sig;
+    size_t sig_len = NULL;
+
+    if (!from_hexstr(data, locked_chars, &locked_chars_len)) return {NULL, NULL};
+    if (!unlockmessage(locked_chars, locked_chars_len - 16, 
+        unlocked_chars, &unlocked_chars_len, sig, &sig_len, use_asymm, 
+        evp_rsa_prikey, (unsigned char*) secret.c_str())
+    ) return {NULL, NULL}; //remove 128 from size to account for IV
+    return {std::string((const char*) unlocked_chars), to_hexstr(sig, sig_len)};
 }
 
-std::array<std::string, 2> hex_keygen() {
+int hex_verify(std::string data, std::string sig, std::string sigpubkey) {
+    BIO* dsa_pubbuf;
+    if (!set_BIO_data(dsa_pubbuf, sigpubkey)) return 0;
+    EVP_PKEY* evp_dsa_pubkey = PEM_read_bio_PUBKEY(dsa_pubbuf, NULL, NULL, NULL);
+
+    unsigned char* sigbuf;
+    size_t siglen;
+    if (!from_hexstr(sig, sigbuf, &siglen)) return 0;
+    return verify(data.c_str(), &sigbuf, siglen, evp_dsa_pubkey);
+}
+
+std::array<std::string, 2> hex_keygen(int (*keygenfunc)(EVP_PKEY*)) {
     EVP_PKEY* dualkey = EVP_PKEY_new();
-    if (!keygen_a(dualkey)) return {NULL, NULL};
+    if (!(keygenfunc(dualkey))) return {NULL, NULL};
     BIO* pribuf = BIO_new(BIO_s_mem());
     BIO* pubbuf = BIO_new(BIO_s_mem());
     if (!PEM_write_bio_PrivateKey(pribuf, dualkey, NULL, NULL, 0, NULL, NULL)) return {NULL, NULL};

@@ -1,4 +1,4 @@
-//#include <iostream>
+#include <iostream>
 #include <string>
 #include <string.h>
 #include <stdio.h>
@@ -77,7 +77,7 @@ int verify(const char* msg, unsigned char** sig, size_t slen, EVP_PKEY* pubkey) 
     return ret;
 }
 
-int paramgen(EVP_PKEY* params) {
+int dsaparamgen(EVP_PKEY* params) {
     /* Create the context for generating the parameters */
     EVP_PKEY_CTX* pctx;
     int ret = 0;
@@ -108,16 +108,27 @@ int keygen_b(EVP_PKEY* params, EVP_PKEY* key) {
     return ret;
 }
 
-int keygen_a(EVP_PKEY* key) {
+int dsakeygen(EVP_PKEY* key) {
     EVP_PKEY* params = EVP_PKEY_new();
-    int ret = 0;
-
-    if (1 != paramgen(params)) return 0;
+    
+    if (1 != dsaparamgen(params)) return 0;
     if (1 != keygen_b(params, key)) return 0;
 
-    ret = 1;
 
-    return ret;
+    return 1;
+}
+
+int rsakeygen(EVP_PKEY* key) {
+    EVP_PKEY_CTX* kctx;
+    if (!(kctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL))) return 0;
+
+    if (!EVP_PKEY_keygen_init(kctx)) return 0;
+
+    if(!EVP_PKEY_CTX_set_rsa_keygen_bits(kctx, 2048)) return 0;
+
+    if (!EVP_PKEY_keygen(kctx, &key)) return 0;
+
+    return 1;
 }
 
 int symm_encrypt(unsigned char* plaintext, size_t plaintextlen, unsigned char* key,
@@ -197,6 +208,73 @@ int symm_decrypt(unsigned char* ciphertext, size_t ciphertextlen, unsigned char*
     return 1;
 }
 
-int asymm_encrypt() {
+//this code is directly taken from the openssl docs
 
+int rsa_env_seal(EVP_PKEY** pub_key, unsigned char* plaintext, int plaintext_len,
+	unsigned char** encrypted_key, int* encrypted_key_len, unsigned char* iv,
+	unsigned char* ciphertext, int* ciphertext_len)
+{
+	EVP_CIPHER_CTX *ctx;
+
+	int len;
+
+	/* Create and initialise the context */
+	if(!(ctx = EVP_CIPHER_CTX_new())) return 0;
+	/* Initialise the envelope seal operation. This operation generates
+	 * a key for the provided cipher, and then encrypts that key a number
+	 * of times (one for each public key provided in the pub_key array). In
+	 * this example the array size is just one. This operation also
+	 * generates an IV and places it in iv. */
+	if(1 != EVP_SealInit(ctx, EVP_aes_256_cbc(), encrypted_key, encrypted_key_len, iv, pub_key, 1)) return 0;
+	/* Provide the message to be encrypted, and obtain the encrypted output.
+	 * EVP_SealUpdate can be called multiple times if necessary
+	 */
+	if(1 != EVP_SealUpdate(ctx, ciphertext, &len, plaintext, plaintext_len)) return 0;
+	*ciphertext_len = len;
+	/* Finalise the encryption. Further ciphertext bytes may be written at
+	 * this stage.
+	 */
+	if(1 != EVP_SealFinal(ctx, ciphertext + len, &len)) return 0;
+	*ciphertext_len += len;
+
+	/* Clean up */
+	EVP_CIPHER_CTX_free(ctx);
+
+	return 1;
+}
+
+int rsa_env_open(EVP_PKEY *priv_key, unsigned char *ciphertext, int ciphertext_len,
+	unsigned char* encrypted_key, int encrypted_key_len, unsigned char* iv,
+	unsigned char* plaintext, int* plaintext_len)
+{
+	EVP_CIPHER_CTX *ctx;
+
+	int len;
+
+	/* Create and initialise the context */
+	if(!(ctx = EVP_CIPHER_CTX_new())) return 0;
+
+
+	/* Initialise the decryption operation. The asymmetric private key is
+	 * provided and priv_key, whilst the encrypted session key is held in
+	 * encrypted_key */
+	if(1 != EVP_OpenInit(ctx, EVP_aes_256_cbc(), encrypted_key, encrypted_key_len, iv, priv_key)) return 0;
+
+	/* Provide the message to be decrypted, and obtain the plaintext output.
+	 * EVP_OpenUpdate can be called multiple times if necessary
+	 */
+	if(1 != EVP_OpenUpdate(ctx, plaintext, &len, ciphertext, ciphertext_len)) return 0;
+	*plaintext_len = len;
+
+
+	/* Finalise the decryption. Further plaintext bytes may be written at
+	 * this stage.
+	 */
+	if(1 != EVP_OpenFinal(ctx, plaintext + len, &len)) return 0;
+	*plaintext_len += len;
+
+	/* Clean up */
+	EVP_CIPHER_CTX_free(ctx);
+
+	return 1;
 }
