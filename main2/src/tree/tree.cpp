@@ -1,0 +1,126 @@
+/**
+ * This file handles all tree-related logic for the client
+ * 
+ * NOTES:
+ * Timestamping protocol follows the W3 standard;
+ * "Complete date plus hours and minutes:
+ *  YYYY-MM-DDThh:mmTZD (eg 1997-07-16T19:20+01:00)"
+ */
+
+#include <string>
+#include <vector>
+#include <array>
+
+#include <fstream>
+#include <iostream>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <stdexcept>
+
+#include "../../inc/miner.h"
+#include "../../inc/hash.h"
+#include "../../inc/timewizard.h"
+#include "../../inc/tree.h"
+
+// where h1 is the new content, and h0 is prev hash
+void Tree::generate_branch(bool debug_info, Miner& local_miner, std::string c1) {
+    // concatenation of h0+h1/h0
+    std::string h0 = ((this->local_chain).size() > 0) ? (this->local_chain).back()[2] : std::string(64, '0');
+    if (debug_info) std::cout << "Old hash: " << h0 << std::endl;
+
+    std::string cat = h0+c1;
+    std::string nonce;
+
+    // debugging
+    if (debug_info) std::cout << "Catted String: " << cat << "\n";
+
+    // hashing w/ timestamp of h1
+    std::string time = get_time();
+
+    nonce = local_miner.generate_valid_nonce(debug_info, cat + time);
+
+    std::string hash = calc_hash(false, cat + time + nonce);
+
+    std::array<std::string, 5> out_block = {time, h0, hash, nonce, c1};
+
+    (this->local_chain).push_back(out_block);
+}
+
+std::vector<std::array<std::string, 5>> Tree::get_chain() {
+    return (this->local_chain);
+}
+
+bool Tree::verify_block(std::array<std::string, 5> block, int pow_min) {
+    std::string result_hash = calc_hash(false, block[1] + block[4] + block[0] + block[3]);
+    if (result_hash != block[2]) return false;
+    for (size_t i = 0; i < pow_min; i++) {
+        if (result_hash.at(i) != '0') return false;
+    }
+    return true;
+}
+
+bool Tree::verify_chain(int pow_min) {
+    for (size_t i = 0; i < (this->local_chain).size(); i++) {
+        if (!verify_block((this->local_chain)[i], pow_min)) return false; //make sure every hash is valid.
+        if (i != 0) {
+            if ((this->local_chain)[i][1] != (this->local_chain)[i - 1][2]) return false; //for blocks beyond the first, ensure hashes chain correctly.
+        }
+    }
+    return true;
+}
+
+//FileTree stuff
+
+struct stat info;
+
+FileTree::FileTree(std::string dir) {
+    this->target_dir = dir;
+    if ((this->target_dir).back() != '/') this->target_dir += "/";
+
+    if ((stat( (this->target_dir).c_str(), &info ) != 0) || !(info.st_mode & S_IFDIR) ) {
+        throw std::invalid_argument("Directory is not accessible.");
+    }
+
+    for (size_t i = 0; true; i++) {
+        std::ifstream saved_block((this->target_dir) + std::to_string(i) + ".block");
+        if (saved_block) {
+            std::string block_data;
+            saved_block.seekg(0, std::ios::end); //move to stream end
+            block_data.resize(saved_block.tellg()); //expand string based on stream end position
+            saved_block.seekg(0, std::ios::beg);
+            saved_block.read(&block_data[0], block_data.size());
+            (this->target_tree).local_chain.push_back({
+                block_data.substr(0, 22), //22 chars of datetime
+                block_data.substr(22, 64), //64 chars of last hash
+                block_data.substr(22 + 64, 64), //64 chars of current hash
+                block_data.substr(22 + 64 + 64, 32), //32 chars of nonce
+                block_data.substr(22 + 64 + 64 + 32) //remainder is plain content
+            });
+            saved_block.close();
+        }
+        else break;
+    }
+}
+
+void FileTree::generate_branch(bool debug_info, Miner& local_miner, std::string c1) {
+    (this->target_tree).generate_branch(debug_info, local_miner, c1);
+    size_t terminal_index = (this->target_tree).get_chain().size() - 1;
+    std::array<std::string, 5> new_block = (this->target_tree).get_chain()[terminal_index];
+    std::string block_string;
+    for (size_t i = 0; i < 5; i++) block_string+=new_block[i];
+    std::ofstream block_file(((this->target_dir) + std::to_string(terminal_index) + ".block").c_str());
+    block_file << block_string;
+    block_file.close();
+}
+
+std::vector<std::array<std::string, 5>> FileTree::get_chain() {
+    return (this->target_tree).get_chain();
+}
+
+bool FileTree::verify_block(std::array<std::string, 5> block, int pow_min) {
+    return (this->target_tree).verify_block(block, pow_min);
+}
+
+bool FileTree::verify_chain(int pow_min) {
+    return (this->target_tree).verify_chain(pow_min);
+}
