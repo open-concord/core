@@ -71,4 +71,3 @@ void Node::contact(std::string initial_content, std::string ip, int port) {
     new_conn->socket().connect(ep);
     new_conn->initiate_comms(initial_content);
 };
-

@@ -5,10 +5,9 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "../../inc/hexstr.h"
 #include "../../inc/crypt.h"
 
-int lockmessage(const char* plaintext, unsigned char* ciphertext, size_t* ciphertextlen, EVP_PKEY* userprikey, unsigned char* serversecret) {
+int lockmessage(const char* plaintext, unsigned char*& ciphertext, size_t* ciphertextlen, EVP_PKEY* userprikey, unsigned char* serversecret) {
 	unsigned char* sig = NULL;
 	unsigned char** sigref = &sig;
 	unsigned char iv[128];
@@ -40,7 +39,8 @@ int lockmessage(const char* plaintext, unsigned char* ciphertext, size_t* cipher
 	std::cout << "UNIFIED LENGTH: " << unifiedlen << std::endl;
 	//*/
 
-	if (encrypt(unified, unifiedlen, serversecret, iv, ciphertext, ciphertextlen) != 1) return 0;
+	ciphertext = (unsigned char*) malloc(((unifiedlen + 16) & (~15)) + 128); //unified len rounded up over 16 + 128
+	if (symm_encrypt(unified, unifiedlen, serversecret, iv, ciphertext, ciphertextlen) != 1) return 0;
 
 	//This code literally just puts the full iv after the ciphertext
 	memcpy(ciphertext + (*ciphertextlen), iv, 128);
@@ -48,8 +48,9 @@ int lockmessage(const char* plaintext, unsigned char* ciphertext, size_t* cipher
 	return 1;
 }
 
-int unlockmessage(unsigned char* ciphertext, size_t ciphertextlen, unsigned char* plaintext, size_t* plaintextlen, EVP_PKEY* userpubkey, unsigned char* serversecret) {
+int unlockmessage(unsigned char* ciphertext, size_t ciphertextlen, unsigned char*& plaintext, size_t* plaintextlen, unsigned char*& sig, size_t* siglen, unsigned char* serversecret) {
 	
+	//ciphertextlen does NOT include iv.
 	//AES plaintext should always be shorter than ciphertext. This is a little hacky.
 	unsigned char* unified = (unsigned char*) malloc(ciphertextlen);
 	unsigned char iv[128];
@@ -60,18 +61,22 @@ int unlockmessage(unsigned char* ciphertext, size_t ciphertextlen, unsigned char
 	//Really important that you don't just take the length of the char array
 	memcpy(iv, ciphertext + ciphertextlen, 128);
 
-	if (decrypt(ciphertext, ciphertextlen, serversecret, iv, unified, &unifiedlen) != 1) return 0;
+	if (symm_decrypt(ciphertext, ciphertextlen, serversecret, iv, unified, &unifiedlen) != 1) return 0;
 
 	unsigned char firstchar[1];
 
 	memcpy(firstchar, unified, 1);
 
-	size_t siglen = (size_t) firstchar[0];
-	unsigned char* sig = (unsigned char*) malloc(siglen);
+	*siglen = (size_t) firstchar[0];
+	sig = (unsigned char*) malloc(*siglen);
 
-	memcpy(sig, unified + 1, siglen);
+	memcpy(sig, unified + 1, *siglen);
 
-	memcpy(plaintext, unified + 1 + siglen, (unifiedlen - 1) - siglen);
+	*plaintextlen = (unifiedlen - 1) - *siglen;
+	plaintext = (unsigned char*) malloc(*plaintextlen);
 
-	return verify((const char*) plaintext, &sig, siglen, userpubkey);
+	memcpy(plaintext, unified + 1 + *siglen, (unifiedlen - 1) - *siglen);
+
+	//return verify((const char*) plaintext, &sig, siglen, userpubkey);
+	return 1;
 }
