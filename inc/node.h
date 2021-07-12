@@ -1,5 +1,5 @@
 #include <string>
-#include <vector>
+#include <map>
 #include <chrono>
 #include <boost/beast/core.hpp>
 #include <boost/asio.hpp>
@@ -18,7 +18,8 @@ class Conn : public boost::enable_shared_from_this<Conn> {
         boost::asio::ip::tcp::socket tsock;   
     public:
         // util vars
-        std::string incoming_msg;
+        std::map<std::string/*type (see contact.txt)*/, std::string/*content*/> message_context; // to log socket communiation
+        std::string incoming_msg; // temp var
         bool done; // close socket (for use in logic function)
 
         // basically just a shared_ptr of self

@@ -1,12 +1,15 @@
 #include "../../inc/node.h"
 
 int main() {
-    bool finished = false;
-    while (!finished) {
-        // initiate node on socket
-        Node net(20, 1338);
-        net.start();
-        net.begin_next();
-    }
+    // node 1 comm list
+
+    // node 2 comm list
+
+    // node 1
+    Node one();
+    // node 2
+    Node two();
+
+    
     return 0;
 }

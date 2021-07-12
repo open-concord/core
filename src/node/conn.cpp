@@ -9,7 +9,7 @@
 
 // std
 #include <string>
-#include <vector>
+#include <map>
 #include <chrono>
 #include <iostream>
 #include <thread>
@@ -45,7 +45,7 @@ void Conn::initiate_comms(std::string msg) {
         &Conn::send_done
     );
 } 
-// check if we're done (logic-wise)
+// check if we're done (logic-wise)in case of 
 void Conn::send_done(const boost::system::error_code& err, std::size_t bytes) {
     if (!err) {
         if (this->done) {
