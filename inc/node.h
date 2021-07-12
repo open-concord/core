@@ -1,6 +1,3 @@
-#include <string>
-#include <map>
-#include <chrono>
 #include <boost/beast/core.hpp>
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
@@ -8,9 +5,17 @@
 #include <boost/beast/ssl/ssl_stream.hpp>
 #include <boost/enable_shared_from_this.hpp>
 
+#include <nlohmann/json.hpp>
+
 #include <iostream>
 #include <thread>
 #include <memory>
+#include <string>
+#include <map>
+#include <chrono>
+#include <vector>
+
+using json = nlohmann::json;
 
 class Conn : public boost::enable_shared_from_this<Conn> {
     private:
@@ -18,9 +23,10 @@ class Conn : public boost::enable_shared_from_this<Conn> {
         boost::asio::ip::tcp::socket tsock;   
     public:
         // util vars
-        std::map<std::string/*type (see contact.txt)*/, std::string/*content*/> message_context; // to log socket communiation
+        std::map<std::string/*flag*/, json/*content*/> message_context; // to log socket communiation
         std::string incoming_msg; // temp var
         bool done; // close socket (for use in logic function)
+        bool server; // which capacity client is currently serving in
 
         // basically just a shared_ptr of self
         typedef std::shared_ptr<Conn> ptr;
@@ -37,8 +43,6 @@ std::string message_logic(Conn *conn_obj);
 
 class Node {
     private:
-        // 'io_service' is deprecated
-
         // context objs
         boost::asio::io_context io_ctx;
         boost::asio::ssl::context ssl_ctx{boost::asio::ssl::context::tlsv12};

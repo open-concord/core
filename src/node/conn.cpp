@@ -17,7 +17,9 @@
 #include "../../inc/node.h"
 
 // Connection instance
-Conn::Conn(boost::asio::io_context& io_ctx) : tsock(io_ctx) {}
+Conn::Conn(boost::asio::io_context& io_ctx) : tsock(io_ctx) {
+    this->server = true;
+}
 
 Conn::ptr Conn::create(boost::asio::io_context& io_ctx) {
     return ptr(new Conn(io_ctx));
@@ -40,6 +42,7 @@ void Conn::read() {
 
 // begin communication
 void Conn::initiate_comms(std::string msg) {
+    this->server = false;
     this->tsock.async_send(
         boost::asio::buffer(msg, msg.size()),
         &Conn::send_done
