@@ -48,7 +48,7 @@ json evaluate_blocks(json cont) {
 json online(json cont) {
     try {
         std::cout << "MSG: " << cont.dump() << "\n";
-    } catch (int error) {
+    } catch (int err) {
         return error(err);
     }
 }

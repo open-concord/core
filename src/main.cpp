@@ -24,7 +24,7 @@ int main() {
     Miner tminer(4);
     FileTree tftree("test/example_ledger/");
 
-    for (size_t i = 0; i < 6000; i++) {
+    for (size_t i = 0; i < 100; i++) {
         dataPieces.push_back("This is the " + std::to_string(i) + "th block.");
     }
     
