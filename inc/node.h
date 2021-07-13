@@ -27,6 +27,7 @@ class Conn : public boost::enable_shared_from_this<Conn> {
         std::string incoming_msg; // temp var
         bool done; // close socket (for use in logic function)
         bool server; // which capacity client is currently serving in
+        bool local; // is local connection?
 
         // basically just a shared_ptr of self
         typedef std::shared_ptr<Conn> ptr;
@@ -40,6 +41,7 @@ class Conn : public boost::enable_shared_from_this<Conn> {
 };
 
 std::string message_logic(Conn *conn_obj);
+std::string local_logic(Conn *lconn_obj);
 
 class Node {
     private:
@@ -66,8 +68,10 @@ class Node {
         };
         std::vector<khost> known_hosts;
 
+        bool accept_only_local;
+
     public:
-        Node(unsigned short int queue, unsigned short int port);
+        Node(unsigned short int queue, unsigned short int port, bool accept_only_local);
 
         // start listening
         void start();
@@ -82,4 +86,7 @@ class Node {
         
         // active communication (eg traditional client role)
         void contact(std::string initial_content, std::string ip, int port);
+
+        // make a local connection (for use with GUI)
+        void make_local(int port);
 };

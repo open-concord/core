@@ -1,10 +1,20 @@
 #include "../inc/tree.h"
 #include "../inc/hash.h"
+#include "../inc/node.h"
 #include <string>
 #include <vector>
 #include <iostream>
 
 int main() {
+
+    // initiate contact with GUI
+    try {
+
+    } catch (errno) {
+        std::cout << "ERRNO: " << errno << "\n";
+    }
+
+
     /*
     Ledger testing;
     testing.start();

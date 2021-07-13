@@ -14,18 +14,17 @@ using json = nlohmann::json;
  */
 
 // error handler
-std::string error(int error_code) {
+json error(int error_code) {
     json ret = {
-        "FLAG": "ERROR",
-        "CONTENT": error_code
+        {"FLAG", "ERROR"},
+        {"CONTENT", error_code}
     };
-    return ret.dump();
+    return ret;
 }
 
-// - handle functions -
-std::string begin_sending_blocks(json args) {
+// - external handle functions -
+json begin_sending_blocks(json cont) {
     try {
-        // check READY flag, if not throw error
         // check for content, if flawed throw error
 
         // return specified block in specified amount
@@ -34,9 +33,8 @@ std::string begin_sending_blocks(json args) {
     }
 }
 
-std::string evaluate_blocks(json args) {
+json evaluate_blocks(json cont) {
     try {
-        // check for BLOCKS flag, if not throw error
         // check each subsequent block, see contact.txt
 
         // return status
@@ -44,12 +42,27 @@ std::string evaluate_blocks(json args) {
         return error(err);
     }
 }
-// - end of handle functions -
+// - end of external handle functions -
+
+// - local handle functions -
+json online(json cont) {
+    try {
+        std::cout << "MSG: " << cont.dump() << "\n";
+    } catch (int error) {
+        return error(err);
+    }
+}
+// - end of local handle functions -
 
 // map of communication roadmap
-std::map<std::string /*prev flag*/, std::function<std::string(json args)>> next {
+std::map<std::string /*prev flag*/, std::function<json(json cont)>> next {
     {"READY", begin_sending_blocks},
     {"BLOCKS", evaluate_blocks}
+};
+
+// map for local comms
+std::map<std::string/*flag*/, std::function<json(json cont)>> lnext {
+    {"ONLINE", online}
 };
 
 std::string message_logic(Conn *conn) {
@@ -60,14 +73,16 @@ std::string message_logic(Conn *conn) {
 
     // message parsing
     std::string cmd = parsed["FLAG"];
-    json args = parsed["CONTENT"];
+    json cont = parsed["CONTENT"];
 
     // temp return var
     std::string rmsg;
 
     // client and server roles can both be stored in func map; communication flags ensure proper order of execution
     try {
-        rmsg = next[cmd](args).dump();
+        if (conn->local) {
+            rmsg = lnext[cmd](cont).dump();
+        } else {rmsg = next[cmd](cont).dump();}
     } catch (int err) {
         rmsg = error(err).dump();
     }
@@ -77,7 +92,7 @@ std::string message_logic(Conn *conn) {
     // clean incoming_message for clean recursion
     conn->incoming_msg.clear();
     // update message_context
-    conn->message_context[cmd] = args;
+    conn->message_context[cmd] = cont;
     // return response
     return rmsg;
 }

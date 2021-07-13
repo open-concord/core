@@ -18,7 +18,7 @@
 #include "../../inc/node.h"
 
 // overarching node instance
-Node::Node(unsigned short int queue, unsigned short int port) {
+Node::Node(unsigned short int queue, unsigned short int port, bool accept_only_local) {
     boost::asio::ip::tcp::endpoint endpoint{boost::asio::ip::tcp::v4(), port};
     this->queue = queue;
 }
@@ -57,6 +57,15 @@ void Node::handle_accept(Conn::ptr new_conn, const boost::system::error_code& er
     } else {
         std::cout << err << "\n";
     }
+};
+
+// make a local socket
+void Node::make_local(int port) {
+    json init = {
+        {"FLAG", "RUNNING"},
+        {"CONTENT", nullptr}
+        };
+    Node::contact(init.dump(), "127.0.0.1", port);
 };
 
 // intiates contact with another ws
