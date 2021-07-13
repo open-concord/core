@@ -75,4 +75,4 @@ $(BIN)tree.o: tree/tree.cpp ../inc/tree.h
 $(BIN)node.o: node/logic.cpp node/conn.cpp node/node.cpp ../inc/node.h
 	$(CC) -c $(CFLAGS) $< -o $@
 clean:
-	cd $(BIN); rm -rf *o main
+	cd $(BIN); rm -rf *o ../main
