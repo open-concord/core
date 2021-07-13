@@ -16,8 +16,8 @@ using json = nlohmann::json;
 // error handler
 std::string error(int error_code) {
     json ret = {
-        "FLAG": "ERROR",
-        "CONTENT": error_code
+        {"FLAG", "ERROR"},
+        {"CONTENT", error_code}
     };
     return ret.dump();
 }
@@ -67,9 +67,9 @@ std::string message_logic(Conn *conn) {
 
     // client and server roles can both be stored in func map; communication flags ensure proper order of execution
     try {
-        rmsg = next[cmd](args).dump();
+        rmsg = next[cmd](args);
     } catch (int err) {
-        rmsg = error(err).dump();
+        rmsg = error(err);
     }
 
     // change 'done' to true to end the communication (make sure to return a <close> message)
