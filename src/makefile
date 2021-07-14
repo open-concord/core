@@ -34,6 +34,8 @@ OBJ = $(BIN)hexstr.o \
 	$(BIN)nlogic.o \
 	$(BIN)nconn.o \
 	$(BIN)nnode.o \
+	$(BIN)b64.o \
+	$(BIN)rw.o \
 	$(BIN)main.o
 
 # returns executable to root
@@ -81,6 +83,12 @@ $(BIN)nlogic.o: node/logic.cpp ../inc/node.h
 $(BIN)nconn.o: node/conn.cpp ../inc/node.h
 	$(CC) -c $(CFLAGS) $< -o $@
 $(BIN)nnode.o: node/node.cpp ../inc/node.h
+	$(CC) -c $(CFLAGS) $< -o $@
+
+# rw
+$(BIN)rw.o: rw/rw.cpp ../inc/rw.h
+	$(CC) -c $(CFLAGS) $< -o $@
+$(BIN)b64.o: rw/base64.cpp ../inc/rw.h
 	$(CC) -c $(CFLAGS) $< -o $@
 clean:
 	cd $(BIN); rm -rf *o main
