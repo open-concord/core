@@ -9,6 +9,7 @@
 
 #include <iostream>
 #include <thread>
+#include <pthread.h>
 #include <memory>
 #include <string>
 #include <map>
@@ -36,12 +37,11 @@ class Conn : public boost::enable_shared_from_this<Conn> {
         // async util func
         void initiate_comms(std::string msg);
         void read();
-        void send_done(const boost::system::error_code& err, std::size_t bytes);
+        void send_done(const boost::system::error_code& err);
         void handle();
 };
 
 std::string message_logic(Conn *conn_obj);
-std::string local_logic(Conn *lconn_obj);
 
 class Node {
     private:
@@ -57,7 +57,7 @@ class Node {
         boost::asio::ip::tcp::endpoint endpoint;
 
         boost::asio::ip::tcp::acceptor acceptor{io_ctx, endpoint};
-        unsigned short int queue;
+        int queue;
 
         // past connection retention
         std::string target_dir;
@@ -68,16 +68,16 @@ class Node {
         };
         std::vector<khost> known_hosts;
 
-        bool accept_only_local;
-
     public:
-        Node(unsigned short int queue, unsigned short int port, bool accept_only_local);
+        Node(int queue, unsigned short int port);
 
         // start listening
         void start();
 
         // stop listening
         void stop();
+        // shutdown **THIS CLOSES ALL ASYNC OPERATIONS, ONLY USE IN EMERGENCIES**
+        void shutdown();
 
         // passive communication (eg traditional server role)
         void begin_next();

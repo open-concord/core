@@ -31,11 +31,11 @@ boost::asio::ip::tcp::socket& Conn::socket() {
 // === async util functions ===
 // read from incoming buffer
 void Conn::read() {
-    boost::asio::async_read(
-        this->tsock,
+    boost::asio::async_read(this->tsock,
         boost::asio::buffer(this->incoming_msg),
-        boost::bind(&Conn::handle, shared_from_this(),
-            boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred
+        boost::bind(
+            &Conn::handle,
+            this
         )
     );
 }
@@ -45,11 +45,15 @@ void Conn::initiate_comms(std::string msg) {
     this->server = false;
     this->tsock.async_send(
         boost::asio::buffer(msg, msg.size()),
-        &Conn::send_done
+        boost::bind(
+            &Conn::send_done,
+            this,
+            boost::asio::placeholders::error
+            )
     );
 } 
 // check if we're done (logic-wise)in case of 
-void Conn::send_done(const boost::system::error_code& err, std::size_t bytes) {
+void Conn::send_done(const boost::system::error_code& err) {
     if (!err) {
         if (this->done) {
             this->tsock.close();
@@ -71,7 +75,11 @@ void Conn::handle() {
         std::string msg = message_logic(this);
         this->tsock.async_send(
             boost::asio::buffer(msg, msg.size()),
-            &Conn::send_done
+            boost::bind(
+                &Conn::send_done,
+                this,
+                boost::asio::placeholders::error
+            )
         );
     }
     

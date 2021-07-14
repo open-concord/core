@@ -9,13 +9,13 @@ SHELL = /bin/sh
 default: ../main
 
 # flag for /include dir
-IN_DIR = -I../include/ -I/usr/include/boost
+IN_DIR = -I../inc/ -I/usr/include/boost
 # c/cpp standard
 CC = g++
 # compile-time flags
 CFLAGS = -g -Wall $(IN_DIR)
 # lib flags
-LFLAGS = -lssl -lcrypt -lcrypto -pthread
+LFLAGS = -lssl -lcrypt -lcrypto -pthread -lboost_system -pthread
 
 # object file sub-dir of src
 BIN = _bin/
@@ -31,12 +31,15 @@ OBJ = $(BIN)hexstr.o \
 	$(BIN)time.o \
 	$(BIN)tree.o \
 	$(BIN)filetree.o \
-	$(BIN)node.o \
+	$(BIN)nlogic.o \
+	$(BIN)nconn.o \
+	$(BIN)nnode.o \
 	$(BIN)main.o
 
 # returns executable to root
 
 ../main: $(OBJ)
+	@echo "NOW COMPILING MAIN EXECUTABLE"
 	$(CC) $(CFLAGS) $(OBJ) $(LFLAGS) -o $@
 
 $(BIN)main.o: main.cpp
@@ -72,7 +75,12 @@ $(BIN)filetree.o: tree/filetree.cpp ../inc/tree.h
 $(BIN)tree.o: tree/tree.cpp ../inc/tree.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
-$(BIN)node.o: node/logic.cpp node/conn.cpp node/node.cpp ../inc/node.h
+# node stuff
+$(BIN)nlogic.o: node/logic.cpp ../inc/node.h
+	$(CC) -c $(CFLAGS) $< -o $@
+$(BIN)nconn.o: node/conn.cpp ../inc/node.h
+	$(CC) -c $(CFLAGS) $< -o $@
+$(BIN)nnode.o: node/node.cpp ../inc/node.h
 	$(CC) -c $(CFLAGS) $< -o $@
 clean:
-	cd $(BIN); rm -rf *o ../main
+	cd $(BIN); rm -rf *o main

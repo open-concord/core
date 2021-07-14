@@ -1,46 +1,22 @@
-#include "../inc/tree.h"
-#include "../inc/hash.h"
 #include "../inc/node.h"
 #include <string>
 #include <vector>
 #include <iostream>
+#include <exception>
 
 int main() {
 
-    // initiate contact with GUI
+    // port numbers etc will be taken over by cfg files
+    unsigned short int host = 1336;
+    // create new node
     try {
-
-    } catch (errno) {
-        std::cout << "ERRNO: " << errno << "\n";
+        // normal node function
+        Node tnode (20, host);
+        // contact with ui 
+        // (if you get connection refused, you have to actually open a port w/ the UI on the specified port lmfao)
+        // tnode.make_local(1338);
+    } catch (std::exception& err) {
+        std::cout << "err: " << err.what() << "\n";
     }
-
-
-    /*
-    Ledger testing;
-    testing.start();
-    testing.shutdown();
-    */
-    std::vector<std::string> dataPieces;
-    Miner tminer(4);
-    FileTree tftree("test/example_ledger/");
-
-    for (size_t i = 0; i < 100; i++) {
-        dataPieces.push_back("This is the " + std::to_string(i) + "th block.");
-    }
-    
-    for (auto dataPiece : dataPieces) {
-        tftree.generate_branch(false, tminer, dataPiece, gen_trip());
-        //std::cout << "Completed '" << dataPiece << "'" << std::endl;
-    }
-
-    for (auto block : tftree.get_chain()) {
-        //std::cout << "BEGIN SUCCESS: " << tftree.verify_integrity(block) << " :END SUCCESS" << std::endl;
-        std::cout << "BEGIN CONT: " << block[5] << " :END CONT"<< std::endl;
-        std::cout << "BEGIN OLDHASH: " << block[1] << " :END OLDHASH"<< std::endl;
-        std::cout << "BEGIN NEWHASH: " << block[2] << " :END NEWHASH"<< std::endl;
-    }
-
-    std::cout << tftree.verify_chain(4) << std::endl;
-
     return 0;
 }
