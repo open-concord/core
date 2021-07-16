@@ -12,6 +12,7 @@
 
 #include <iostream>
 #include <thread>
+#include <pthread.h>
 #include <memory>
 #include <string>
 #include <map>
@@ -40,6 +41,7 @@ class Conn : public boost::enable_shared_from_this<Conn> {
         std::string incoming_msg; // temp var
         bool done; // close socket (for use in logic function)
         bool server; // which capacity client is currently serving in
+        bool local; // is local connection?
 
         // basically just a shared_ptr of self
         typedef std::shared_ptr<Conn> ptr;
@@ -48,7 +50,7 @@ class Conn : public boost::enable_shared_from_this<Conn> {
         // async util func
         void initiate_comms(std::string msg);
         void read();
-        void send_done(const boost::system::error_code& err, std::size_t bytes);
+        void send_done(const boost::system::error_code& err);
         void handle();
 };
 
@@ -68,7 +70,7 @@ class Node {
         boost::asio::ip::tcp::endpoint endpoint;
 
         boost::asio::ip::tcp::acceptor acceptor{io_ctx, endpoint};
-        unsigned short int queue;
+        int queue;
 
         // past connection retention
         std::string target_dir;
@@ -81,13 +83,15 @@ class Node {
     public:
         std::map<std::string/*trip*/, FileTree/*chain model*/> chains;
 
-        Node(unsigned short int queue, unsigned short int port);
+        Node(int queue, unsigned short int port);
 
         // start listening
         void start();
 
         // stop listening
         void stop();
+        // shutdown **THIS CLOSES ALL ASYNC OPERATIONS, ONLY USE IN EMERGENCIES**
+        void shutdown();
 
         // passive communication (eg traditional server role)
         void begin_next();
@@ -96,4 +100,7 @@ class Node {
         
         // active communication (eg traditional client role)
         void contact(std::string initial_content, std::string ip, int port);
+
+        // make a local connection (for use with GUI)
+        void make_local(int port);
 };

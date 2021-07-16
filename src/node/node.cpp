@@ -32,7 +32,7 @@ std::vector<std::string> get_directories(const std::string& s)
 }
 
 // overarching node instance
-Node::Node(unsigned short int queue, unsigned short int port, std::string chains_dir, std::vector<std::string> desired_trips) {
+Node::Node(int queue, unsigned short int port, std::string chains_dir, std::vector<std::string> desired_trips) {
     boost::asio::ip::tcp::endpoint endpoint{boost::asio::ip::tcp::v4(), port};
     this->queue = queue;
     this->chains_dir = chains_dir;
@@ -55,11 +55,15 @@ void Node::start() {
 
 // stop listen
 void Node::stop() {
-    // should be able to add graceful acceptor shutdown with boost::asio::bind_executor
-    // also make sure to close out any still-uncompleted async tasks
-    this->acceptor.cancel();
     this->acceptor.close();
 };
+
+// shutdown **THIS CLOSES ALL ASYNC OPERATIONS, ONLY USE IN EMERGENCIES**
+void Node::shutdown() {
+    this->acceptor.close();
+    this->acceptor.cancel();
+}
+
 // awaits new connection and passes message to handler
 void Node::begin_next() {
     // create new connection instance
@@ -67,8 +71,12 @@ void Node::begin_next() {
 
     // await connection creation
     this->acceptor.async_accept(new_conn->socket(),
-        boost::bind(&Node::handle_accept, this, new_conn,
-        boost::asio::placeholders::error)
+        boost::bind(
+            &Node::handle_accept,
+            this,
+            new_conn,
+            boost::asio::placeholders::error
+        )
     );
 };
 // util func for async-call timing
@@ -79,6 +87,15 @@ void Node::handle_accept(Conn::ptr new_conn, const boost::system::error_code& er
     } else {
         std::cout << err << "\n";
     }
+};
+
+// make a local socket
+void Node::make_local(int port) {
+    json init = {
+        {"FLAG", "RUNNING"},
+        {"CONTENT", nullptr}
+    };
+    Node::contact(init.dump(), "127.0.0.1", port);
 };
 
 // intiates contact with another ws
