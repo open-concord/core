@@ -9,23 +9,22 @@ class Tree {
         //int pow;
         //Miner local_miner;
     public:
-        std::vector<std::array<std::string, 6>> local_chain;
+        std::vector<std::vector<std::string>> local_chain;
         //Tree(int pow_min);
 
         // where h1 is the new content, and h0 is prev hash
         void generate_branch(bool debug_info, Miner& local_miner, std::string c1, std::string st);
 
-        std::vector<std::array<std::string, 6>> get_chain();
+        std::vector<std::vector<std::string>> get_chain();
 
-        bool verify_block(std::array<std::string, 6> block, int pow_min = 0);
+        bool verify_block(std::vector<std::string> block, int pow_min = 0);
 
         bool verify_chain(int pow_min = 0);
 };
 
 class FileTree {
-    private:
-        Tree target_tree;
     public:
+        Tree target_tree;
         std::string target_dir;
 
         FileTree(std::string dir);
@@ -34,9 +33,9 @@ class FileTree {
 
         void generate_branch(bool debug_info, Miner& local_miner, std::string c1, std::string st);
 
-        std::vector<std::array<std::string, 6>> get_chain();
+        std::vector<std::vector<std::string>> get_chain();
         
-        bool verify_block(std::array<std::string, 6> block, int pow_min = 0);
+        bool verify_block(std::vector<std::string> block, int pow_min = 0);
 
         bool verify_chain(int pow_min = 0);
 };

@@ -4,8 +4,11 @@
 #include <boost/beast/websocket.hpp>
 #include <boost/beast/ssl/ssl_stream.hpp>
 #include <boost/enable_shared_from_this.hpp>
+#include <boost/any.hpp>
 
 #include <nlohmann/json.hpp>
+
+#include "tree.h"
 
 #include <iostream>
 #include <thread>
@@ -17,13 +20,23 @@
 
 using json = nlohmann::json;
 
+struct conn_context {
+    std::vector<std::vector<std::string>> wchain;
+    std::string chain_trip;
+    size_t lastbi;
+    size_t k;
+    size_t pow_min;
+};
+
 class Conn : public boost::enable_shared_from_this<Conn> {
     private:
         Conn(boost::asio::io_context& io_ctx);
         boost::asio::ip::tcp::socket tsock;   
     public:
+        std::map<std::string, FileTree>* parent_chains;
+        conn_context message_context;
         // util vars
-        std::map<std::string/*flag*/, json/*content*/> message_context; // to log socket communiation
+         // to log socket communiation
         std::string incoming_msg; // temp var
         bool done; // close socket (for use in logic function)
         bool server; // which capacity client is currently serving in
@@ -62,11 +75,12 @@ class Node {
         struct khost {
             std::string address;
             unsigned short int port;
-            std::chrono::high_resolution_clock::time_point last_verfed;
+            std::chrono::high_resolution_clock::time_point last_verified;
         };
         std::vector<khost> known_hosts;
-
     public:
+        std::map<std::string/*trip*/, FileTree/*chain model*/> chains;
+
         Node(unsigned short int queue, unsigned short int port);
 
         // start listening
