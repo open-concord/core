@@ -22,7 +22,7 @@ json error(int error_code) {
     return ret;
 }
 
-// - external handle functions -
+// - C2C handle functions -
 json begin_sending_blocks(json cont) {
     try {
         // check for content, if flawed throw error
@@ -42,27 +42,33 @@ json evaluate_blocks(json cont) {
         return error(err);
     }
 }
-// - end of external handle functions -
+// - end of C2C handle functions -
 
-// - local handle functions -
-json online(json cont) {
+// there's only one standard request for UI2C
+json handle_request(json cont) {
     try {
-        std::cout << "MSG: " << cont.dump() << "\n";
-    } catch (int err) {
-        return error(err);
+        switch (cont.t) {
+            case 'a': // addition
+
+                break;
+            case 'q': // query
+
+                break;
+            case 'u': // user info
+                /* code */
+                break;  
+            default: // none of the actual flags were present, throw error
+                throw;
+        }
+    } catch (std::exception& err) {
+        std::cout << err.what() << "\n";
     }
 }
-// - end of local handle functions -
 
 // map of communication roadmap
 std::map<std::string /*prev flag*/, std::function<json(json cont)>> next {
     {"READY", begin_sending_blocks},
     {"BLOCKS", evaluate_blocks}
-};
-
-// map for local comms
-std::map<std::string/*flag*/, std::function<json(json cont)>> lnext {
-    {"ONLINE", online}
 };
 
 std::string message_logic(Conn *conn) {
@@ -80,9 +86,9 @@ std::string message_logic(Conn *conn) {
 
     // client and server roles can both be stored in func map; communication flags ensure proper order of execution
     try {
-        if (conn->local) {
-            rmsg = lnext[cmd](cont).dump();
-        } else {rmsg = next[cmd](cont).dump();}
+        if (!conn->local) {
+            rmsg = next[cmd](cont).dump();
+        } else {rmsg = handle_request(cont).dump();}
     } catch (int err) {
         rmsg = error(err).dump();
     }
