@@ -32,10 +32,9 @@ json error(int error_code) {
     return ret;
 }
 
-<<<<<<< HEAD
 // - handle functions -
 
-std::string send_blocks(Conn *conn, json args) {
+json send_blocks(Conn *conn, json args) {
     try {
         #define CTX (conn->message_context)
         #define TREES (*(conn->parent_chains))
@@ -57,22 +56,17 @@ std::string send_blocks(Conn *conn, json args) {
         if (CTX.lastbi > CTX.k) CTX.lastbi = CTX.lastbi - CTX.k;
         else CTX.lastbi = 0;
         ret["CONTENT"] = {{"blocks", blocks}};
-        return ret.dump();
+        return ret;
     } catch (int err) {
         return error(err);
     }
 }
 
-std::string begin_sending_blocks(Conn *conn, json args) {
+json begin_sending_blocks(json cont) {
     try {
         #define CTX (conn->message_context)
         #define TREES (*(conn->parent_chains))
-=======
-// - C2C handle functions -
-json begin_sending_blocks(json cont) {
-    try {
         // check for content, if flawed throw error
->>>>>>> 067c75d2eca6c3760e4aafffce85cf9bd9f7336d
 
         CTX.chain_trip = args["chain"];
         CTX.lastbi = TREES[CTX.chain_trip].get_chain().size();
@@ -84,17 +78,11 @@ json begin_sending_blocks(json cont) {
     }
 }
 
-<<<<<<< HEAD
-std::string evaluate_blocks(Conn *conn, json args) {
+json evaluate_blocks(json cont) {
     try {
         #define CTX (conn->message_context)
         #define TREES (*(conn->parent_chains))
-=======
-json evaluate_blocks(json cont) {
-    try {
         // check each subsequent block, see contact.txt
->>>>>>> 067c75d2eca6c3760e4aafffce85cf9bd9f7336d
-
         json ret = {
         {"FLAG", "ABSENT/V"}
         };
@@ -171,13 +159,9 @@ std::string message_logic(Conn *conn) {
 
     // client and server roles can both be stored in func map; communication flags ensure proper order of execution
     try {
-<<<<<<< HEAD
-        rmsg = next[cmd](conn, args);
-=======
         if (!conn->local) {
             rmsg = next[cmd](cont).dump();
         } else {rmsg = handle_request(cont).dump();}
->>>>>>> 067c75d2eca6c3760e4aafffce85cf9bd9f7336d
     } catch (int err) {
         rmsg = error(err).dump();
     }
@@ -186,11 +170,6 @@ std::string message_logic(Conn *conn) {
     // conn_obj->done = true;
     // clean incoming_message for clean recursion
     conn->incoming_msg.clear();
-<<<<<<< HEAD
-=======
-    // update message_context
-    conn->message_context[cmd] = cont;
->>>>>>> 067c75d2eca6c3760e4aafffce85cf9bd9f7336d
     // return response
     return rmsg;
 }
