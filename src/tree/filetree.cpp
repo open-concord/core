@@ -44,7 +44,7 @@ FileTree::FileTree(std::string dir) {
 void FileTree::generate_branch(bool debug_info, Miner& local_miner, std::string c1, std::string st) {
     (this->target_tree).generate_branch(debug_info, local_miner, c1, st);
     size_t terminal_index = (this->target_tree).get_chain().size() - 1;
-    std::array<std::string, 6> new_block = (this->target_tree).get_chain()[terminal_index];
+    std::vector<std::string> new_block = (this->target_tree).get_chain()[terminal_index];
     std::string block_string;
     for (size_t i = 0; i < 6; i++) block_string+=new_block[i];
     std::ofstream block_file(((this->target_dir) + std::to_string(terminal_index) + ".block").c_str());
@@ -52,11 +52,11 @@ void FileTree::generate_branch(bool debug_info, Miner& local_miner, std::string 
     block_file.close();
 }
 
-std::vector<std::array<std::string, 6>> FileTree::get_chain() {
+std::vector<std::vector<std::string>> FileTree::get_chain() {
     return (this->target_tree).get_chain();
 }
 
-bool FileTree::verify_block(std::array<std::string, 6> block, int pow_min) {
+bool FileTree::verify_block(std::vector<std::string> block, int pow_min) {
     return (this->target_tree).verify_block(block, pow_min);
 }
 

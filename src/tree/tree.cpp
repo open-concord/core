@@ -39,16 +39,16 @@ void Tree::generate_branch(bool debug_info, Miner& local_miner, std::string c1, 
 
     std::string hash = calc_hash(false, cat + time + nonce);
 
-    std::array<std::string, 6> out_block = {time, h0, hash, nonce, st, c1};
+    std::vector<std::string> out_block({time, h0, hash, nonce, st, c1});
 
     (this->local_chain).push_back(out_block);
 }
 
-std::vector<std::array<std::string, 6>> Tree::get_chain() {
+std::vector<std::vector<std::string>> Tree::get_chain() {
     return (this->local_chain);
 }
 
-bool Tree::verify_block(std::array<std::string, 6> block, int pow_min) {
+bool Tree::verify_block(std::vector<std::string> block, int pow_min) {
     std::string result_hash = calc_hash(false, block[1] + block[4] + block[5] + block[0] + block[3]);
     if (result_hash != block[2]) return false;
     for (size_t i = 0; i < pow_min; i++) {

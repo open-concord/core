@@ -17,12 +17,12 @@
 #include "../../inc/node.h"
 
 // Connection instance
-Conn::Conn(boost::asio::io_context& io_ctx) : tsock(io_ctx) {
+Conn::Conn(std::map<std::string, FileTree>* pchains, boost::asio::io_context& io_ctx) : parent_chains(pchains), tsock(io_ctx) {
     this->server = true;
 }
 
-Conn::ptr Conn::create(boost::asio::io_context& io_ctx) {
-    return ptr(new Conn(io_ctx));
+Conn::ptr Conn::create(std::map<std::string, FileTree>* pchains, boost::asio::io_context& io_ctx) {
+    return ptr(new Conn(pchains, io_ctx));
 }
 boost::asio::ip::tcp::socket& Conn::socket() {
     return this->tsock;
