@@ -16,11 +16,11 @@ using json = nlohmann::json;
 
 void update_chain(Conn *conn) {
     #define CTX (conn->message_context)
-    #define TREES (*(conn->parent_chains))
-    std::vector<std::vector<std::string>> reversed = CTX.wchain;
-    std::reverse(reversed.begin(), reversed.end());
-
-    TREES[CTX.chain_trip].target_tree.local_chain.insert(TREES[CTX.chain_trip].target_tree.local_chain.end(), reversed.begin(), reversed.end());
+    #define TREE (*(conn->parent_chains))[CTX.chain_trip]
+    for (size_t i = 0; i < CTX.wchain.size(); i++) 
+        TREE.target_tree.local_chain.push_back(
+            CTX.wchain[CTX.wchain.size() - i]
+        );
 }
 
 // error handler
@@ -37,7 +37,7 @@ json error(int error_code) {
 json send_blocks(Conn *conn, json args) {
     try {
         #define CTX (conn->message_context)
-        #define TREES (*(conn->parent_chains))
+        #define TREE (*(conn->parent_chains))[CTX.chain_trip]
 
         json ret = {
             {"FLAG", "BLOCKS"}
@@ -47,7 +47,7 @@ json send_blocks(Conn *conn, json args) {
             size_t workingi = CTX.lastbi - 1 - backi;
             blocks.push_back(json({
                 {"#", workingi},
-                {"b", TREES[CTX.chain_trip].get_chain()[workingi]}
+                {"b", TREE.get_chain()[workingi]}
             }));
             if (workingi == 0) {
                 break;
@@ -62,46 +62,45 @@ json send_blocks(Conn *conn, json args) {
     }
 }
 
-json begin_sending_blocks(json cont) {
+json begin_sending_blocks(Conn *conn, json cont) {
     try {
         #define CTX (conn->message_context)
-        #define TREES (*(conn->parent_chains))
-        // check for content, if flawed throw error
+        #define TREE (*(conn->parent_chains))[CTX.chain_trip]
 
-        CTX.chain_trip = args["chain"];
-        CTX.lastbi = TREES[CTX.chain_trip].get_chain().size();
-        CTX.k = args["k"];
-        CTX.pow_min = json(TREES[CTX.chain_trip].get_chain()[0][5])["p"];
-        return send_blocks(conn, args);
+        CTX.chain_trip = cont["chain"];
+        CTX.lastbi = TREE.get_chain().size();
+        CTX.k = cont["k"];
+        CTX.pow_min = json(TREE.get_chain()[0][5])["p"];
+        return send_blocks(conn, cont);
     } catch (int err) {
         return error(err);
     }
 }
 
-json evaluate_blocks(json cont) {
+json evaluate_blocks(Conn *conn, json cont) {
     try {
         #define CTX (conn->message_context)
-        #define TREES (*(conn->parent_chains))
+        #define TREE (*(conn->parent_chains))[CTX.chain_trip]
         // check each subsequent block, see contact.txt
         json ret = {
         {"FLAG", "ABSENT/V"}
         };
-        for (auto block : args["CONTENT"]["blocks"]) {
+        for (auto block : cont["CONTENT"]["blocks"]) {
             size_t bi = block["#"];
             ret["CONTENT"]["i"] = bi;
             if (CTX.wchain.size() > 0 &&
-                !(TREES[CTX.chain_trip].verify_block(block, CTX.pow_min)
+                !(TREE.verify_block(block, CTX.pow_min)
                     && block["b"][2] == CTX.wchain.back()[1]
                 )
             ) {
                 ret["FLAG"] == "ABSENT/NV";
                 break;
             }
-            if (bi < TREES[CTX.chain_trip].get_chain().size()) {
+            if (bi < TREE.get_chain().size()) {
                 bool all_equal = true;
-                for (size_t i = 0; i < 6; i++) all_equal = (all_equal && TREES[CTX.chain_trip].get_chain()[bi][i] == block["b"][i]);
+                for (size_t i = 0; i < 6; i++) all_equal = (all_equal && TREE.get_chain()[bi][i] == block["b"][i]);
                 if (all_equal) {
-                    if (bi == TREES[CTX.chain_trip].get_chain().size() - 1) ret["FLAG"] = "PRESENT/T";
+                    if (bi == TREE.get_chain().size() - 1) ret["FLAG"] = "PRESENT/T";
                     else ret["FLAG"] == "PRESENT/NT";
                     break;
                 }
@@ -117,9 +116,9 @@ json evaluate_blocks(json cont) {
 // - end of C2C handle functions -
 
 // there's only one standard request for UI2C
-json handle_request(json cont) {
+json handle_request(Conn* conn, json cont) {
     try {
-        switch (cont.t) {
+        switch (((std::string) cont["t"]).at(0)) {
             case 'a': // addition
 
                 break;
@@ -138,10 +137,10 @@ json handle_request(json cont) {
 }
 
 // map of communication roadmap
-std::map<std::string /*prev flag*/, std::function<json(json cont)>> next {
-    {"READY", begin_sending_blocks},
-    {"BLOCKS", evaluate_blocks},
-    {"ABSENT/V", send_blocks}
+std::map<std::string /*prev flag*/, json (*)(Conn*, json)> next {
+    {"READY", &begin_sending_blocks},
+    {"BLOCKS", &evaluate_blocks},
+    {"ABSENT/V", &send_blocks}
 };
 
 std::string message_logic(Conn *conn) {
@@ -160,8 +159,8 @@ std::string message_logic(Conn *conn) {
     // client and server roles can both be stored in func map; communication flags ensure proper order of execution
     try {
         if (!conn->local) {
-            rmsg = next[cmd](cont).dump();
-        } else {rmsg = handle_request(cont).dump();}
+            rmsg = ((*next[cmd])(conn, cont)).dump();
+        } else {rmsg = handle_request(conn, cont).dump();}
     } catch (int err) {
         rmsg = error(err).dump();
     }

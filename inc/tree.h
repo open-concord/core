@@ -27,7 +27,9 @@ class FileTree {
         Tree target_tree;
         std::string target_dir;
 
+        FileTree();
         FileTree(std::string dir);
+        void load(std::string dir);
 
         //Pass through normal classes.
 

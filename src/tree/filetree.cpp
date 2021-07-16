@@ -11,7 +11,15 @@
 
 struct stat info;
 
+FileTree::FileTree() {
+
+}
+
 FileTree::FileTree(std::string dir) {
+    load(dir);
+}
+
+void FileTree::load(std::string dir) {
     this->target_dir = dir;
     if ((this->target_dir).back() != '/') this->target_dir += "/";
 

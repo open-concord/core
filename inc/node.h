@@ -31,7 +31,7 @@ struct conn_context {
 
 class Conn : public boost::enable_shared_from_this<Conn> {
     private:
-        Conn(boost::asio::io_context& io_ctx);
+        Conn(std::map<std::string, FileTree>*, boost::asio::io_context& io_ctx);
         boost::asio::ip::tcp::socket tsock;   
     public:
         std::map<std::string, FileTree>* parent_chains;
@@ -45,7 +45,7 @@ class Conn : public boost::enable_shared_from_this<Conn> {
 
         // basically just a shared_ptr of self
         typedef std::shared_ptr<Conn> ptr;
-        static ptr create(boost::asio::io_context& io_ctx);
+        static ptr create(std::map<std::string, FileTree>*, boost::asio::io_context& io_ctx);
         boost::asio::ip::tcp::socket& socket();
         // async util func
         void initiate_comms(std::string msg);
@@ -73,7 +73,7 @@ class Node {
         int queue;
 
         // past connection retention
-        std::string target_dir;
+        std::string chains_dir;
         struct khost {
             std::string address;
             unsigned short int port;
@@ -81,9 +81,9 @@ class Node {
         };
         std::vector<khost> known_hosts;
     public:
-        std::map<std::string/*trip*/, FileTree/*chain model*/> chains;
+        std::map<std::string /*trip*/, FileTree /*chain model*/> chains;
 
-        Node(int queue, unsigned short int port);
+        Node(int queue, unsigned short int port, std::string chains_dir, std::vector<std::string> desired_trips);
 
         // start listening
         void start();
@@ -99,7 +99,9 @@ class Node {
         void handle_accept(Conn::ptr new_conn, const boost::system::error_code& err);
         
         // active communication (eg traditional client role)
-        void contact(std::string initial_content, std::string ip, int port);
+        Conn::ptr contact(std::string initial_content, std::string ip, int port);
+
+        void chain_contact(std::string chaintrip, size_t k, std::string ip, int port);
 
         // make a local connection (for use with GUI)
         void make_local(int port);

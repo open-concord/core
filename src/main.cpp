@@ -12,7 +12,7 @@ int main() {
     // create new node
     try {
         // normal node function
-        Node tnode (20, host);
+        Node tnode (20, host, "test/example_chains_dir", std::vector<std::string>({}));
         // contact with ui 
         // (if you get connection refused, you have to actually open a port w/ the UI on the specified port lmfao)
         // tnode.make_local(1338);
