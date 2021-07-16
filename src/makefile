@@ -15,7 +15,7 @@ CC = g++
 # compile-time flags
 CFLAGS = -g -Wall $(IN_DIR)
 # lib flags
-LFLAGS = -lssl -lcrypt -lcrypto -pthread -lboost_system -pthread
+LFLAGS = -lssl -lcrypt -lcrypto -pthread -lboost_system -lboost_filesystem -pthread
 
 # object file sub-dir of src
 BIN = _bin/
