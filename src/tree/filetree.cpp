@@ -11,10 +11,6 @@
 
 struct stat info;
 
-FileTree::FileTree() {
-
-}
-
 FileTree::FileTree(std::string dir) {
     load(dir);
 }
