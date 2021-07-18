@@ -45,7 +45,7 @@ std::string hex_lock(std::string data, std::string sigprikey, bool use_asymm, st
         use_asymm, evp_rsa_pubkey, (unsigned char*) secret.c_str())) return NULL;
     std::cout << locked_chars_len << std::endl;
 
-    return to_hexstr(locked_chars, locked_chars_len + 16); // add 128 to account for IV
+    return to_hexstr(locked_chars, locked_chars_len); //account for IV
 }
 
 std::array<std::string, 2> hex_unlock(std::string data, bool use_asymm, std::string encprikey, std::string secret) {
@@ -65,7 +65,7 @@ std::array<std::string, 2> hex_unlock(std::string data, bool use_asymm, std::str
     size_t sig_len = NULL;
 
     if (!from_hexstr(data, locked_chars, &locked_chars_len)) return {NULL, NULL};
-    if (!unlockmessage(locked_chars, locked_chars_len - 16, 
+    if (!unlockmessage(locked_chars, locked_chars_len, 
         unlocked_chars, &unlocked_chars_len, sig, &sig_len, use_asymm, 
         evp_rsa_prikey, (unsigned char*) secret.c_str())
     ) return {NULL, NULL}; //remove 128 from size to account for IV

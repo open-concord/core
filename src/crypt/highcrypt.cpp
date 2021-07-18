@@ -8,10 +8,12 @@
 
 #include "../../inc/crypt.h"
 
+#define IVLEN 32
+
 int lockmessage(const char* plaintext, unsigned char*& ciphertext, size_t* ciphertextlen, EVP_PKEY* sigprikey, bool use_asymm, EVP_PKEY* encpubkey, unsigned char* serversecret) {
 	unsigned char* sig = NULL;
 	unsigned char** sigref = &sig;
-	unsigned char iv[16];
+	unsigned char iv[IVLEN];
 	size_t siglen = NULL;
 	size_t* siglenref = &siglen;
 
@@ -42,7 +44,7 @@ int lockmessage(const char* plaintext, unsigned char*& ciphertext, size_t* ciphe
 	if (use_asymm) {
 		size_t ksize = EVP_PKEY_size(encpubkey);
 		std::cout << ksize << std::endl;
-		ciphertext = (unsigned char*) malloc(ciphertext_buf_mlen + ksize + 16);
+		ciphertext = (unsigned char*) malloc(ciphertext_buf_mlen + ksize + IVLEN);
 		unsigned char* encrypted_key = ciphertext + ciphertext_buf_mlen;
 		int encrypted_key_len;
 		std::cout << "REACHED SEAL" << std::endl;
@@ -55,12 +57,14 @@ int lockmessage(const char* plaintext, unsigned char*& ciphertext, size_t* ciphe
 		assert(ksize == (size_t) encrypted_key_len);
 	}
 	else {
-		ciphertext = (unsigned char*) malloc(ciphertext_buf_mlen + 16);
-		if (!RAND_bytes(iv, 16)) return 0;
+		ciphertext = (unsigned char*) malloc(ciphertext_buf_mlen + IVLEN);
+		if (!RAND_bytes(iv, IVLEN)) return 0;
 		if (symm_encrypt(unified, unifiedlen, serversecret, iv, ciphertext, ciphertextlen) != 1) return 0;
 	}
 	//This code literally just puts the full iv after the ciphertext
-	memcpy(ciphertext + (*ciphertextlen), iv, 16);
+	memcpy(ciphertext + (*ciphertextlen), iv, IVLEN);
+	//add IV len to ciphertextlen
+	*ciphertextlen += IVLEN;
 
 	return 1;
 }
@@ -70,22 +74,22 @@ int unlockmessage(unsigned char* ciphertext, size_t ciphertextlen, unsigned char
 	//ciphertextlen does NOT include iv.
 	//AES plaintext should always be shorter than ciphertext. This is a little hacky.
 	unsigned char* unified = (unsigned char*) malloc(ciphertextlen);
-	unsigned char iv[16];
+	unsigned char iv[IVLEN];
 	size_t unifiedlen = NULL;
 
 	//Copy the IV from the end of the ciphertext char array
 	//Remember that our ciphertextlen is the length of the substance, not including the IV
 	//Really important that you don't just take the length of the char array
-	memcpy(iv, ciphertext + ciphertextlen, 16);
+	memcpy(iv, ciphertext + ciphertextlen - IVLEN, IVLEN);
 
 	if (use_asymm) {
 		size_t ksize = EVP_PKEY_size(encpubkey);
-		if (!rsa_env_open(encpubkey, ciphertext, (int) ciphertextlen - ksize,
+		if (!rsa_env_open(encpubkey, ciphertext, (int) ciphertextlen - ksize - IVLEN,
 		ciphertext + ciphertextlen - ksize, (int) ksize, iv,
 		unified, reinterpret_cast<int*>(&unifiedlen))) return 0;
 	}
 	else {
-		if (symm_decrypt(ciphertext, ciphertextlen, serversecret, iv, unified, &unifiedlen) != 1) return 0;
+		if (symm_decrypt(ciphertext, ciphertextlen - IVLEN, serversecret, iv, unified, &unifiedlen) != 1) return 0;
 	}
 	unsigned char firstchar[1];
 
