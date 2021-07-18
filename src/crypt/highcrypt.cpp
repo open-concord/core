@@ -85,7 +85,7 @@ int unlockmessage(unsigned char* ciphertext, size_t ciphertextlen, unsigned char
 	if (use_asymm) {
 		size_t ksize = EVP_PKEY_size(encpubkey);
 		if (!rsa_env_open(encpubkey, ciphertext, (int) ciphertextlen - ksize - IVLEN,
-		ciphertext + ciphertextlen - ksize, (int) ksize, iv,
+		ciphertext + ciphertextlen - ksize - IVLEN, (int) ksize, iv,
 		unified, reinterpret_cast<int*>(&unifiedlen))) return 0;
 	}
 	else {
