@@ -5,6 +5,11 @@
 #include "../../inc/crypt++.h"
 using namespace CryptoPP;
 
+std::string b64_encode_string(std::string in) {
+    SecByteBlock out(reinterpret_cast<const byte*>(&in[0]), in.size());
+    return b64_encode(out);
+}
+
 std::string b64_encode(SecByteBlock ibytes) {
     std::string encoded;
     StringSource ss(ibytes, ibytes.size(), true,

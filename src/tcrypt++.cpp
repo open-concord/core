@@ -19,8 +19,8 @@ int main() {
 
     std::cout << "RSA KEY GEN" << "\n";
     std::vector<std::string> rsakp = RSA_keygen();
-    std::cout << "HEXED PRIVATE RSA KEY | " << rsakp.at(0) << "\n";
-    std::cout << "HEXED PUBLIC RSA KEY | " << rsakp.at(1) << "\n";
+    std::cout << "b64 PRIVATE RSA KEY | " << rsakp.at(0) << "\n";
+    std::cout << "b64 PUBLIC RSA KEY | " << rsakp.at(1) << "\n";
     std::string rsa = RSA_encrypt(rsakp.at(1), plain);
     std::cout << "ENCRYPTED | CIPHER TEXT: " << rsa << "\n";
     std::cout << "DECRYPTED | RECOVERED TEXT: " << RSA_decrypt(rsakp.at(1), rsa) << "\n";
