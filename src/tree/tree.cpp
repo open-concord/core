@@ -66,3 +66,7 @@ bool Tree::verify_chain(int pow_min) {
     }
     return true;
 }
+
+void Tree::chain_push(std::vector<std::string> block) {
+    (this->local_chain).push_back(block);
+}
