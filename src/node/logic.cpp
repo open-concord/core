@@ -6,6 +6,10 @@
 #include <functional>
 
 #include "../../inc/node.h"
+#include "../../inc/crypt.h"
+#include "../../inc/hexstr.h"
+#include "../../inc/tree.h"
+#include "../../inc/rw.h"
 #include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
@@ -13,6 +17,10 @@ using json = nlohmann::json;
 /** this file only holds the message logic
  * which will be sure to grow exponentially
  */
+
+// temp var for cfg path
+RW rw_handler;
+json cfg = json::parse(rw_handler.read("../../cfg/main.json"));
 
 void update_chain(Conn *conn) {
     #define CTX (conn->message_context)
@@ -118,22 +126,74 @@ json evaluate_blocks(Conn *conn, json cont) {
 // there's only one standard request for UI2C
 json handle_request(Conn* conn, json cont) {
     try {
+        json ret;
+        ret["t"] = cont["t"];
         switch (((std::string) cont["t"]).at(0)) {
-            case 'a': // addition
-
+            case 'a': // addition (decleration, intraserver)
+                
                 break;
-            case 'q': // query
-
+            case 'q': // query (messages)
+                ret["c"] = query(cont);
                 break;
-            case 'u': // user info
-                /* code */
-                break;  
+            case 'c': // user-specific data changes (keys)
+                
+                break;
+            case 'g': // keygen
+                ret["c"] = key_gen(cont);
+                break;
             default: // none of the actual flags were present, throw error
                 throw;
-        }
+        };
+        return ret;
     } catch (std::exception& err) {
         std::cout << err.what() << "\n";
     }
+}
+
+// keygen
+json key_gen(json cont) {
+    // index 0 is pri, index 1 is pub
+    std::array<std::string, 2> keys;
+    switch (((std::string) cont["kt"]).at(0)) {
+        case 'D': // DSA
+            keys = hex_keygen(dsakeygen);
+            break;
+        case 'R': // RSA
+            keys = hex_keygen(rsakeygen);
+            break;
+        case 'A': // AES
+            // 256 byte key (maybe set this up to be cfg?)
+            unsigned char key[32];
+            RAND_bytes(key, 32);
+            keys[0] = to_hexstr(key, 32);
+            keys[1] = "";
+            break;
+        default:
+            throw;
+    };
+    json retc = {
+        "pri", keys[0],
+        "pub", keys[1],
+        "kt", cont["kt"]
+    };
+    return retc;
+};
+
+// queries
+json query (json cont) {
+    FileTree ftree((cfg["block_dir"]+=cont["ch"]));
+    std::vector<std::vector<std::string>> blocks = ftree.get_chain();
+    if (cont["cfg"]) { // search for server config
+        
+    } else { // search for specified amount of messages
+
+    }
+}
+
+// user declare
+json declaration(json cont) {
+    ;
+
 }
 
 // map of communication roadmap
