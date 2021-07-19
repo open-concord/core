@@ -18,7 +18,7 @@ void update_chain(Conn *conn) {
     #define CTX (conn->message_context)
     #define TREE (*(conn->parent_chains))[CTX.chain_trip]
     for (size_t i = 0; i < CTX.wchain.size(); i++) 
-        TREE.target_tree.local_chain.push_back(
+        TREE.chain_push(
             CTX.wchain[CTX.wchain.size() - i]
         );
 }

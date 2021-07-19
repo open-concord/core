@@ -8,8 +8,8 @@ class Tree {
     private:
         //int pow;
         //Miner local_miner;
-    public:
         std::vector<std::vector<std::string>> local_chain;
+    public:
         //Tree(int pow_min);
 
         // where h1 is the new content, and h0 is prev hash
@@ -20,9 +20,12 @@ class Tree {
         bool verify_block(std::vector<std::string> block, int pow_min = 0);
 
         bool verify_chain(int pow_min = 0);
+
+        void chain_push(std::vector<std::string> block);
 };
 
 class FileTree {
+    private:
     public:
         Tree target_tree;
         std::string target_dir;
@@ -40,4 +43,8 @@ class FileTree {
         bool verify_block(std::vector<std::string> block, int pow_min = 0);
 
         bool verify_chain(int pow_min = 0);
+
+        void chain_push(std::vector<std::string> block);
+        
+        void save_latest();
 };
