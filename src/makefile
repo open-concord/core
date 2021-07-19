@@ -36,6 +36,7 @@ OBJ = $(BIN)hexstr.o \
 	$(BIN)nnode.o \
 	$(BIN)b64.o \
 	$(BIN)rw.o \
+	$(BIN)aes.o \
 	$(BIN)main.o
 
 # returns executable to root
@@ -90,5 +91,10 @@ $(BIN)rw.o: rw/rw.cpp ../inc/rw.h
 	$(CC) -c $(CFLAGS) $< -o $@
 $(BIN)b64.o: rw/base64.cpp ../inc/rw.h
 	$(CC) -c $(CFLAGS) $< -o $@
+
+# crypt
+$(BIN)aes.o: crypt++/AES.cpp ../inc/crypt++
+	$(CC) -c $(CFLAGS) $< -o $@
+
 clean:
 	cd $(BIN); rm -rf *o main
