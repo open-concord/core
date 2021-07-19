@@ -15,7 +15,7 @@ std::vector<std::string> AES_encrypt(std::string hkey, std::string msg) {
     AutoSeededRandomPool prng;
 
     // hex encoded to binary string
-    std::string bkey = hdecode(hkey);
+    std::string bkey = b64_decode(hkey);
     // convert binary key to SecByteBlock
     SecByteBlock key(reinterpret_cast<const byte*>(&bkey[0]), bkey.size());
 
@@ -41,7 +41,7 @@ std::vector<std::string> AES_encrypt(std::string hkey, std::string msg) {
         // convert string cipher to SecByteBlock (basically an array)
         SecByteBlock acipher(reinterpret_cast<const byte*>(&cipher[0]), cipher.size());
         // return cipher, nonce
-        return {hencode(acipher), hencode(nonce)};
+        return {b64_encode(acipher), b64_encode(nonce)};
     } catch (const /*crypto*/ Exception& err) {
         std::cerr << err.what() << "\n";
         exit(1);
@@ -51,12 +51,12 @@ std::vector<std::string> AES_encrypt(std::string hkey, std::string msg) {
 std::string AES_decrypt(std::string hkey, std::string hnonce, std::string hcipher) {
     // tag size
     const int TAG_SIZE = 12;
-    std::string bkey = hdecode(hkey);
-    std::string bnonce = hdecode(hnonce);
+    std::string bkey = b64_decode(hkey);
+    std::string bnonce = b64_decode(hnonce);
     SecByteBlock key(reinterpret_cast<const byte*>(&bkey[0]), bkey.size());
     SecByteBlock nonce(reinterpret_cast<const byte*>(&bnonce[0]), bnonce.size());
 
-    std::string cipher = hdecode(hcipher);
+    std::string cipher = b64_decode(hcipher);
     std::string recovered;
     try {
         GCM< AES >::Decryption d;
@@ -94,5 +94,5 @@ std::string AES_keygen() {
     AutoSeededRandomPool prng;
     SecByteBlock key(AES::BLOCKSIZE);
     prng.GenerateBlock(key, key.size());
-    return hencode(key);
+    return b64_encode(key);
 }
