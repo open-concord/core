@@ -23,7 +23,7 @@ json get_continuity_value(std::vector<json> defs, std::string key) {
     throw std::out_of_range("No such value defined");
 }
 
-bool no_filter(json) {
+bool no_filter(json data) {
     return true;
 }
 

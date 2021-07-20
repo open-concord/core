@@ -21,6 +21,8 @@
 
 using json = nlohmann::json;
 
+std::vector<json> chain_search(std::vector<std::vector<std::string>> chain, char message_type, std::string target_trip, std::string key, bool (*filter)(json), size_t start_b = -1, size_t end_b = -1);
+
 struct conn_context {
     std::vector<std::vector<std::string>> wchain;
     std::string chain_trip;
@@ -105,4 +107,6 @@ class Node {
 
         // make a local connection (for use with GUI)
         void make_local(int port);
+
+        bool type_filter(char type, json cont);
 };

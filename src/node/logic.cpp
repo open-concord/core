@@ -5,6 +5,8 @@
 #include <vector>
 #include <functional>
 
+#include <boost/bind.hpp>
+
 #include "../../inc/node.h"
 #include "../../inc/crypt.h"
 #include "../../inc/hexstr.h"
@@ -179,21 +181,14 @@ json key_gen(json cont) {
     return retc;
 };
 
+
 // queries
 json query (json cont) {
-    FileTree ftree((cfg["block_dir"]+=cont["ch"]));
+    FileTree ftree((cfg["block_dir"]+cont["ch"]));
     std::vector<std::vector<std::string>> blocks = ftree.get_chain();
-    if (cont["cfg"]) { // search for server config
-        
-    } else { // search for specified amount of messages
-
-    }
-}
-
-// user declare
-json declaration(json cont) {
-    ;
-
+    char search_type_char = cont["mt"].at(0);
+    if (cont["imt"] == "m") search_type_char = 'm';
+    std::vector<json> search_results = chain_search(blocks, search_type_char, cont["s"], )
 }
 
 // map of communication roadmap

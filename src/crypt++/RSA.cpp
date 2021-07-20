@@ -6,6 +6,8 @@
 #include <cryptopp/gcm.h>
 #include <cryptopp/queue.h>
 #include "assert.h"
+#include <array>
+
 #include <cryptopp/rsa.h>
 #include <cryptopp/base64.h>
 
@@ -51,7 +53,7 @@ void DecodePri(RSA::PrivateKey key, std::string in) {
     key.Load(queue);
 }
 
-std::vector<std::string> RSA_keygen() {
+std::array<std::string, 2> RSA_keygen() {
     AutoSeededRandomPool rng;
 
     RSA::PrivateKey privateKey;

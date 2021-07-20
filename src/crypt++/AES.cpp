@@ -4,6 +4,7 @@
 #include <cryptopp/filters.h>
 #include <cryptopp/aes.h>
 #include <cryptopp/gcm.h>
+#include <array>
 #include "assert.h"
 
 #include "../../inc/crypt++.h"
@@ -11,7 +12,7 @@
 using namespace CryptoPP;
 
 // skey = AES::DEFAULT_KEYLENGTH 
-std::vector<std::string> AES_encrypt(std::string hkey, std::string msg) {
+std::array<std::string, 2> AES_encrypt(std::string hkey, std::string msg) {
     AutoSeededRandomPool prng;
 
     // hex encoded to binary string
