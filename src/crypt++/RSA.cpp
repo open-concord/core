@@ -4,8 +4,10 @@
 #include <cryptopp/filters.h>
 #include <cryptopp/aes.h>
 #include <cryptopp/gcm.h>
+#include <cryptopp/queue.h>
 #include "assert.h"
 #include <cryptopp/rsa.h>
+#include <cryptopp/base64.h>
 
 #include "../../inc/crypt++.h"
 using namespace std;
@@ -13,49 +15,64 @@ using namespace std;
 // encode
 std::string EncodePub(RSA::PublicKey key) {
     std::string out;
+    ByteQueue queue;
+    key.DEREncodePublicKey(queue);
     StringSink output(out);
-    key.DEREncode(output);
+    queue.CopyTo(output);
+    output.MessageEnd();
     return b64_encode_string(out);
 }
 std::string EncodePri(RSA::PrivateKey key) {
     std::string out;
+    ByteQueue queue;
+    key.DEREncodePrivateKey(queue);
     StringSink output(out);
-    key.DEREncode(output);
+    queue.CopyTo(output);
+    output.MessageEnd();
     return b64_encode_string(out);
 }
 // decode
 void DecodePub(RSA::PublicKey key, std::string in) {
-    b64_decode(in);
-    StringSource output(in, true);
-    key.BERDecodePublicKey(output, false, sizeof(output));
+    std::string din = b64_decode(in);
+    ByteQueue queue;
+    StringSource output(din, true);
+    output.TransferTo(queue);
+    queue.MessageEnd();
+    key.BERDecode(queue);
+    key.Load(queue);
 }
 void DecodePri(RSA::PrivateKey key, std::string in) {
-    b64_decode(in);
-    StringSource output(in, true);
-    key.BERDecodePrivateKey(output, false, sizeof(output));
+    std::string din = b64_decode(in);
+    ByteQueue queue;
+    StringSource output(din, true);
+    output.TransferTo(queue);
+    queue.MessageEnd();
+    key.BERDecode(queue);
+    key.Load(queue);
 }
 
 std::vector<std::string> RSA_keygen() {
     AutoSeededRandomPool rng;
 
-    InvertibleRSAFunction params;
-    params.GenerateRandomWithKeySize(rng, 3072);
+    RSA::PrivateKey privateKey;
+    privateKey.GenerateRandomWithKeySize(rng, 4096);
 
-    RSA::PrivateKey privateKey(params);
-    RSA::PublicKey publicKey(params);
+    RSA::PublicKey publicKey(privateKey);
 
     return {EncodePri(privateKey), EncodePub(publicKey)};
 }
 std::string RSA_encrypt(std::string encKey, std::string msg) {
     AutoSeededRandomPool rng;
+    // return value
     std::string cipher;
-
     // loading key
     RSA::PublicKey publicKey;
     DecodePub(publicKey, encKey);
+    
+    // encryptor object initialization
     RSAES_OAEP_SHA_Encryptor e(publicKey);
 
-    StringSource ss1(msg, true,
+    StringSource sso(msg, true,
         new PK_EncryptorFilter(rng, e,
             new StringSink(cipher)
         )
@@ -72,7 +89,7 @@ std::string RSA_decrypt(std::string encKey, std::string cipher) {
 
     RSAES_OAEP_SHA_Decryptor d(privateKey);
 
-    StringSource ss2(b64_decode(cipher), true,
+    StringSource sso(b64_decode(cipher), true,
         new PK_DecryptorFilter(rng, d,
             new StringSink(recovered)
         )
