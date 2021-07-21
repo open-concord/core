@@ -1,11 +1,9 @@
 #include <cryptopp/hex.h>
 #include <cryptopp/osrng.h>
 #include <cryptopp/cryptlib.h>
-#include <cryptopp/filters.h>
 #include <cryptopp/aes.h>
 #include <cryptopp/gcm.h>
 #include <array>
-#include "assert.h"
 
 #include "../../inc/crypt++.h"
 
@@ -39,10 +37,10 @@ std::array<std::string, 2> AES_encrypt(std::string hkey, std::string msg) {
                 new StringSink(cipher), false, TAG_SIZE
             )
         );
-        // convert string cipher to SecByteBlock (basically an array)
-        SecByteBlock acipher(reinterpret_cast<const byte*>(&cipher[0]), cipher.size());
+        // translate nonce to string
+        std::string snonce(reinterpret_cast<const char*>(&nonce[0]), nonce.size());      
         // return cipher, nonce
-        return {b64_encode(acipher), b64_encode(nonce)};
+        return {b64_encode(cipher), b64_encode(snonce)};
     } catch (const /*crypto*/ Exception& err) {
         std::cerr << err.what() << "\n";
         exit(1);
@@ -95,5 +93,6 @@ std::string AES_keygen() {
     AutoSeededRandomPool prng;
     SecByteBlock key(AES::BLOCKSIZE);
     prng.GenerateBlock(key, key.size());
-    return b64_encode(key);
+    std::string skey(reinterpret_cast<const char*>(&key[0]), key.size());
+    return b64_encode(skey);
 }

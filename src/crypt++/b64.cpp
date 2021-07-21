@@ -5,18 +5,21 @@
 #include "../../inc/crypt++.h"
 using namespace CryptoPP;
 
-std::string b64_encode_string(std::string in) {
-    SecByteBlock out(reinterpret_cast<const byte*>(&in[0]), in.size());
-    return b64_encode(out);
-}
-
-std::string b64_encode(SecByteBlock ibytes) {
+std::string b64_encode(std::string in_string) {
+    // output string
     std::string encoded;
-    StringSource ss(ibytes, ibytes.size(), true,
+    // copy input string to byte array
+    SecByteBlock in_bytes(
+        reinterpret_cast<const byte*>(&in_string[0]), in_string.size()
+    );
+    // pipe byte array through b64
+    StringSource ss(in_bytes, in_bytes.size(), true,
         new Base64Encoder(
+            // pipe encoded byte array to output string
             new StringSink(encoded)
         )
     );
+    // return output string
     return encoded;
 }
 

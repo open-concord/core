@@ -1,57 +1,12 @@
-#include <cryptopp/hex.h>
 #include <cryptopp/osrng.h>
 #include <cryptopp/cryptlib.h>
-#include <cryptopp/filters.h>
-#include <cryptopp/aes.h>
 #include <cryptopp/gcm.h>
-#include <cryptopp/queue.h>
-#include "assert.h"
 #include <array>
-
 #include <cryptopp/rsa.h>
-#include <cryptopp/base64.h>
 
 #include "../../inc/crypt++.h"
 using namespace std;
-
-// encode
-std::string EncodePub(RSA::PublicKey key) {
-    std::string out;
-    ByteQueue queue;
-    key.DEREncodePublicKey(queue);
-    StringSink output(out);
-    queue.CopyTo(output);
-    output.MessageEnd();
-    return b64_encode_string(out);
-}
-std::string EncodePri(RSA::PrivateKey key) {
-    std::string out;
-    ByteQueue queue;
-    key.DEREncodePrivateKey(queue);
-    StringSink output(out);
-    queue.CopyTo(output);
-    output.MessageEnd();
-    return b64_encode_string(out);
-}
-// decode
-void DecodePub(RSA::PublicKey key, std::string in) {
-    std::string din = b64_decode(in);
-    ByteQueue queue;
-    StringSource output(din, true);
-    output.TransferTo(queue);
-    queue.MessageEnd();
-    key.BERDecode(queue);
-    key.Load(queue);
-}
-void DecodePri(RSA::PrivateKey key, std::string in) {
-    std::string din = b64_decode(in);
-    ByteQueue queue;
-    StringSource output(din, true);
-    output.TransferTo(queue);
-    queue.MessageEnd();
-    key.BERDecode(queue);
-    key.Load(queue);
-}
+using namespace CryptoPP;
 
 std::array<std::string, 2> RSA_keygen() {
     AutoSeededRandomPool rng;
@@ -59,42 +14,83 @@ std::array<std::string, 2> RSA_keygen() {
     RSA::PrivateKey privateKey;
     privateKey.GenerateRandomWithKeySize(rng, 4096);
 
-    RSA::PublicKey publicKey(privateKey);
+    RSA::PublicKey publicKey;
+    publicKey.AssignFrom(privateKey);
 
-    return {EncodePri(privateKey), EncodePub(publicKey)};
+    // Validating
+    if (!privateKey.Validate(rng, 3) || !publicKey.Validate(rng, 3)) {
+        throw "RSA KeyGen produced invalid keys";
+    }
+    // No issues
+    // Save keys to strings (encoded as per BER)
+    std::string encodedPrivateKey, encodedPublicKey;
+    privateKey.Save(
+        StringSink(encodedPrivateKey).Ref()
+    );
+    publicKey.Save(
+        StringSink(encodedPublicKey).Ref()
+    );
+
+    // return B64 encoded versions of BER encoded keys    
+    return {b64_encode(encodedPrivateKey), b64_encode(encodedPublicKey)};
 }
-std::string RSA_encrypt(std::string encKey, std::string msg) {
+
+std::string RSA_encrypt(std::string encodedPublicKey, std::string msg) {
     AutoSeededRandomPool rng;
     // return value
     std::string cipher;
+
     // loading key
     RSA::PublicKey publicKey;
-    DecodePub(publicKey, encKey);
+    publicKey.Load(
+        StringStore(
+            b64_decode(encodedPublicKey)
+        ).Ref()
+    );
     
     // encryptor object initialization
     RSAES_OAEP_SHA_Encryptor e(publicKey);
 
-    StringSource sso(msg, true,
+    StringSource (
+        // msg input
+        msg,
+        // pump all (pass input to BufferedTransform)
+        true,
+        // BufferedTransform
         new PK_EncryptorFilter(rng, e,
             new StringSink(cipher)
         )
     );
-    return b64_encode_string(cipher);
+    // return B64 encoded message
+    return b64_encode(cipher);
 }
-std::string RSA_decrypt(std::string encKey, std::string cipher) {
+
+std::string RSA_decrypt(std::string encodedPrivateKey, std::string cipher) {
     AutoSeededRandomPool rng;
+    // return value
     std::string recovered;
 
     // loading key
     RSA::PrivateKey privateKey;
-    DecodePri(privateKey, encKey);
+    privateKey.Load(
+        StringStore(
+            b64_decode(encodedPrivateKey)
+        ).Ref()
+    );
 
+    // Intialize Decryptor object
     RSAES_OAEP_SHA_Decryptor d(privateKey);
 
-    StringSource sso(b64_decode(cipher), true,
+    StringSource (
+        // msg input
+        b64_decode(cipher),
+        // pump all (pass input to BufferedTransform)
+        true,
+        // BufferedTransform
         new PK_DecryptorFilter(rng, d,
             new StringSink(recovered)
         )
     );
+    // return raw message
     return recovered;
 }
