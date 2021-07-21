@@ -31,8 +31,8 @@ std::array<std::string, 2> RSA_keygen() {
         StringSink(encodedPublicKey).Ref()
     );
 
-    // return B64 encoded versions of BER encoded keys    
-    return {b64_encode(encodedPrivateKey), b64_encode(encodedPublicKey)};
+    // return BER encoded keys    
+    return {encodedPrivateKey, encodedPublicKey};
 }
 
 std::string RSA_encrypt(std::string encodedPublicKey, std::string msg) {
@@ -44,7 +44,7 @@ std::string RSA_encrypt(std::string encodedPublicKey, std::string msg) {
     RSA::PublicKey publicKey;
     publicKey.Load(
         StringStore(
-            b64_decode(encodedPublicKey)
+            encodedPublicKey
         ).Ref()
     );
     
@@ -62,7 +62,7 @@ std::string RSA_encrypt(std::string encodedPublicKey, std::string msg) {
         )
     );
     // return B64 encoded message
-    return b64_encode(cipher);
+    return cipher;
 }
 
 std::string RSA_decrypt(std::string encodedPrivateKey, std::string cipher) {
@@ -74,7 +74,7 @@ std::string RSA_decrypt(std::string encodedPrivateKey, std::string cipher) {
     RSA::PrivateKey privateKey;
     privateKey.Load(
         StringStore(
-            b64_decode(encodedPrivateKey)
+            encodedPrivateKey
         ).Ref()
     );
 
@@ -83,7 +83,7 @@ std::string RSA_decrypt(std::string encodedPrivateKey, std::string cipher) {
 
     StringSource (
         // msg input
-        b64_decode(cipher),
+        cipher,
         // pump all (pass input to BufferedTransform)
         true,
         // BufferedTransform

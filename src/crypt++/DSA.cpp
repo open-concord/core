@@ -26,11 +26,11 @@ std::array<std::string, 2> DSA_keygen() {
     publicKey.Save(StringSink(encodedPublicKey).Ref());
     privateKey.Save(StringSink(encodedPrivateKey).Ref());
 
-    // Return (B64 => BER) Encoded Keys
-    return {b64_encode(encodedPrivateKey), b64_encode(encodedPublicKey)};
+    // Return BER keys
+    return {encodedPrivateKey, encodedPublicKey};
 }
 
-std::string DSA_sign(std::string encodedPrivateKey, std::string message) {
+std::string DSA_sign(std::string encodedPrivateKey, std::string msg) {
     AutoSeededRandomPool rng;
     // output
     std::string signature;
@@ -39,7 +39,7 @@ std::string DSA_sign(std::string encodedPrivateKey, std::string message) {
     DSA::PrivateKey privateKey;
     privateKey.Load(
         StringStore(
-            b64_decode(encodedPrivateKey)
+            encodedPrivateKey
         ).Ref()
     );
 
@@ -48,7 +48,7 @@ std::string DSA_sign(std::string encodedPrivateKey, std::string message) {
 
     StringSource (
         // input
-        message,
+        msg,
         // pump all (see RSA)
         true,
         // BufferedTransformation
@@ -58,11 +58,10 @@ std::string DSA_sign(std::string encodedPrivateKey, std::string message) {
             new StringSink (signature)
         )
     );
-    // return b64 encoded signature 
-    return b64_encode(message+signature);
+    return signature;
 }
 
-bool DSA_verify(std::string encodedPublicKey, std::string ciphertext) {
+bool DSA_verify(std::string encodedPublicKey, std::string sig, std::string msg) {
     // return value
     bool legit; // phrased as a question, not an assertion
 
@@ -70,14 +69,14 @@ bool DSA_verify(std::string encodedPublicKey, std::string ciphertext) {
     DSA::PublicKey publicKey;
     publicKey.Load(
         StringStore(
-            b64_decode(encodedPublicKey)
+            encodedPublicKey
         ).Ref()
     );
     // Initializing verifier object
     DSA::Verifier v(publicKey);
     // Checking
     StringSource(
-        b64_decode(ciphertext),
+        msg + sig,
         true,
         new SignatureVerificationFilter {
             v,

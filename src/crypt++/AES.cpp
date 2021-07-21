@@ -10,13 +10,11 @@
 using namespace CryptoPP;
 
 // skey = AES::DEFAULT_KEYLENGTH 
-std::array<std::string, 2> AES_encrypt(std::string hkey, std::string msg) {
+std::array<std::string, 2> AES_encrypt(std::string skey, std::string msg) {
     AutoSeededRandomPool prng;
 
-    // hex encoded to binary string
-    std::string bkey = b64_decode(hkey);
     // convert binary key to SecByteBlock
-    SecByteBlock key(reinterpret_cast<const byte*>(&bkey[0]), bkey.size());
+    SecByteBlock key(reinterpret_cast<const byte*>(&skey[0]), skey.size());
 
     // intiallize nonce
     SecByteBlock nonce(AES::BLOCKSIZE);
@@ -40,22 +38,20 @@ std::array<std::string, 2> AES_encrypt(std::string hkey, std::string msg) {
         // translate nonce to string
         std::string snonce(reinterpret_cast<const char*>(&nonce[0]), nonce.size());      
         // return cipher, nonce
-        return {b64_encode(cipher), b64_encode(snonce)};
+        return {cipher, snonce};
     } catch (const /*crypto*/ Exception& err) {
         std::cerr << err.what() << "\n";
         exit(1);
     }
 }
 
-std::string AES_decrypt(std::string hkey, std::string hnonce, std::string hcipher) {
+std::string AES_decrypt(std::string skey, std::string snonce, std::string cipher) {
     // tag size
     const int TAG_SIZE = 12;
-    std::string bkey = b64_decode(hkey);
-    std::string bnonce = b64_decode(hnonce);
-    SecByteBlock key(reinterpret_cast<const byte*>(&bkey[0]), bkey.size());
-    SecByteBlock nonce(reinterpret_cast<const byte*>(&bnonce[0]), bnonce.size());
+    
+    SecByteBlock key(reinterpret_cast<const byte*>(&skey[0]), skey.size());
+    SecByteBlock nonce(reinterpret_cast<const byte*>(&snonce[0]), snonce.size());
 
-    std::string cipher = b64_decode(hcipher);
     std::string recovered;
     try {
         GCM< AES >::Decryption d;
@@ -94,5 +90,5 @@ std::string AES_keygen() {
     SecByteBlock key(AES::BLOCKSIZE);
     prng.GenerateBlock(key, key.size());
     std::string skey(reinterpret_cast<const char*>(&key[0]), key.size());
-    return b64_encode(skey);
+    return skey;
 }
