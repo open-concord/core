@@ -8,7 +8,7 @@ std::array<std::string, 2> DSA_keygen() {
     AutoSeededRandomPool rng;
     // Private
     DSA::PrivateKey privateKey;
-    privateKey.GenerateRandomWithKeySize(rng, 3072);
+    privateKey.GenerateRandomWithKeySize(rng, DSA_KEYLEN);
 
     // Public
     DSA::PublicKey publicKey;

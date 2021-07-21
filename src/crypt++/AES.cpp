@@ -17,7 +17,7 @@ std::array<std::string, 2> AES_encrypt(std::string skey, std::string msg) {
     SecByteBlock key(reinterpret_cast<const byte*>(&skey[0]), skey.size());
 
     // intiallize nonce
-    SecByteBlock nonce(AES::BLOCKSIZE);
+    SecByteBlock nonce(AES_NONCELEN);
     // populate nonce
     prng.GenerateBlock(nonce, nonce.size());
     // tag size
@@ -87,7 +87,7 @@ std::string AES_decrypt(std::string skey, std::string snonce, std::string cipher
 
 std::string AES_keygen() {
     AutoSeededRandomPool prng;
-    SecByteBlock key(AES::BLOCKSIZE);
+    SecByteBlock key(AES_KEYLEN);
     prng.GenerateBlock(key, key.size());
     std::string skey(reinterpret_cast<const char*>(&key[0]), key.size());
     return skey;

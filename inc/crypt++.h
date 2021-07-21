@@ -1,6 +1,16 @@
 #include <string>
 #include <iostream>
 #include <array>
+#include <cryptopp/aes.h>
+
+
+#pragma once
+
+#define AES_KEYLEN CryptoPP::AES::MAX_KEYLENGTH
+#define AES_NONCELEN CryptoPP::AES::BLOCKSIZE
+#define DSA_SIGLEN 64
+#define DSA_KEYLEN 3072
+#define RSA_KEYLEN 4096
 
 // AES
 std::string AES_keygen();
@@ -21,3 +31,7 @@ bool DSA_verify(std::string encodedPublicKey, std::string sig, std::string msg);
 std::string b64_encode(std::string in_string);
 // can add a char array => b64 later for images etc
 std::string b64_decode(std::string encoded);
+
+// Message Locking
+std::string lock_msg(std::string message, bool use_asymm, std::string dsa_pri_key, std::string aes_key = "", std::string rsa_pub_key = "");
+std::array<std::string, 2> unlock_msg(std::string ciphertext, bool use_asymm, std::string aes_key = "", std::string rsa_pri_key = "");

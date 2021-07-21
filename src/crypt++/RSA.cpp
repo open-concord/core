@@ -12,7 +12,7 @@ std::array<std::string, 2> RSA_keygen() {
     AutoSeededRandomPool rng;
 
     RSA::PrivateKey privateKey;
-    privateKey.GenerateRandomWithKeySize(rng, 4096);
+    privateKey.GenerateRandomWithKeySize(rng, RSA_KEYLEN);
 
     RSA::PublicKey publicKey;
     publicKey.AssignFrom(privateKey);
