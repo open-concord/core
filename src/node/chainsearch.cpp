@@ -1,4 +1,4 @@
-#include "../../inc/crypt.h"
+#include "../../inc/crypt++.h"
 #include "../../inc/node.h"
 #include <nlohmann/json.hpp>
 #include <array>
@@ -78,7 +78,8 @@ std::vector<json> chain_search(std::vector<std::vector<std::string>> chain, char
         }
         else {
             try {
-                std::array<std::string, 2> unlocked = hex_unlock(block[6], (message_type == 'p'), key, key);
+                std::string skey = b64_decode(key);
+                std::array<std::string, 2> unlocked = unlock_msg(b64_decode(block[6]), (message_type == 'p'), skey, skey);
                 cont = json(unlocked[0]);
                 if (member_search && outputs.size() == 0) {
                     assert(cont["t"] == "nserv"); //first member search block needs to be server initialization

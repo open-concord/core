@@ -21,10 +21,10 @@ LFLAGS = -lssl -lcrypt -lcrypto -pthread -lboost_system -lboost_filesystem -pthr
 BIN = _bin/
 
 # objects
-OBJ = $(BIN)hexstr.o \
-	$(BIN)rawcrypt.o \
-	$(BIN)highcrypt.o \
-	$(BIN)hexcrypt.o \
+OBJ = $(BIN)b64.o \
+	$(BIN)AES.o \
+	$(BIN)RSA.o \
+	$(BIN)DSA.o \
 	$(BIN)hash.o \
 	$(BIN)ledger.o \
 	$(BIN)miner.o \
@@ -48,16 +48,19 @@ OBJ = $(BIN)hexstr.o \
 $(BIN)main.o: main.cpp
 	$(CC) -c $(CFLAGS) $< -o $@
 
-$(BIN)hexstr.o: hexstr/hexstr.cpp ../inc/hexstr.h
+$(BIN)lockmsg.o: crypt++/lockmsg.cpp ../inc/crypt++.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
-$(BIN)rawcrypt.o: crypt/rawcrypt.cpp ../inc/crypt.h
+$(BIN)DSA.o: crypt++/DSA.cpp ../inc/crypt++.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
-$(BIN)highcrypt.o: crypt/highcrypt.cpp ../inc/crypt.h
+$(BIN)RSA.o: crypt++/RSA.cpp ../inc/crypt++.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
-$(BIN)hexcrypt.o: crypt/hexcrypt.cpp ../inc/crypt.h
+$(BIN)AES.o: crypt++/AES.cpp ../inc/crypt++.h
+	$(CC) -c $(CFLAGS) $< -o $@
+
+$(BIN)b64.o: b64/b64.cpp ../inc/b64.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
 $(BIN)hash.o: hash/hash.cpp ../inc/hash.h

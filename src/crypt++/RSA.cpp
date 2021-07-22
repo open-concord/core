@@ -61,7 +61,6 @@ std::string RSA_encrypt(std::string encodedPublicKey, std::string msg) {
             new StringSink(cipher)
         )
     );
-    // return B64 encoded message
     return cipher;
 }
 

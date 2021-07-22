@@ -1,4 +1,5 @@
 #include "../inc/crypt++.h"
+#include "../inc/b64.h"
 
 #include <iostream>
 #include <string>
@@ -40,10 +41,10 @@ int main() {
     std::cout << "DECRYPTED | VALID TEXT: " << DSA_verify(dsakp[1], dsa, plain) << "\n";
     //assert(DSA_verify(dsakp[1], dsa) == 1);
     
-    std::string locked_msg = lock_msg(plain, false, dsakp[0], key, rsakp[1]);
+    std::string locked_msg = lock_msg(std::string(4170, 'f'), true, dsakp[0], "", rsakp[1]);
     std::cout << "LOCKED MSG | " << b64_encode(locked_msg) << "\n";
     std::cout << "LOCKED MSG LEN | " << locked_msg.length() << "\n";
-    std::array<std::string, 2> unlocked_msg = unlock_msg(locked_msg, false, key, rsakp[0]);
+    std::array<std::string, 2> unlocked_msg = unlock_msg(locked_msg, true, "", rsakp[0]);
     std::cout << "UNLOCKED MSG | " << unlocked_msg[0] << "\n";
     std::cout << "UNLOCKED MSG VALID TEXT | " << DSA_verify(dsakp[1], unlocked_msg[1], unlocked_msg[0]) << "\n";
     return 0;
