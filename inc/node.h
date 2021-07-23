@@ -23,11 +23,13 @@
 
 using json = nlohmann::json;
 
-std::vector<json> chain_search(std::vector<std::vector<std::string>> chain, char message_type, std::string target_trip, std::string key, boost::function<bool(json)> filter, size_t start_b = -1, size_t end_b = -1);
+bool no_filter(json data);
 
 bool type_filter(char qtype, json data);
 
 json get_continuity_value(std::vector<json> defs,  std::string key);
+
+std::vector<json> chain_search(std::vector<std::vector<std::string>> chain, char message_type, std::string target_trip, std::string key, boost::function<bool(json)> filter = no_filter, size_t start_b = -1, size_t end_b = -1);
 
 struct user_keys {
     std::map<std::string, std::string> server_keys;
