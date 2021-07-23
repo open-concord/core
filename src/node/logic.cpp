@@ -91,6 +91,18 @@ json key_gen(Conn* conn, json cont) {
     return retc;
 }
 
+json encdec(Conn* conn, json cont) {
+    json retc;
+    if (cont["dec"]) {
+        retc["plain"] = AES_decrypt(b64_decode(cont["aes_key"]), b64_decode(cont["nonce"]), b64_decode(cont["cipher"]));
+    } else {
+        std::array<std::string, 2> results = AES_encrypt(b64_decode(cont["aes_key"]), cont["plain"]);
+        retc["cipher"] = b64_encode(results[0]);
+        retc["nonce"] = b64_encode(results[1]);
+    }
+    return retc;
+}
+
 void update_chain(Conn *conn) {
     #define CTX (conn->message_context)
     #define TREE (*(conn->parent_chains))[CTX.chain_trip]
@@ -219,6 +231,9 @@ json handle_request(Conn* conn, json cont) {
                 break;
             case 'g': // keygen
                 ret["c"] = key_gen(conn, cont);
+                break;
+            case 'e':
+                ret["c"] = encdec(conn, cont);
                 break;
             default: // none of the actual flags were present, throw error
                 throw;
