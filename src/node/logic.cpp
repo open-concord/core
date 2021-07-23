@@ -27,8 +27,15 @@ json cfg = json::parse(rw_handler.read("../../cfg/main.json"));
 
 //addition
 json addition(Conn* conn, json cont) {
+    #define KEYS (conn->message_context).user_keys_map[cont["u"]]
     #define TREE (*(conn->parent_chains))[cont["ch"]]
-    TREE.generate_branch(false, cont["c"], cont["s"]);
+    std::string enc_string = cont["c"].dump();
+    if (cont["mt"] != "d") { //no encryption for dec
+        std::string rsa_pub_key;
+        if (cont["mt"] == "p") rsa_pub_key = get_continuity_value(chain_search(TREE.get_chain(), 'p', cont["s"], ""), "rsa_pubk");
+        enc_string = lock_msg(enc_string, (cont["mt"] == "p"), b64_decode(KEYS.dsa_pri_key), b64_decode(KEYS.server_keys[cont["s"]]));
+    }
+    TREE.generate_branch(false, enc_string, cont["s"]);
     return {
         {"success", 1}
     };

@@ -27,6 +27,8 @@ std::vector<json> chain_search(std::vector<std::vector<std::string>> chain, char
 
 bool type_filter(char qtype, json data);
 
+json get_continuity_value(std::vector<json> defs,  std::string key);
+
 struct user_keys {
     std::map<std::string, std::string> server_keys;
     std::string dsa_pri_key;
