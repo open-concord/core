@@ -97,7 +97,7 @@ void Node::make_local(int port) {
         {"FLAG", "RUNNING"},
         {"CONTENT", nullptr}
     };
-    Node::contact(init.dump(), "127.0.0.1", port);
+    this->local_conn = Node::contact(init.dump(), "127.0.0.1", port);
 };
 
 // intiates contact with another ws
@@ -105,7 +105,7 @@ Conn::ptr Node::contact(std::string initial_content, std::string ip, int port) {
     // target info
     boost::asio::ip::tcp::endpoint ep(boost::asio::ip::address::from_string(ip), port);
     // socket creation
-    Conn::ptr new_conn = Conn::create(&(this->chains), this->io_ctx);
+    Conn::ptr new_conn = Conn::create(&(this->chains), &(this->local_conn), this->io_ctx);
     // not capable of doing async mental gymnastics to get async_connect hooked up
     // but I also don't want to write a helper func
     // *fix in alpha*

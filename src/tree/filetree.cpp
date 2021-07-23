@@ -45,8 +45,12 @@ void FileTree::load(std::string dir) {
     }
 }
 
-void FileTree::generate_branch(bool debug_info, Miner& local_miner, std::string c1, std::string st) {
-    (this->target_tree).generate_branch(debug_info, local_miner, c1, st);
+void FileTree::set_pow_req(int POW_req) {
+    (this->target_tree).set_pow_req(POW_req);
+}
+
+void FileTree::generate_branch(bool debug_info, std::string c1, std::string st) {
+    (this->target_tree).generate_branch(debug_info, c1, st);
     save_latest();
 }
 

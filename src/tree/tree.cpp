@@ -19,7 +19,8 @@
 #include "../../inc/tree.h"
 
 // where h1 is the new content, and h0 is prev hash
-void Tree::generate_branch(bool debug_info, Miner& local_miner, std::string c1, std::string st) {
+void Tree::generate_branch(bool debug_info, std::string c1, std::string st) {
+    Miner local_miner(this->pow);
     // concatenation of h0+h1/h0
     assert(st.length() == 32);
 
@@ -48,18 +49,18 @@ std::vector<std::vector<std::string>> Tree::get_chain() {
     return (this->local_chain);
 }
 
-bool Tree::verify_block(std::vector<std::string> block, int pow_min) {
+bool Tree::verify_block(std::vector<std::string> block) {
     std::string result_hash = calc_hash(false, block[1] + block[4] + block[5] + block[0] + block[3]);
     if (result_hash != block[2]) return false;
-    for (size_t i = 0; i < pow_min; i++) {
+    for (size_t i = 0; i < this->pow; i++) {
         if (result_hash.at(i) != '0') return false;
     }
     return true;
 }
 
-bool Tree::verify_chain(int pow_min) {
+bool Tree::verify_chain() {
     for (size_t i = 0; i < (this->local_chain).size(); i++) {
-        if (!verify_block((this->local_chain)[i], pow_min)) return false; //make sure every hash is valid.
+        if (!verify_block((this->local_chain)[i])) return false; //make sure every hash is valid.
         if (i != 0) {
             if ((this->local_chain)[i][1] != (this->local_chain)[i - 1][2]) return false; //for blocks beyond the first, ensure hashes chain correctly.
         }

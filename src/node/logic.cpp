@@ -6,10 +6,11 @@
 #include <functional>
 
 #include <boost/bind.hpp>
+#include <boost/asio.hpp>
 
 #include "../../inc/node.h"
-#include "../../inc/crypt.h"
-#include "../../inc/hexstr.h"
+#include "../../inc/b64.h"
+#include "../../inc/crypt++.h"
 #include "../../inc/tree.h"
 #include "../../inc/rw.h"
 #include <nlohmann/json.hpp>
@@ -27,10 +28,27 @@ json cfg = json::parse(rw_handler.read("../../cfg/main.json"));
 void update_chain(Conn *conn) {
     #define CTX (conn->message_context)
     #define TREE (*(conn->parent_chains))[CTX.chain_trip]
-    for (size_t i = 0; i < CTX.wchain.size(); i++) 
+    std::vector<json> forward_wchain;
+    for (size_t i = 0; i < CTX.wchain.size(); i++)
         TREE.chain_push(
             CTX.wchain[CTX.wchain.size() - i]
         );
+    std::string msg = json({
+        {"err", 0},
+        {"t", "nb"},
+        {"c", {
+            "ch": CTX.chain_trip,
+            "bc": CTX.wchain.size()
+        }}
+    });
+    (*(conn->parent_local_conn))->tsock.async_send(
+            boost::asio::buffer(msg, msg.size()),
+            boost::bind(
+                &Conn::send_done,
+                conn,
+                boost::asio::placeholders::error
+        )
+    );
 }
 
 // error handler
@@ -132,16 +150,16 @@ json handle_request(Conn* conn, json cont) {
         ret["t"] = cont["t"];
         switch (((std::string) cont["t"]).at(0)) {
             case 'a': // addition (decleration, intraserver)
-                
+                retc["c"] = addition(conn, cont);
                 break;
             case 'q': // query (messages)
-                ret["c"] = query(cont);
+                ret["c"] = query(conn, cont);
                 break;
             case 'c': // user-specific data changes (keys)
-                
+                ret["c"] = key_change(conn, cont);
                 break;
             case 'g': // keygen
-                ret["c"] = key_gen(cont);
+                ret["c"] = key_gen(conn, cont);
                 break;
             default: // none of the actual flags were present, throw error
                 throw;
@@ -152,8 +170,35 @@ json handle_request(Conn* conn, json cont) {
     }
 }
 
+json key_change(Conn* conn, json cont) {
+    #define KEYS (conn->conn_context).user_keys_map[cont["u"]]
+    if (cont.find("servkeys") != cont.end()) {
+        for (auto servkey : cont["servkeys"]) {
+            KEYS[servkey["s"]] = servkey["k"];
+        }
+    }
+    if (cont.find("sigkey") != cont.end()) {
+        KEYS.dsa_pri_key = cont["sigkey"];
+    }
+    if (cont.find("enckey") != cont.end()) {
+        KEYS.dsa_pri_key = cont["enckey"];
+    }
+    return {
+        {"success", 1}
+    };
+}
+
+//addition
+json addition(Conn* conn, json cont) {
+    #define TREE (*(conn->parent_chains))[cont["ch"]]
+    TREE.generate_branch(false, cont["c"], cont["s"]);
+    return {
+        {"success", 1}
+    };
+}
+
 // keygen
-json key_gen(json cont) {
+json key_gen(Conn* conn, json cont) {
     // index 0 is pri, index 1 is pub
     std::array<std::string, 2> keys;
     switch (((std::string) cont["kt"]).at(0)) {
@@ -183,12 +228,15 @@ json key_gen(json cont) {
 
 
 // queries
-json query (json cont) {
-    FileTree ftree((cfg["block_dir"]+cont["ch"]));
-    std::vector<std::vector<std::string>> blocks = ftree.get_chain();
+json query (Conn* conn, json cont) {
+    #define KEYS (conn->conn_context).user_keys_map[cont["u"]]
+    #define TREE (*(conn->parent_chains))[cont["ch"]]
+
+    std::vector<std::vector<std::string>> blocks = TREE.get_chain();
     char search_type_char = cont["mt"].at(0);
     if (cont["imt"] == "m") search_type_char = 'm';
-    std::vector<json> search_results = chain_search(blocks, search_type_char, cont["s"], )
+    std::vector<json> search_results = chain_search(blocks, search_type_char, cont["s"], KEYS.server_keys[cont["s"]], boost::bind(type_filter, cont["imt"].at(0), _1), cont["r"][0], cont["r"][1]);
+    return search_results;
 }
 
 // map of communication roadmap

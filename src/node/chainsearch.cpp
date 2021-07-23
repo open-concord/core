@@ -49,8 +49,8 @@ std::vector<json> chain_search(std::vector<std::vector<std::string>> chain, char
     if (message_type == 'm') {
         message_type = 's'; //use server procedure
         member_search = true;
-        auto startpoint = chain.begin(); //first->last order instead of last->first
-        auto endpoint = chain.end();
+        startpoint = chain.begin(); //first->last order instead of last->first
+        endpoint = chain.end();
         //member searches need to have set characteristics
         filter = boost::bind(type_filter, 'm', _1);
         start_b = -1;

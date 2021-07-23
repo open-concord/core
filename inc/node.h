@@ -23,12 +23,21 @@ using json = nlohmann::json;
 
 std::vector<json> chain_search(std::vector<std::vector<std::string>> chain, char message_type, std::string target_trip, std::string key, bool (*filter)(json), size_t start_b = -1, size_t end_b = -1);
 
+bool type_filter(char qtype, json data);
+
+struct user_keys {
+    std::map<std::string, std::string> server_keys;
+    std::string dsa_pri_key;
+    std::string rsa_pri_key;
+}
+
 struct conn_context {
     std::vector<std::vector<std::string>> wchain;
     std::string chain_trip;
     size_t lastbi;
     size_t k;
     size_t pow_min;
+    std::map<std::string, user_keys> user_keys_map;
 };
 
 class Conn : public boost::enable_shared_from_this<Conn> {
@@ -37,6 +46,8 @@ class Conn : public boost::enable_shared_from_this<Conn> {
         boost::asio::ip::tcp::socket tsock;   
     public:
         std::map<std::string, FileTree>* parent_chains;
+        Conn::ptr* parent_local_conn;
+
         conn_context message_context;
         // util vars
          // to log socket communiation
@@ -82,6 +93,8 @@ class Node {
             std::chrono::high_resolution_clock::time_point last_verified;
         };
         std::vector<khost> known_hosts;
+
+        Conn:ptr local_conn;
     public:
         std::map<std::string /*trip*/, FileTree /*chain model*/> chains;
 
