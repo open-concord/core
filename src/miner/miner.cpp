@@ -25,14 +25,6 @@ bool Miner::check_valid_hash(std::string hash) {
     return true;
 };
 
-std::string Miner::generate_nonce() {
-    unsigned char nonce[16];
-
-    RAND_bytes(nonce, sizeof(nonce));
-
-    return to_hexstr(nonce, 16);
-}
-
 // genning hash and nonce
 std::string Miner::generate_valid_nonce(bool debug_info, std::string content) {
     std::string rhash = calc_hash(false, content); //hash init
@@ -40,7 +32,7 @@ std::string Miner::generate_valid_nonce(bool debug_info, std::string content) {
 
     while (!this->check_valid_hash(rhash)) {
         // TODO: add error handling
-        nonce = generate_nonce();
+        nonce = gen_trip(8);
         rhash = calc_hash(false, content + nonce);
         if (debug_info) std::cout << "Used nonce " << nonce << " to generate hash " << rhash << std::endl;
     }

@@ -1,8 +1,10 @@
 #include <cryptopp/base64.h>
+#include <cryptopp/osrng.h>
 
 #include <string>
 
 #include "../../inc/b64.h"
+
 using namespace CryptoPP;
 
 std::string b64_encode(std::string in_string) {

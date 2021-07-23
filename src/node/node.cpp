@@ -69,7 +69,7 @@ void Node::shutdown() {
 // awaits new connection and passes message to handler
 void Node::begin_next() {
     // create new connection instance
-    Conn::ptr new_conn = Conn::create(&(this->chains), this->io_ctx);
+    Conn::ptr new_conn = Conn::create(&(this->chains), &(this->local_conn), this->io_ctx);
 
     // await connection creation
     this->acceptor.async_accept(new_conn->socket(),

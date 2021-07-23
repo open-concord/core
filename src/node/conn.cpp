@@ -64,6 +64,18 @@ void Conn::send_done(const boost::system::error_code& err) {
         std::cout << err << "\n";
     }
 }
+
+//send a message, async
+void Conn::send(std::string msg) {
+    this->tsock.async_send(
+        boost::asio::buffer(msg, msg.size()),
+        boost::bind(
+            &Conn::send_done,
+            this,
+            boost::asio::placeholders::error
+        )
+    );
+}
 // === end util ===
 
 // recursive handling :pogU:
@@ -73,14 +85,7 @@ void Conn::handle() {
     } else {
         // to change message-specific-logic, modify logic.cpp
         std::string msg = message_logic(this);
-        this->tsock.async_send(
-            boost::asio::buffer(msg, msg.size()),
-            boost::bind(
-                &Conn::send_done,
-                this,
-                boost::asio::placeholders::error
-            )
-        );
+        send(msg);
     }
     
 }

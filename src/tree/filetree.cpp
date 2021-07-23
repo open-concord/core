@@ -11,6 +11,10 @@
 
 struct stat info;
 
+FileTree::FileTree() {
+    
+}
+
 FileTree::FileTree(std::string dir) {
     load(dir);
 }
@@ -58,12 +62,8 @@ std::vector<std::vector<std::string>> FileTree::get_chain() {
     return (this->target_tree).get_chain();
 }
 
-bool FileTree::verify_block(std::vector<std::string> block, int pow_min) {
-    return (this->target_tree).verify_block(block, pow_min);
-}
-
-bool FileTree::verify_chain(int pow_min) {
-    return (this->target_tree).verify_chain(pow_min);
+bool FileTree::verify_chain() {
+    return (this->target_tree).verify_chain();
 }
 
 void FileTree::chain_push(std::vector<std::string> block) {

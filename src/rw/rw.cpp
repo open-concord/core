@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include "../../inc/rw.h"
+#include "../../inc/b64.h"
 
 RW::RW() {}
 
@@ -41,10 +42,10 @@ std::string RW::b64(std::string path, bool encode, std::string content = "") {
     try {
         if (encode) {
             // base 64 encode
-            return base64_encode(this->read(path));
+            return b64_encode(this->read(path));
         } else {
             // base 64 decode
-            return base64_decode(content);
+            return b64_decode(content);
         }
     } catch (const std::exception& e) {
         std::cout << e.what() << "\n";

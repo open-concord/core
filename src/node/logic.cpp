@@ -25,6 +25,72 @@ using json = nlohmann::json;
 RW rw_handler;
 json cfg = json::parse(rw_handler.read("../../cfg/main.json"));
 
+//addition
+json addition(Conn* conn, json cont) {
+    #define TREE (*(conn->parent_chains))[cont["ch"]]
+    TREE.generate_branch(false, cont["c"], cont["s"]);
+    return {
+        {"success", 1}
+    };
+}
+
+// queries
+json query (Conn* conn, json cont) {
+    #define KEYS (conn->message_context).user_keys_map[cont["u"]]
+    #define TREE (*(conn->parent_chains))[cont["ch"]]
+
+    std::vector<std::vector<std::string>> blocks = TREE.get_chain();
+    char search_type_char = std::string(cont["mt"]).at(0);
+    if (cont["imt"] == "m") search_type_char = 'm';
+    std::vector<json> search_results = chain_search(blocks, search_type_char, cont["s"], KEYS.server_keys[cont["s"]], boost::bind(type_filter, (char) std::string(cont["imt"]).at(0), _1), cont["r"][0], cont["r"][1]);
+    return search_results;
+}
+
+json key_change(Conn* conn, json cont) {
+    #define KEYS (conn->message_context).user_keys_map[cont["u"]]
+    if (cont.find("servkeys") != cont.end()) {
+        for (auto servkey : cont["servkeys"]) {
+            KEYS.server_keys[servkey["s"]] = servkey["k"];
+        }
+    }
+    if (cont.find("sigkey") != cont.end()) {
+        KEYS.dsa_pri_key = cont["sigkey"];
+    }
+    if (cont.find("enckey") != cont.end()) {
+        KEYS.dsa_pri_key = cont["enckey"];
+    }
+    return {
+        {"success", 1}
+    };
+}
+
+// keygen
+json key_gen(Conn* conn, json cont) {
+    // index 0 is pri, index 1 is pub
+    std::array<std::string, 2> keys;
+    switch (((std::string) cont["kt"]).at(0)) {
+        case 'D': // DSA
+            keys = DSA_keygen();
+            break;
+        case 'R': // RSA
+            keys = RSA_keygen();
+            break;
+        case 'A': // AES
+            // 256 byte key (maybe set this up to be cfg?)
+            keys[0] = AES_keygen();
+            keys[1] = "";
+            break;
+        default:
+            throw;
+    };
+    json retc = {
+        "pri", b64_encode(keys[0]),
+        "pub", b64_encode(keys[1]),
+        "kt", cont["kt"]
+    };
+    return retc;
+}
+
 void update_chain(Conn *conn) {
     #define CTX (conn->message_context)
     #define TREE (*(conn->parent_chains))[CTX.chain_trip]
@@ -33,22 +99,15 @@ void update_chain(Conn *conn) {
         TREE.chain_push(
             CTX.wchain[CTX.wchain.size() - i]
         );
-    std::string msg = json({
+    json jret = {
         {"err", 0},
         {"t", "nb"},
         {"c", {
-            "ch": CTX.chain_trip,
-            "bc": CTX.wchain.size()
+            {"ch", CTX.chain_trip},
+            {"bc", CTX.wchain.size()}
         }}
-    });
-    (*(conn->parent_local_conn))->tsock.async_send(
-            boost::asio::buffer(msg, msg.size()),
-            boost::bind(
-                &Conn::send_done,
-                conn,
-                boost::asio::placeholders::error
-        )
-    );
+    };
+    (*(conn->parent_local_conn))->send(jret.dump());
 }
 
 // error handler
@@ -73,10 +132,10 @@ json send_blocks(Conn *conn, json args) {
         std::vector<json> blocks;
         for (size_t backi = 0; backi < CTX.k; backi++) {
             size_t workingi = CTX.lastbi - 1 - backi;
-            blocks.push_back(json({
+            blocks.push_back({
                 {"#", workingi},
                 {"b", TREE.get_chain()[workingi]}
-            }));
+            });
             if (workingi == 0) {
                 break;
             }
@@ -117,7 +176,7 @@ json evaluate_blocks(Conn *conn, json cont) {
             size_t bi = block["#"];
             ret["CONTENT"]["i"] = bi;
             if (CTX.wchain.size() > 0 &&
-                !(TREE.verify_block(block, CTX.pow_min)
+                !(verify_block(block, CTX.pow_min)
                     && block["b"][2] == CTX.wchain.back()[1]
                 )
             ) {
@@ -150,7 +209,7 @@ json handle_request(Conn* conn, json cont) {
         ret["t"] = cont["t"];
         switch (((std::string) cont["t"]).at(0)) {
             case 'a': // addition (decleration, intraserver)
-                retc["c"] = addition(conn, cont);
+                ret["c"] = addition(conn, cont);
                 break;
             case 'q': // query (messages)
                 ret["c"] = query(conn, cont);
@@ -168,75 +227,6 @@ json handle_request(Conn* conn, json cont) {
     } catch (std::exception& err) {
         std::cout << err.what() << "\n";
     }
-}
-
-json key_change(Conn* conn, json cont) {
-    #define KEYS (conn->conn_context).user_keys_map[cont["u"]]
-    if (cont.find("servkeys") != cont.end()) {
-        for (auto servkey : cont["servkeys"]) {
-            KEYS[servkey["s"]] = servkey["k"];
-        }
-    }
-    if (cont.find("sigkey") != cont.end()) {
-        KEYS.dsa_pri_key = cont["sigkey"];
-    }
-    if (cont.find("enckey") != cont.end()) {
-        KEYS.dsa_pri_key = cont["enckey"];
-    }
-    return {
-        {"success", 1}
-    };
-}
-
-//addition
-json addition(Conn* conn, json cont) {
-    #define TREE (*(conn->parent_chains))[cont["ch"]]
-    TREE.generate_branch(false, cont["c"], cont["s"]);
-    return {
-        {"success", 1}
-    };
-}
-
-// keygen
-json key_gen(Conn* conn, json cont) {
-    // index 0 is pri, index 1 is pub
-    std::array<std::string, 2> keys;
-    switch (((std::string) cont["kt"]).at(0)) {
-        case 'D': // DSA
-            keys = hex_keygen(dsakeygen);
-            break;
-        case 'R': // RSA
-            keys = hex_keygen(rsakeygen);
-            break;
-        case 'A': // AES
-            // 256 byte key (maybe set this up to be cfg?)
-            unsigned char key[32];
-            RAND_bytes(key, 32);
-            keys[0] = to_hexstr(key, 32);
-            keys[1] = "";
-            break;
-        default:
-            throw;
-    };
-    json retc = {
-        "pri", keys[0],
-        "pub", keys[1],
-        "kt", cont["kt"]
-    };
-    return retc;
-};
-
-
-// queries
-json query (Conn* conn, json cont) {
-    #define KEYS (conn->conn_context).user_keys_map[cont["u"]]
-    #define TREE (*(conn->parent_chains))[cont["ch"]]
-
-    std::vector<std::vector<std::string>> blocks = TREE.get_chain();
-    char search_type_char = cont["mt"].at(0);
-    if (cont["imt"] == "m") search_type_char = 'm';
-    std::vector<json> search_results = chain_search(blocks, search_type_char, cont["s"], KEYS.server_keys[cont["s"]], boost::bind(type_filter, cont["imt"].at(0), _1), cont["r"][0], cont["r"][1]);
-    return search_results;
 }
 
 // map of communication roadmap

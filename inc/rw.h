@@ -3,6 +3,8 @@
 #include <map>
 #include <fstream>
 
+#pragma once
+
 class RW {
     private:
         // file types mapped to parse functions

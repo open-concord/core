@@ -17,8 +17,6 @@ class Tree {
 
         std::vector<std::vector<std::string>> get_chain();
 
-        bool verify_block(std::vector<std::string> block);
-
         bool verify_chain();
 
         void chain_push(std::vector<std::string> block);
@@ -41,8 +39,6 @@ class FileTree {
         void generate_branch(bool debug_info, std::string c1, std::string st);
 
         std::vector<std::vector<std::string>> get_chain();
-        
-        bool verify_block(std::vector<std::string> block);
 
         bool verify_chain();
 
@@ -50,3 +46,5 @@ class FileTree {
         
         void save_latest();
 };
+
+bool verify_block(std::vector<std::string> block, int pow);

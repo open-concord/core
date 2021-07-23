@@ -15,13 +15,13 @@ CC = g++
 # compile-time flags
 CFLAGS = -g -Wall $(IN_DIR)
 # lib flags
-LFLAGS = -lssl -lcrypt -lcrypto -pthread -lboost_system -lboost_filesystem -pthread
+LFLAGS = -lssl -lcryptopp -lcrypt -lcrypto -pthread -lboost_system -lboost_filesystem -pthread
 
 # object file sub-dir of src
 BIN = _bin/
 
 # objects
-OBJ = $(BIN)b64.o \
+OBJ = $(BIN)lockmsg.o \
 	$(BIN)AES.o \
 	$(BIN)RSA.o \
 	$(BIN)DSA.o \
@@ -34,9 +34,9 @@ OBJ = $(BIN)b64.o \
 	$(BIN)nlogic.o \
 	$(BIN)nconn.o \
 	$(BIN)nnode.o \
+	$(BIN)nchainsearch.o \
 	$(BIN)b64.o \
 	$(BIN)rw.o \
-	$(BIN)aes.o \
 	$(BIN)main.o
 
 # returns executable to root
@@ -46,18 +46,6 @@ OBJ = $(BIN)b64.o \
 	$(CC) $(CFLAGS) $(OBJ) $(LFLAGS) -o $@
 
 $(BIN)main.o: main.cpp
-	$(CC) -c $(CFLAGS) $< -o $@
-
-$(BIN)lockmsg.o: crypt++/lockmsg.cpp ../inc/crypt++.h
-	$(CC) -c $(CFLAGS) $< -o $@
-
-$(BIN)DSA.o: crypt++/DSA.cpp ../inc/crypt++.h
-	$(CC) -c $(CFLAGS) $< -o $@
-
-$(BIN)RSA.o: crypt++/RSA.cpp ../inc/crypt++.h
-	$(CC) -c $(CFLAGS) $< -o $@
-
-$(BIN)AES.o: crypt++/AES.cpp ../inc/crypt++.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
 $(BIN)b64.o: b64/b64.cpp ../inc/b64.h
@@ -82,6 +70,8 @@ $(BIN)tree.o: tree/tree.cpp ../inc/tree.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
 # node stuff
+$(BIN)nchainsearch.o: node/chainsearch.cpp ../inc/node.h
+	$(CC) -c $(CFLAGS) $< -o $@
 $(BIN)nlogic.o: node/logic.cpp ../inc/node.h
 	$(CC) -c $(CFLAGS) $< -o $@
 $(BIN)nconn.o: node/conn.cpp ../inc/node.h
@@ -92,11 +82,20 @@ $(BIN)nnode.o: node/node.cpp ../inc/node.h
 # rw
 $(BIN)rw.o: rw/rw.cpp ../inc/rw.h
 	$(CC) -c $(CFLAGS) $< -o $@
-$(BIN)b64.o: rw/base64.cpp ../inc/rw.h
-	$(CC) -c $(CFLAGS) $< -o $@
+#$(BIN)b64.o: rw/base64.cpp ../inc/rw.h
+#	$(CC) -c $(CFLAGS) $< -o $@
 
 # crypt
-$(BIN)aes.o: crypt++/AES.cpp ../inc/crypt++
+$(BIN)lockmsg.o: crypt++/lockmsg.cpp ../inc/crypt++.h
+	$(CC) -c $(CFLAGS) $< -o $@
+
+$(BIN)DSA.o: crypt++/DSA.cpp ../inc/crypt++.h
+	$(CC) -c $(CFLAGS) $< -o $@
+
+$(BIN)RSA.o: crypt++/RSA.cpp ../inc/crypt++.h
+	$(CC) -c $(CFLAGS) $< -o $@
+
+$(BIN)AES.o: crypt++/AES.cpp ../inc/crypt++.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
 clean:

@@ -19,9 +19,11 @@
 #include <chrono>
 #include <vector>
 
+#include <boost/function.hpp>
+
 using json = nlohmann::json;
 
-std::vector<json> chain_search(std::vector<std::vector<std::string>> chain, char message_type, std::string target_trip, std::string key, bool (*filter)(json), size_t start_b = -1, size_t end_b = -1);
+std::vector<json> chain_search(std::vector<std::vector<std::string>> chain, char message_type, std::string target_trip, std::string key, boost::function<bool(json)> filter, size_t start_b = -1, size_t end_b = -1);
 
 bool type_filter(char qtype, json data);
 
@@ -29,7 +31,7 @@ struct user_keys {
     std::map<std::string, std::string> server_keys;
     std::string dsa_pri_key;
     std::string rsa_pri_key;
-}
+};
 
 struct conn_context {
     std::vector<std::vector<std::string>> wchain;
@@ -41,8 +43,11 @@ struct conn_context {
 };
 
 class Conn : public boost::enable_shared_from_this<Conn> {
+    public:
+        // basically just a shared_ptr of self
+        typedef std::shared_ptr<Conn> ptr;
     private:
-        Conn(std::map<std::string, FileTree>*, boost::asio::io_context& io_ctx);
+        Conn(std::map<std::string, FileTree>*, Conn::ptr*, boost::asio::io_context& io_ctx);
         boost::asio::ip::tcp::socket tsock;   
     public:
         std::map<std::string, FileTree>* parent_chains;
@@ -56,13 +61,12 @@ class Conn : public boost::enable_shared_from_this<Conn> {
         bool server; // which capacity client is currently serving in
         bool local; // is local connection?
 
-        // basically just a shared_ptr of self
-        typedef std::shared_ptr<Conn> ptr;
-        static ptr create(std::map<std::string, FileTree>*, boost::asio::io_context& io_ctx);
+        static ptr create(std::map<std::string, FileTree>*, Conn::ptr*, boost::asio::io_context& io_ctx);
         boost::asio::ip::tcp::socket& socket();
         // async util func
         void initiate_comms(std::string msg);
         void read();
+        void send(std::string msg);
         void send_done(const boost::system::error_code& err);
         void handle();
 };
@@ -94,7 +98,7 @@ class Node {
         };
         std::vector<khost> known_hosts;
 
-        Conn:ptr local_conn;
+        Conn::ptr local_conn;
     public:
         std::map<std::string /*trip*/, FileTree /*chain model*/> chains;
 

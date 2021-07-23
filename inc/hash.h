@@ -5,4 +5,4 @@
 
 std::string calc_hash (bool use_disk, std::string target);
 
-std::string gen_trip(size_t len = 16);
+std::string gen_trip(size_t quad_chars = 4);
