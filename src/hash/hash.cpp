@@ -1,4 +1,5 @@
 #include "crypto++/sha.h"
+#include "crypto++/hex.h"
 
 #include <string>
 #include <iostream>
@@ -33,10 +34,19 @@ std::string calc_hash (bool use_disk, std::string target) {
     byte abDigest[SHA256::DIGESTSIZE];
 
     SHA256().CalculateDigest(abDigest, pbData, nDataLen);
+    
+    std::string encoded;
 
-    return b64_encode(std::string((char*)abDigest));
+    StringSource ss(abDigest, SHA256::DIGESTSIZE, true,
+        new HexEncoder(
+            // pipe encoded byte array to output string
+            new StringSink(encoded)
+        )
+    );
+
+    return encoded;
 };
 
-std::string gen_trip(size_t quad_chars) {
-    return b64_encode(gen_string(quad_chars*3));
+std::string gen_trip(size_t base_chars, size_t out_chars) {
+    return b64_encode(gen_string(base_chars), out_chars);
 }

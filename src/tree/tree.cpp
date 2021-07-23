@@ -23,7 +23,7 @@ void Tree::set_pow_req(int POW_req) {
 }
 
 // where h1 is the new content, and h0 is prev hash
-void Tree::generate_branch(bool debug_info, std::string c1, std::string st) {
+void Tree::generate_branch(bool debug_info, std::string c1, std::string st, std::string creator_trip) {
     Miner local_miner(this->pow);
     // concatenation of h0+h1/h0
     assert(st.length() == 32);
@@ -44,7 +44,7 @@ void Tree::generate_branch(bool debug_info, std::string c1, std::string st) {
 
     std::string hash = calc_hash(false, cat + time + nonce);
 
-    std::vector<std::string> out_block({time, h0, hash, nonce, st, c1});
+    std::vector<std::string> out_block({time, h0, hash, nonce, creator_trip, st, c1});
 
     (this->local_chain).push_back(out_block);
 }

@@ -7,7 +7,7 @@
 
 using namespace CryptoPP;
 
-std::string b64_encode(std::string in_string) {
+std::string b64_encode(std::string in_string, size_t padded_len) {
     // output string
     std::string encoded;
     // copy input string to byte array
@@ -22,7 +22,11 @@ std::string b64_encode(std::string in_string) {
         )
     );
     // return output string
-    return encoded;
+    std::string enc_string = encoded.substr(0, encoded.length() - 1); //a null character we don't want gets included
+    if (padded_len != -1) {
+        enc_string += std::string(padded_len - enc_string.length(), '=');
+    }
+    return enc_string;
 }
 
 std::string b64_decode(std::string encoded) {

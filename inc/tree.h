@@ -13,7 +13,7 @@ class Tree {
         void set_pow_req(int pow_req);
 
         // where h1 is the new content, and h0 is prev hash
-        void generate_branch(bool debug_info, std::string c1, std::string st);
+        void generate_branch(bool debug_info, std::string c1, std::string st, std::string creator_trip = std::string(24, '='));
 
         std::vector<std::vector<std::string>> get_chain();
 

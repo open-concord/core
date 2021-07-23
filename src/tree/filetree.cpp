@@ -39,9 +39,10 @@ void FileTree::load(std::string dir) {
                 block_data.substr(0, 22), //22 chars of datetime
                 block_data.substr(22, 64), //64 chars of last hash
                 block_data.substr(22 + 64, 64), //64 chars of current hash
-                block_data.substr(22 + 64 + 64, 32), //32 chars of nonce
-                block_data.substr(22 + 64 + 64 + 32, 32), //32 chars of server trip
-                block_data.substr(22 + 64 + 64 + 32 + 32) //remainder is plain content
+                block_data.substr(22 + 64 + 64, 24), //24 chars of nonce
+                block_data.substr(22 + 64 + 64 + 24, 24), //24 chars of nonce creator trip
+                block_data.substr(22 + 64 + 64 + 24 + 24, 24), //24 chars of server trip
+                block_data.substr(22 + 64 + 64 + 24 + 24 + 24) //remainder is plain content
             });
             saved_block.close();
         }

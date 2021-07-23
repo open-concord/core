@@ -1,11 +1,14 @@
-#include "../inc/node.h"
-#include "../inc/rw.h"
+//#include "../inc/node.h"
+//#include "../inc/rw.h"
+#include "../inc/hash.h"
+#include "../inc/b64.h"
 #include <string>
 #include <vector>
 #include <iostream>
 #include <exception>
 
-int main() {
+/*
+int maint() {
 
     // port numbers etc will be taken over by cfg files
     unsigned short int host = 1336;
@@ -20,4 +23,13 @@ int main() {
         std::cout << "err: " << err.what() << "\n";
     }
     return 0;
+}
+*/
+
+int main() {
+    std::cout << b64_decode(b64_encode("hdhfjkghfhdrstfjykuujyhtgefd", 100)) << std::endl;
+    std::cout << calc_hash(false, "rawraw") << std::endl;
+    std::cout << calc_hash(false, "rawrar") << std::endl;
+    std::cout << calc_hash(false, "rawraw").length() << std::endl;
+    std::cout << calc_hash(false, "rawrar").length() << std::endl;
 }
