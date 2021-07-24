@@ -32,4 +32,5 @@ int main() {
     std::cout << calc_hash(false, "rawrar") << std::endl;
     std::cout << calc_hash(false, "rawraw").length() << std::endl;
     std::cout << calc_hash(false, "rawrar").length() << std::endl;
+    return 0;
 }

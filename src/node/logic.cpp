@@ -23,8 +23,8 @@ using json = nlohmann::json;
  */
 
 // temp var for cfg path
-RW rw_handler;
-json cfg = json::parse(rw_handler.read("../../cfg/main.json"));
+//RW rw_handler;
+//json cfg = json::parse(rw_handler.read("../../cfg/main.json"));
 
 //addition
 json addition(Conn* conn, json cont) {
