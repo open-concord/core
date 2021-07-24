@@ -9,6 +9,7 @@
 #include <boost/asio.hpp>
 
 #include "../../inc/node.h"
+#include "../../inc/chain_utils.h"
 #include "../../inc/b64.h"
 #include "../../inc/crypt++.h"
 #include "../../inc/tree.h"
@@ -29,13 +30,12 @@ json cfg = json::parse(rw_handler.read("../../cfg/main.json"));
 json addition(Conn* conn, json cont) {
     #define KEYS (conn->message_context).user_keys_map[cont["u"]]
     #define TREE (*(conn->parent_chains))[cont["ch"]]
-    std::string enc_string = cont["c"].dump();
-    if (cont["mt"] != "d") { //no encryption for dec
-        std::string rsa_pub_key;
-        if (cont["mt"] == "p") rsa_pub_key = get_continuity_value(chain_search(TREE.get_chain(), 'p', cont["s"], ""), "rsa_pubk");
-        enc_string = lock_msg(enc_string, (cont["mt"] == "p"), b64_decode(KEYS.dsa_pri_key), b64_decode(KEYS.server_keys[cont["s"]]));
-    }
-    TREE.generate_branch(false, enc_string, cont["s"]);
+    std::string rsa_pub_key = "";
+    if (cont["mt"] == "p") rsa_pub_key = get_continuity_value(chain_search(TREE.get_chain(), 'p', cont["s"], ""), "rsa_pubk");
+    TREE.generate_branch(false, 
+        chain_encrypt(cont, KEYS.dsa_pri_key, rsa_pub_key, KEYS.server_keys[cont["s"]], std::string(cont["mt"]).at(0)), 
+        cont["s"]
+    );
     return {
         {"success", 1}
     };

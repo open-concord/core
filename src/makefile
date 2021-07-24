@@ -26,7 +26,6 @@ OBJ = $(BIN)lockmsg.o \
 	$(BIN)RSA.o \
 	$(BIN)DSA.o \
 	$(BIN)hash.o \
-	$(BIN)ledger.o \
 	$(BIN)miner.o \
 	$(BIN)time.o \
 	$(BIN)tree.o \
@@ -34,7 +33,8 @@ OBJ = $(BIN)lockmsg.o \
 	$(BIN)nlogic.o \
 	$(BIN)nconn.o \
 	$(BIN)nnode.o \
-	$(BIN)nchainsearch.o \
+	$(BIN)chainsearch.o \
+	$(BIN)chainmisc.o \
 	$(BIN)b64.o \
 	$(BIN)rw.o \
 	$(BIN)main.o
@@ -69,9 +69,13 @@ $(BIN)filetree.o: tree/filetree.cpp ../inc/tree.h
 $(BIN)tree.o: tree/tree.cpp ../inc/tree.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
-# node stuff
-$(BIN)nchainsearch.o: node/chainsearch.cpp ../inc/node.h
+# chain utils
+$(BIN)chainsearch.o: chain_utils/chain_search.cpp ../inc/chain_utils.h
 	$(CC) -c $(CFLAGS) $< -o $@
+$(BIN)chainmisc.o: chain_utils/chain_misc.cpp ../inc/chain_utils.h
+	$(CC) -c $(CFLAGS) $< -o $@
+
+# nodes
 $(BIN)nlogic.o: node/logic.cpp ../inc/node.h
 	$(CC) -c $(CFLAGS) $< -o $@
 $(BIN)nconn.o: node/conn.cpp ../inc/node.h
