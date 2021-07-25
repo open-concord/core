@@ -86,7 +86,13 @@ int main() {
         });
     }
 
-    std::vector<json> member_search = chain_search(test_tree.get_chain(), 's', server_trip, aes_key, boost::bind(type_filter, 'p', _1));
+    std::vector<json> member_search = chain_search(
+        test_tree.get_chain(),
+        's',
+        server_trip,
+        aes_key,
+        boost::bind(type_filter, 'p', _1)
+    );
     for (auto block : member_search) {
         std::cout << block << "\n";
     }
