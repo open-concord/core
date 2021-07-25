@@ -1,4 +1,5 @@
 #include <nlohmann/json.hpp>
+#include <iostream>
 
 #include "../../inc/crypt++.h"
 #include "../../inc/b64.h"

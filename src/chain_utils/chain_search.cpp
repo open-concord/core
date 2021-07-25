@@ -36,9 +36,8 @@ bool type_filter(char qtype, json data) {
 }
 
 void apply_member_change(std::map<std::string, std::string>& m_keys, json m_data) {
-    if (m_data["t"] == "inv") m_keys[m_data["nm"]] = m_data["pubk"]; //add member key
-    else if (m_data["t"] == "rem") m_keys[m_data["nm"]] = ""; //remove member key
-    //notably, we only use nserve in the special logic where size() == 0
+    if (m_data["t"] == "inv" || m_data["t"] == "nserv") m_keys[m_data["d"]["nm"]] = m_data["d"]["pubk"]; //add member key
+    else if (m_data["t"] == "rem") m_keys[m_data["d"]["nm"]] = ""; //remove member key
 }
 
 std::vector<json> chain_search(std::vector<std::vector<std::string>> chain, char message_type, std::string target_trip, std::string key, boost::function<bool(json)> filter, size_t start_b, size_t end_b) {
@@ -69,11 +68,11 @@ std::vector<json> chain_search(std::vector<std::vector<std::string>> chain, char
         if (message_type == 'd') {
             json data;
             try {
-                data = json(block[6]); //get overall data
-                cont = json(data["cont"]); //get declaration content
+                data = json::parse(block[6]); //get overall data
+                cont = json::parse(std::string(data["cont"])); //get declaration content
                 std::string pubkey = cont["pubk"]; //get pubkey from content
                 if (!filter(cont)) continue;
-                if (!DSA_verify(data["cont"], b64_decode(data["sig"]), pubkey)) continue; //not properly signed -> skip
+                if (!DSA_verify(pubkey, b64_decode(data["sig"]), data["cont"])) continue; //not properly signed -> skip
             }
             catch(int e) {
                 continue; //error if not plaintext json, with cont json and pubkey field -> skip
@@ -83,13 +82,13 @@ std::vector<json> chain_search(std::vector<std::vector<std::string>> chain, char
             try {
                 std::string skey = b64_decode(key);
                 std::array<std::string, 2> unlocked = unlock_msg(b64_decode(block[6]), (message_type == 'p'), skey, skey);
-                cont = json(unlocked[0]);
+                cont = json::parse(unlocked[0]);
+                if (!filter(cont)) continue; //needs to pass filter
                 if (member_search && outputs.size() == 0) {
                     assert(cont["t"] == "nserv"); //first member search block needs to be server initialization
-                    member_sig_keys[cont["nm"]] = cont["pubk"]; //server creator is automatically a member
+                    member_sig_keys[cont["d"]["nm"]] = cont["d"]["pubk"]; //server creator is automatically a member
                 }
-                if (!filter(cont)) continue; //needs to pass filter
-                if (!DSA_verify(unlocked[0], member_sig_keys[cont["s"]], unlocked[1])) continue; //verify with sender sig, per known member sigs. This will error if sender sig is unknown (i.e. sender is not a member).
+                if (!DSA_verify(b64_decode(member_sig_keys[cont["s"]]), unlocked[1], unlocked[0])) continue; //verify with sender sig, per known member sigs. This will error if sender sig is unknown (i.e. sender is not a member).
                 if (member_search) apply_member_change(member_sig_keys, cont);
             }
             catch(int e) {

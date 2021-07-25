@@ -26,7 +26,8 @@ void Tree::set_pow_req(int POW_req) {
 void Tree::generate_branch(bool debug_info, std::string c1, std::string st, std::string creator_trip) {
     Miner local_miner(this->pow);
     // concatenation of h0+h1/h0
-    assert(st.length() == 32);
+    assert(st.length() == 24);
+    assert(creator_trip.length() == 24);
 
     std::string h0 = ((this->local_chain).size() > 0) ? (this->local_chain).back()[2] : std::string(64, '0');
     if (debug_info) std::cout << "Old hash: " << h0 << std::endl;

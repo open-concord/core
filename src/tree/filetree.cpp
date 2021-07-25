@@ -54,8 +54,8 @@ void FileTree::set_pow_req(int POW_req) {
     (this->target_tree).set_pow_req(POW_req);
 }
 
-void FileTree::generate_branch(bool debug_info, std::string c1, std::string st) {
-    (this->target_tree).generate_branch(debug_info, c1, st);
+void FileTree::generate_branch(bool debug_info, std::string c1, std::string st, std::string creator_trip) {
+    (this->target_tree).generate_branch(debug_info, c1, st, creator_trip);
     save_latest();
 }
 
@@ -76,7 +76,7 @@ void FileTree::save_latest() {
     size_t terminal_index = (this->target_tree).get_chain().size() - 1;
     std::vector<std::string> new_block = (this->target_tree).get_chain()[terminal_index];
     std::string block_string;
-    for (size_t i = 0; i < 6; i++) block_string+=new_block[i];
+    for (size_t i = 0; i < new_block.size(); i++) block_string+=new_block[i];
     std::ofstream block_file(((this->target_dir) + std::to_string(terminal_index) + ".block").c_str());
     block_file << block_string;
     block_file.close();
