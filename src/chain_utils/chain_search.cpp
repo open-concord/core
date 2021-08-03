@@ -54,7 +54,7 @@ std::vector<json> chain_search(std::vector<std::vector<std::string>> chain, char
         start_b = -1;
         end_b = -1;
     } else if (message_type == 's') { //not a member search, but still a server search
-        std::vector<json> member_data = chain_search(chain, 'm', target_trip, key, NULL, -1, -1);
+        std::vector<json> member_data = chain_search(chain, 'm', target_trip, key);
         for (auto member_change : member_data) apply_member_change(member_sig_keys, member_change); //load sig keys from a member search
     }
     size_t valid_block_iter = 0;
