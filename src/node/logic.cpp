@@ -28,8 +28,8 @@ using json = nlohmann::json;
 
 //addition
 json addition(Conn* conn, json cont) {
-    #define KEYS (conn->message_context).user_keys_map[cont["u"]]
-    #define TREE (*(conn->parent_chains))[cont["ch"]]
+    auto KEYS  = (conn->message_context).user_keys_map[cont["u"]];
+    auto TREE = (*(conn->parent_chains))[cont["ch"]];
     std::string rsa_pub_key = "";
     if (cont["mt"] == "p") rsa_pub_key = get_continuity_value(chain_search(TREE.get_chain(), 'p', cont["s"], ""), "rsa_pubk");
     TREE.generate_branch(false, 
@@ -43,8 +43,8 @@ json addition(Conn* conn, json cont) {
 
 // queries
 json query (Conn* conn, json cont) {
-    #define KEYS (conn->message_context).user_keys_map[cont["u"]]
-    #define TREE (*(conn->parent_chains))[cont["ch"]]
+    auto KEYS = (conn->message_context).user_keys_map[cont["u"]];
+    auto TREE = (*(conn->parent_chains))[cont["ch"]];
 
     std::vector<std::vector<std::string>> blocks = TREE.get_chain();
     char search_type_char = std::string(cont["mt"]).at(0);
@@ -54,7 +54,7 @@ json query (Conn* conn, json cont) {
 }
 
 json key_change(Conn* conn, json cont) {
-    #define KEYS (conn->message_context).user_keys_map[cont["u"]]
+    auto KEYS = (conn->message_context).user_keys_map[cont["u"]];
     if (cont.find("servkeys") != cont.end()) {
         for (auto servkey : cont["servkeys"]) {
             KEYS.server_keys[servkey["s"]] = servkey["k"];
@@ -111,8 +111,8 @@ json encdec(Conn* conn, json cont) {
 }
 
 void update_chain(Conn *conn) {
-    #define CTX (conn->message_context)
-    #define TREE (*(conn->parent_chains))[CTX.chain_trip]
+    auto CTX = (conn->message_context);
+    auto TREE = (*(conn->parent_chains))[CTX.chain_trip];
     std::vector<json> forward_wchain;
     for (size_t i = 0; i < CTX.wchain.size(); i++)
         TREE.chain_push(
@@ -142,8 +142,8 @@ json error(int error_code) {
 
 json send_blocks(Conn *conn, json args) {
     try {
-        #define CTX (conn->message_context)
-        #define TREE (*(conn->parent_chains))[CTX.chain_trip]
+        auto CTX = (conn->message_context);
+        auto TREE = (*(conn->parent_chains))[CTX.chain_trip];
 
         json ret = {
             {"FLAG", "BLOCKS"}
@@ -170,8 +170,8 @@ json send_blocks(Conn *conn, json args) {
 
 json begin_sending_blocks(Conn *conn, json cont) {
     try {
-        #define CTX (conn->message_context)
-        #define TREE (*(conn->parent_chains))[CTX.chain_trip]
+        auto CTX = (conn->message_context);
+        auto TREE = (*(conn->parent_chains))[CTX.chain_trip];
 
         CTX.chain_trip = cont["chain"];
         CTX.lastbi = TREE.get_chain().size();
@@ -185,8 +185,8 @@ json begin_sending_blocks(Conn *conn, json cont) {
 
 json evaluate_blocks(Conn *conn, json cont) {
     try {
-        #define CTX (conn->message_context)
-        #define TREE (*(conn->parent_chains))[CTX.chain_trip]
+        auto CTX = (conn->message_context);
+        auto TREE = (*(conn->parent_chains))[CTX.chain_trip];
         // check each subsequent block, see contact.txt
         json ret = {
         {"FLAG", "ABSENT/V"}
