@@ -1,2 +1,3 @@
 *.block
 ./chains/
+src/_bin/*

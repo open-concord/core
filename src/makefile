@@ -36,14 +36,20 @@ OBJ = $(BIN)lockmsg.o \
 	$(BIN)chainsearch.o \
 	$(BIN)chainmisc.o \
 	$(BIN)b64.o \
-	$(BIN)rw.o \
-	$(BIN)main.o
+	$(BIN)rw.o
 
 # returns executable to root
 
-../main: $(OBJ)
+../tnode: $(BIN)tnode.o $(OBJ)
 	@echo "NOW COMPILING MAIN EXECUTABLE"
-	$(CC) $(CFLAGS) $(OBJ) $(LFLAGS) -o $@
+	$(CC) $(CFLAGS) $(BIN)tnode.o $(OBJ) $(LFLAGS) -o $@
+
+../main: $(BIN)main.o $(OBJ)
+	@echo "NOW COMPILING MAIN EXECUTABLE"
+	$(CC) $(CFLAGS) $(BIN)main.o $(OBJ) $(LFLAGS) -o $@
+
+$(BIN)tnode.o: tnode.cpp
+	$(CC) -c $(CFLAGS) $< -o $@
 
 $(BIN)main.o: main.cpp
 	$(CC) -c $(CFLAGS) $< -o $@

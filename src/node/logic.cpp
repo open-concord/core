@@ -5,7 +5,7 @@
 #include <vector>
 #include <functional>
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/asio.hpp>
 
 #include "../../inc/node.h"
@@ -17,6 +17,7 @@
 #include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
+using namespace boost::placeholders;
 
 /** this file only holds the message logic
  * which will be sure to grow exponentially
