@@ -1,3 +1,4 @@
 *.block
 ./chains/
 src/_bin/*
+./vscode/*
