@@ -1,9 +1,80 @@
-# main
-Concord is a distributed messaging protocol (?)
+# Concord/Main
+Concord is a distributed messaging protocol
 
-This is currently the Pre-Alpha build, RunAtYourOwnRisk (or not at all)
+This is currently the Pre-Alpha build, Run-At-Your-Own-Risk (or not at all)
 
-Register to become a beta tester; @0xuTon on the funni bird app
+Register to become a beta tester; shoot either maintainer an email
+
+<br>
+
+## Using
+`Concord/Main` produces either a Shared Object (Unix), or a Dynamic-Link Library (Windows). If you're here because you want a plug and play application, check out [Concord/Desktop](https://github.com/open-concord/desktop/).
+
+You can find stable releases of both the SO and DLL under this repository's releases page. You can also build from source.
+
+*Concord currently only has g++ support in its makefile(s), but feel free to contribute Windows support!*
+
+<br>
+<br>
+
+## Building from source
+Making a SO <ins>On Unix</ins>
+
+- folder_location refers to the install location of Concord, which is usually the /usr/ folder on linux, but it just as well could be an arbitrary folder (in which event you'd have to pass `-I/path/to/arbitrary/folder/` in the linking process)
+```
+// building the lib
+> cd src
+> make unix
+
+// move shared lib to installation folder
+> sudo mv <so_file> <folder_location/lib>
+
+// update libs (install concord lib)
+> sudo ldconfig
+
+// check that concord lib is installed
+> ldconfig -p | grep <so_file>
+
+// copy header files to <folder_location/include>
+> cp -r /path/to/cloned/repo/include /path/to/folder/location/include
+```
+You're now able to use the Concord share lib!
+<br>
+
+**Compiling your own (cpp) code with the `concord.so` using g++**
+
+*See above note on folder location and linking*
+```
+// compile your program
+> g++ ... my_code.cpp -o my_executable -lconcord
+
+// make the .SO avaliable at runtime (this step is unnessecary if you installed in a common location; /usr/, /usr/local/, etc.)
+> export LD_LIBRARY_PATH=<path_to_.SO_file>:$LD_LIBRARY_PATH
+
+// run your program
+> ./my_executable
+```
+
+
+> Issues with building? Check out [this site's wonderful .so section](http://www.yolinux.com/TUTORIALS/LibraryArchives-StaticAndDynamic.html) first, then if your problem persists, file an issue.
+
+*Remember, the last code block is for compiling C++ code with the concord lib, other languages will have different ways of linking.*
+
+<br>
+
+----
+
+<br>
+
+Making a DLL **not yet implemented**
+
+```
+> cd src
+
+> make win
+```
+<br>
+<br>
 
 ## Dependencies
 Boost Asio >= 1.71

@@ -1,24 +1,19 @@
-##### ReWrite as per GNU conventions on Makefiles ####
-
 SHELL = /bin/sh
-# fix any issues w/ suffixes
-.SUFFIXES:
-.SUFFIXES: .cpp .o
-
-# calls main rule (allowing us to return the exe to the root) [possibly take command line input for future releases??]
-default: ../main
 
 # flag for /include dir
 IN_DIR = -I../inc/ -I/usr/include/boost
 # c/cpp standard
 CC = g++
 # compile-time flags
-CFLAGS = -g -Wall $(IN_DIR)
+CFLAGS = -c -g -Wall -fPIC $(IN_DIR)
 # lib flags
 LFLAGS = -lssl -lcryptopp -lcrypt -lcrypto -pthread -lboost_system -lboost_filesystem -pthread
 
 # object file sub-dir of src
 BIN = _bin/
+
+# .so args
+SOFLAGS = -shared -Wl,-soname,libconcord.so
 
 # objects
 OBJ = $(BIN)lockmsg.o \
@@ -38,75 +33,65 @@ OBJ = $(BIN)lockmsg.o \
 	$(BIN)b64.o \
 	$(BIN)rw.o
 
-# returns executable to root
+# ex. `make unix`
+unix: $(OBJ)
+	@echo "NOW COMPILING | MAIN SHARED LIBRARY"
+	$(CC) $(SOFLAGS) $(OBJ) $(LFLAGS) -o libconcord.so
 
-../tnode: $(BIN)tnode.o $(OBJ)
-	@echo "NOW COMPILING MAIN EXECUTABLE"
-	$(CC) $(CFLAGS) $(BIN)tnode.o $(OBJ) $(LFLAGS) -o $@
+# ex. `make win`
+win: $(OBJ)
+	@echo "NOW COMPILING | MAIN SO"
+	$(CC) $(CFLAGS) $(OBJ) $(LFLAGS) -o ../concord.dll
 
-../main: $(BIN)main.o $(OBJ)
-	@echo "NOW COMPILING MAIN EXECUTABLE"
-	$(CC) $(CFLAGS) $(BIN)main.o $(OBJ) $(LFLAGS) -o $@
-
-$(BIN)tnode.o: tnode.cpp
-	$(CC) -c $(CFLAGS) $< -o $@
-
-$(BIN)main.o: main.cpp
-	$(CC) -c $(CFLAGS) $< -o $@
-
+# functional stuff
 $(BIN)b64.o: b64/b64.cpp ../inc/b64.h
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $< -o $@
 
 $(BIN)hash.o: hash/hash.cpp ../inc/hash.h
-	$(CC) -c $(CFLAGS) $< -o $@
-
-$(BIN)ledger.o: ledger/ledger.cpp ../inc/ledger.h
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $< -o $@
 
 $(BIN)miner.o: miner/miner.cpp ../inc/miner.h
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $< -o $@
 
 $(BIN)time.o: time/timewizard.cpp ../inc/timewizard.h
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $< -o $@
 
 $(BIN)filetree.o: tree/filetree.cpp ../inc/tree.h
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $< -o $@
 
 $(BIN)tree.o: tree/tree.cpp ../inc/tree.h
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $< -o $@
 
 # chain utils
 $(BIN)chainsearch.o: chain_utils/chain_search.cpp ../inc/chain_utils.h
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $< -o $@
 $(BIN)chainmisc.o: chain_utils/chain_misc.cpp ../inc/chain_utils.h
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $< -o $@
 
 # nodes
 $(BIN)nlogic.o: node/logic.cpp ../inc/node.h
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $< -o $@
 $(BIN)nconn.o: node/conn.cpp ../inc/node.h
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $< -o $@
 $(BIN)nnode.o: node/node.cpp ../inc/node.h
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $< -o $@
 
 # rw
 $(BIN)rw.o: rw/rw.cpp ../inc/rw.h
-	$(CC) -c $(CFLAGS) $< -o $@
-#$(BIN)b64.o: rw/base64.cpp ../inc/rw.h
-#	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $< -o $@
 
 # crypt
 $(BIN)lockmsg.o: crypt++/lockmsg.cpp ../inc/crypt++.h
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $< -o $@
 
 $(BIN)DSA.o: crypt++/DSA.cpp ../inc/crypt++.h
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $< -o $@
 
 $(BIN)RSA.o: crypt++/RSA.cpp ../inc/crypt++.h
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $< -o $@
 
 $(BIN)AES.o: crypt++/AES.cpp ../inc/crypt++.h
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $< -o $@
 
 clean:
 	cd $(BIN); rm -rf *o main

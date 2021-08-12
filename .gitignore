@@ -1,4 +1,6 @@
 *.block
-./chains/
+/chains/
 src/_bin/*
-./vscode/*
+/.vscode/
+*.so
+*.dll
