@@ -66,13 +66,21 @@ You're now able to use the Concord share lib!
 
 <br>
 
-Making a DLL **not yet implemented**
+Making a DLL **not very well implemented, use at own risk, but feel free to pull req :)**
+- This assumes you have MinGW installed; if not, vsCode has a [good article](https://code.visualstudio.com/docs/cpp/config-mingw) on it
 
 ```
+// building the lib
 > cd src
-
 > make win
+
+// move to a known dir
+move <path_to_.DLL_file> <known_dir>
+
+// compile with own code
+g++ my_code.cpp -o my_executable -lconcord
 ```
+*Something wrong with this? Submit a pull request, every contribution helps!*
 <br>
 <br>
 

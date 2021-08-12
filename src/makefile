@@ -15,6 +15,9 @@ BIN = _bin/
 # .so args
 SOFLAGS = -shared -Wl,-soname,libconcord.so
 
+# .dll args
+DLLFLAGS = -shared
+
 # objects
 OBJ = $(BIN)lockmsg.o \
 	$(BIN)AES.o \
@@ -40,8 +43,8 @@ unix: $(OBJ)
 
 # ex. `make win`
 win: $(OBJ)
-	@echo "NOW COMPILING | MAIN SO"
-	$(CC) $(CFLAGS) $(OBJ) $(LFLAGS) -o ../concord.dll
+	@echo "NOW COMPILING | MAIN DLL"
+	$(CC) $(DLLFLAGS) $(OBJ) $(LFLAGS) -o concord.dll
 
 # functional stuff
 $(BIN)b64.o: b64/b64.cpp ../inc/b64.h
