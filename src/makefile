@@ -48,7 +48,8 @@ install_unix: unix
 	@echo "INSTALLING FOR UNIX"
 	sudo cp libconcord.so /usr/lib/libconcord.so
 	sudo ldconfig
-	sudo cp ../inc/* /usr/include/
+	sudo mkdir /usr/include/concord
+	sudo cp ../inc/* /usr/include/concord
 
 # ex. `make unix`
 unix: $(OBJ)
