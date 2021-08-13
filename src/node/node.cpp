@@ -91,15 +91,6 @@ void Node::handle_accept(Conn::ptr new_conn, const boost::system::error_code& er
     }
 };
 
-// make a local socket
-void Node::make_local(int port) {
-    json init = {
-        {"FLAG", "RUNNING"},
-        {"CONTENT", nullptr}
-    };
-    this->local_conn = Node::contact(init.dump(), "127.0.0.1", port);
-};
-
 // intiates contact with another ws
 Conn::ptr Node::contact(std::string initial_content, std::string ip, int port) {
     // target info

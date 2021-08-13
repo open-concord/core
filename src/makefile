@@ -36,6 +36,20 @@ OBJ = $(BIN)lockmsg.o \
 	$(BIN)b64.o \
 	$(BIN)rw.o
 
+default: main
+
+main: $(BIN)main.o $(OBJ)
+	@echo "NOW COMPILING MAIN EXECUTABLE"
+	$(CC) $(CFLAGS) $(BIN)main.o $(OBJ) $(LFLAGS) -o $@
+
+install: install_unix
+
+install_unix: unix
+	@echo "INSTALLING FOR UNIX"
+	sudo cp libconcord.so /usr/lib/libconcord.so
+	sudo ldconfig
+	sudo cp ../inc/* /usr/include/
+
 # ex. `make unix`
 unix: $(OBJ)
 	@echo "NOW COMPILING | MAIN SHARED LIBRARY"
@@ -47,6 +61,9 @@ win: $(OBJ)
 	$(CC) $(DLLFLAGS) $(OBJ) $(LFLAGS) -o concord.dll
 
 # functional stuff
+$(BIN)main.o: main.cpp
+	$(CC) $(CFLAGS) $< -o $@
+
 $(BIN)b64.o: b64/b64.cpp ../inc/b64.h
 	$(CC) $(CFLAGS) $< -o $@
 
@@ -98,3 +115,4 @@ $(BIN)AES.o: crypt++/AES.cpp ../inc/crypt++.h
 
 clean:
 	cd $(BIN); rm -rf *o main
+	rm libconcord.so
