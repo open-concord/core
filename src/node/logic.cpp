@@ -27,90 +27,6 @@ using namespace boost::placeholders;
 //RW rw_handler;
 //json cfg = json::parse(rw_handler.read("../../cfg/main.json"));
 
-//addition
-json addition(Conn* conn, json cont) {
-    auto KEYS  = (conn->message_context).user_keys_map[cont["u"]];
-    auto TREE = (*(conn->parent_chains))[cont["ch"]];
-    std::string rsa_pub_key = "";
-    if (cont["mt"] == "p") rsa_pub_key = get_continuity_value(chain_search(TREE.get_chain(), 'p', cont["s"], ""), "rsa_pubk");
-    TREE.generate_branch(false, 
-        chain_encrypt(cont, KEYS.dsa_pri_key, rsa_pub_key, KEYS.server_keys[cont["s"]], std::string(cont["mt"]).at(0)), 
-        cont["s"]
-    );
-    return {
-        {"success", 1}
-    };
-}
-
-// queries
-json query (Conn* conn, json cont) {
-    auto KEYS = (conn->message_context).user_keys_map[cont["u"]];
-    auto TREE = (*(conn->parent_chains))[cont["ch"]];
-
-    std::vector<std::vector<std::string>> blocks = TREE.get_chain();
-    char search_type_char = std::string(cont["mt"]).at(0);
-    if (cont["imt"] == "m") search_type_char = 'm';
-    std::vector<json> search_results = chain_search(blocks, search_type_char, cont["s"], KEYS.server_keys[cont["s"]], boost::bind(type_filter, (char) std::string(cont["imt"]).at(0), _1), cont["r"][0], cont["r"][1]);
-    return search_results;
-}
-
-json key_change(Conn* conn, json cont) {
-    auto KEYS = (conn->message_context).user_keys_map[cont["u"]];
-    if (cont.find("servkeys") != cont.end()) {
-        for (auto servkey : cont["servkeys"]) {
-            KEYS.server_keys[servkey["s"]] = servkey["k"];
-        }
-    }
-    if (cont.find("sigkey") != cont.end()) {
-        KEYS.dsa_pri_key = cont["sigkey"];
-    }
-    if (cont.find("enckey") != cont.end()) {
-        KEYS.dsa_pri_key = cont["enckey"];
-    }
-    return {
-        {"success", 1}
-    };
-}
-
-// keygen
-json key_gen(Conn* conn, json cont) {
-    // index 0 is pri, index 1 is pub
-    std::array<std::string, 2> keys;
-    switch (((std::string) cont["kt"]).at(0)) {
-        case 'D': // DSA
-            keys = DSA_keygen();
-            break;
-        case 'R': // RSA
-            keys = RSA_keygen();
-            break;
-        case 'A': // AES
-            // 256 byte key (maybe set this up to be cfg?)
-            keys[0] = AES_keygen();
-            keys[1] = "";
-            break;
-        default:
-            throw;
-    };
-    json retc = {
-        "pri", b64_encode(keys[0]),
-        "pub", b64_encode(keys[1]),
-        "kt", cont["kt"]
-    };
-    return retc;
-}
-
-json encdec(Conn* conn, json cont) {
-    json retc;
-    if (cont["dec"]) {
-        retc["plain"] = AES_decrypt(b64_decode(cont["aes_key"]), b64_decode(cont["nonce"]), b64_decode(cont["cipher"]));
-    } else {
-        std::array<std::string, 2> results = AES_encrypt(b64_decode(cont["aes_key"]), cont["plain"]);
-        retc["cipher"] = b64_encode(results[0]);
-        retc["nonce"] = b64_encode(results[1]);
-    }
-    return retc;
-}
-
 void update_chain(Conn *conn) {
     auto CTX = (conn->message_context);
     auto TREE = (*(conn->parent_chains))[CTX.chain_trip];
@@ -220,37 +136,7 @@ json evaluate_blocks(Conn *conn, json cont) {
         return error(err);
     }
 }
-// - end of C2C handle functions -
-
-// there's only one standard request for UI2C
-json handle_request(Conn* conn, json cont) {
-    try {
-        json ret;
-        ret["t"] = cont["t"];
-        switch (((std::string) cont["t"]).at(0)) {
-            case 'a': // addition (decleration, intraserver)
-                ret["c"] = addition(conn, cont);
-                break;
-            case 'q': // query (messages)
-                ret["c"] = query(conn, cont);
-                break;
-            case 'c': // user-specific data changes (keys)
-                ret["c"] = key_change(conn, cont);
-                break;
-            case 'g': // keygen
-                ret["c"] = key_gen(conn, cont);
-                break;
-            case 'e':
-                ret["c"] = encdec(conn, cont);
-                break;
-            default: // none of the actual flags were present, throw error
-                throw;
-        };
-        return ret;
-    } catch (std::exception& err) {
-        std::cout << err.what() << "\n";
-    }
-}
+// - end of C2C handle functions
 
 // map of communication roadmap
 std::map<std::string /*prev flag*/, json (*)(Conn*, json)> next {
@@ -274,9 +160,10 @@ std::string message_logic(Conn *conn) {
 
     // client and server roles can both be stored in func map; communication flags ensure proper order of execution
     try {
+        //still don't want to connect over loopback. TODO: add a nicer fix
         if (!conn->local) {
             rmsg = ((*next[cmd])(conn, cont)).dump();
-        } else {rmsg = handle_request(conn, cont).dump();}
+        } //else {rmsg = handle_request(conn, cont).dump();}
     } catch (int err) {
         rmsg = error(err).dump();
     }
