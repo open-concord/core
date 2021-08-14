@@ -33,8 +33,7 @@ OBJ = $(BIN)lockmsg.o \
 	$(BIN)nnode.o \
 	$(BIN)chainsearch.o \
 	$(BIN)chainmisc.o \
-	$(BIN)b64.o \
-	$(BIN)rw.o
+	$(BIN)b64.o
 
 default: main
 
@@ -95,10 +94,6 @@ $(BIN)nlogic.o: node/logic.cpp ../inc/node.h
 $(BIN)nconn.o: node/conn.cpp ../inc/node.h
 	$(CC) $(CFLAGS) $< -o $@
 $(BIN)nnode.o: node/node.cpp ../inc/node.h
-	$(CC) $(CFLAGS) $< -o $@
-
-# rw
-$(BIN)rw.o: rw/rw.cpp ../inc/rw.h
 	$(CC) $(CFLAGS) $< -o $@
 
 # crypt

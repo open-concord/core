@@ -4,6 +4,7 @@
 #include <boost/beast/websocket.hpp>
 #include <boost/beast/ssl/ssl_stream.hpp>
 #include <boost/enable_shared_from_this.hpp>
+#include <boost/function.hpp>
 #include <boost/any.hpp>
 
 #include <nlohmann/json.hpp>
@@ -41,11 +42,11 @@ class Conn : public boost::enable_shared_from_this<Conn> {
         // basically just a shared_ptr of self
         typedef std::shared_ptr<Conn> ptr;
     private:
-        Conn(std::map<std::string, FileTree>*, Conn::ptr*, boost::asio::io_context& io_ctx);
+        Conn(std::map<std::string, FileTree>*, boost::function<void(std::string, size_t)>, boost::asio::io_context& io_ctx);
         boost::asio::ip::tcp::socket tsock;   
     public:
         std::map<std::string, FileTree>* parent_chains;
-        Conn::ptr* parent_local_conn;
+        boost::function<void(std::string, size_t)> parent_blocks_callback;
 
         conn_context message_context;
         // util vars
@@ -55,7 +56,7 @@ class Conn : public boost::enable_shared_from_this<Conn> {
         bool server; // which capacity client is currently serving in
         bool local; // is local connection?
 
-        static ptr create(std::map<std::string, FileTree>*, Conn::ptr*, boost::asio::io_context& io_ctx);
+        static ptr create(std::map<std::string, FileTree>*, boost::function<void(std::string, size_t)>, boost::asio::io_context& io_ctx);
         boost::asio::ip::tcp::socket& socket();
         // async util func
         void initiate_comms(std::string msg);
@@ -91,12 +92,11 @@ class Node {
             std::chrono::high_resolution_clock::time_point last_verified;
         };
         std::vector<khost> known_hosts;
-
-        Conn::ptr local_conn;
+        boost::function<void(std::string, size_t)> blocks_callback;
     public:
         std::map<std::string /*trip*/, FileTree /*chain model*/> chains;
 
-        Node(int queue, unsigned short int port, std::string chains_dir, std::vector<std::string> desired_trips);
+        Node(int queue, unsigned short int port, std::string chains_dir, std::vector<std::string> desired_trips, boost::function<void(std::string, size_t)> blocks_cb);
 
         // start listening
         void start();
@@ -115,7 +115,4 @@ class Node {
         Conn::ptr contact(std::string initial_content, std::string ip, int port);
 
         void chain_contact(std::string chaintrip, size_t k, std::string ip, int port);
-
-        // make a local connection (for use with GUI)
-        void make_local(int port);
 };

@@ -6,6 +6,7 @@
 #include <boost/bind.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/function.hpp>
 
 // std
 #include <string>
@@ -16,14 +17,16 @@
 #include <functional>
 #include "../../inc/node.h"
 
+#include <nlohmann/json.hpp>
+
 // Connection instance
-Conn::Conn(std::map<std::string, FileTree>* pchains, Conn::ptr* plocal_conn, boost::asio::io_context& io_ctx) : parent_chains(pchains), parent_local_conn(plocal_conn), tsock(io_ctx) {
+Conn::Conn(std::map<std::string, FileTree>* pchains, boost::function<void(std::string, size_t)> pblocks_cb, boost::asio::io_context& io_ctx) : parent_chains(pchains), parent_blocks_callback(pblocks_cb), tsock(io_ctx) {
     this->server = true;
     this->local = (this->tsock).remote_endpoint().address().is_loopback();
 }
 
-Conn::ptr Conn::create(std::map<std::string, FileTree>* pchains, Conn::ptr* plocal_conn, boost::asio::io_context& io_ctx) {
-    return ptr(new Conn(pchains, plocal_conn, io_ctx));
+Conn::ptr Conn::create(std::map<std::string, FileTree>* pchains, boost::function<void(std::string, size_t)> pblocks_cb, boost::asio::io_context& io_ctx) {
+    return ptr(new Conn(pchains, pblocks_cb, io_ctx));
 }
 boost::asio::ip::tcp::socket& Conn::socket() {
     return this->tsock;

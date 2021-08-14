@@ -6,11 +6,13 @@
 #include <stdexcept>
 
 #include <boost/function.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include "../../inc/crypt++.h"
 #include "../../inc/chain_utils.h"
 #include "../../inc/b64.h"
+
+using namespace boost::placeholders;
 
 std::map<char, std::vector<std::string>> qtypes {
     {'s', {"set"}},
@@ -40,7 +42,7 @@ void apply_member_change(std::map<std::string, std::string>& m_keys, json m_data
     else if (m_data["t"] == "rem") m_keys[m_data["d"]["nm"]] = ""; //remove member key
 }
 
-std::vector<json> chain_search(std::vector<std::vector<std::string>> chain, char message_type, std::string target_trip, std::string key, boost::function<bool(json)> filter, size_t start_b, size_t end_b) {
+std::vector<json> chain_search(std::vector<std::vector<std::string>> chain, char message_type, std::string target_trip, std::string key, boost::function<bool(json)> filter, int start_b, int end_b) {
     //note: depending on message_type, key can be an AES key or PEM RSA key
     
     //member searches are special because they need to be done back-front and with unlimited range

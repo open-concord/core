@@ -13,7 +13,6 @@
 #include "../../inc/b64.h"
 #include "../../inc/crypt++.h"
 #include "../../inc/tree.h"
-#include "../../inc/rw.h"
 #include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
@@ -35,15 +34,7 @@ void update_chain(Conn *conn) {
         TREE.chain_push(
             CTX.wchain[CTX.wchain.size() - i]
         );
-    json jret = {
-        {"err", 0},
-        {"t", "nb"},
-        {"c", {
-            {"ch", CTX.chain_trip},
-            {"bc", CTX.wchain.size()}
-        }}
-    };
-    (*(conn->parent_local_conn))->send(jret.dump());
+    conn->parent_blocks_callback(CTX.chain_trip, CTX.wchain.size());
 }
 
 // error handler
