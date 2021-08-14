@@ -9,41 +9,19 @@
 #include <boost/bind/bind.hpp>
 
 #include "../../inc/crypt++.h"
-#include "../../inc/chain_utils.h"
 #include "../../inc/b64.h"
+#include "../../inc/tree.h"
 
 using namespace boost::placeholders;
-
-std::map<char, std::vector<std::string>> qtypes {
-    {'s', {"set"}},
-    {'r', {"crole", "drole", "grole", "nserv"}},
-    {'m', {"inv", "rem", "nserv"}},
-    {'p', {"msg", "img", "li", "imgli", "vidli"}}
-};
-
-json get_continuity_value(std::vector<json> defs, std::string key) {
-    for (auto def : defs) {
-        if (def.find(key) != def.end()) return def[key];
-    }
-    throw std::out_of_range("No such value defined");
-}
-
-bool no_filter(json data) {
-    return true;
-}
-
-bool type_filter(char qtype, json data) {
-    std::vector<std::string>& type_tags = qtypes[qtype];
-    return (std::find(type_tags.begin(), type_tags.end(), std::string(data["t"])) != type_tags.end());
-}
 
 void apply_member_change(std::map<std::string, std::string>& m_keys, json m_data) {
     if (m_data["t"] == "inv" || m_data["t"] == "nserv") m_keys[m_data["d"]["nm"]] = m_data["d"]["pubk"]; //add member key
     else if (m_data["t"] == "rem") m_keys[m_data["d"]["nm"]] = ""; //remove member key
 }
 
-std::vector<json> chain_search(std::vector<std::vector<std::string>> chain, char message_type, std::string target_trip, std::string key, boost::function<bool(json)> filter, int start_b, int end_b) {
+std::vector<json> Tree::search(char message_type, std::string target_trip, std::string key, boost::function<bool(json)> filter, int start_b, int end_b) {
     //note: depending on message_type, key can be an AES key or PEM RSA key
+    auto chain = get_chain();
     
     //member searches are special because they need to be done back-front and with unlimited range
     std::map<std::string, std::string> member_sig_keys;
@@ -56,10 +34,10 @@ std::vector<json> chain_search(std::vector<std::vector<std::string>> chain, char
         start_b = -1;
         end_b = -1;
     } else if (message_type == 's') { //not a member search, but still a server search
-        std::vector<json> member_data = chain_search(chain, 'm', target_trip, key);
+        std::vector<json> member_data = search('m', target_trip, key);
         for (auto member_change : member_data) apply_member_change(member_sig_keys, member_change); //load sig keys from a member search
     }
-    size_t valid_block_iter = 0;
+    int valid_block_iter = 0;
     std::vector<json> outputs;
     std::string dsa_pubkey;
     for (size_t i = 0; i < chain.size(); i++) {

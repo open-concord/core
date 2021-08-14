@@ -9,7 +9,6 @@
 #include <boost/asio.hpp>
 
 #include "../../inc/node.h"
-#include "../../inc/chain_utils.h"
 #include "../../inc/b64.h"
 #include "../../inc/crypt++.h"
 #include "../../inc/tree.h"

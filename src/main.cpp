@@ -1,1 +1,0 @@
-//TODO: Initialize simple node

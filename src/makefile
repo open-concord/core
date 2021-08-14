@@ -27,18 +27,14 @@ OBJ = $(BIN)lockmsg.o \
 	$(BIN)miner.o \
 	$(BIN)time.o \
 	$(BIN)tree.o \
+	$(BIN)tsearch.o \
+	$(BIN)tmisc.o \
 	$(BIN)nlogic.o \
 	$(BIN)nconn.o \
 	$(BIN)nnode.o \
-	$(BIN)chainsearch.o \
-	$(BIN)chainmisc.o \
 	$(BIN)b64.o
 
-default: main
-
-main: $(BIN)main.o $(OBJ)
-	@echo "NOW COMPILING MAIN EXECUTABLE"
-	$(CC) $(CFLAGS) $(BIN)main.o $(OBJ) $(LFLAGS) -o $@
+default: unix
 
 install: install_unix
 
@@ -46,7 +42,7 @@ install_unix: unix
 	@echo "INSTALLING FOR UNIX"
 	sudo cp libconcord.so /usr/lib/libconcord.so
 	sudo ldconfig
-	sudo mkdir /usr/include/concord
+	sudo mkdir -p /usr/include/concord
 	sudo cp ../inc/* /usr/include/concord
 
 # ex. `make unix`
@@ -79,9 +75,9 @@ $(BIN)tree.o: tree/tree.cpp ../inc/tree.h
 	$(CC) $(CFLAGS) $< -o $@
 
 # chain utils
-$(BIN)chainsearch.o: chain_utils/chain_search.cpp ../inc/chain_utils.h
+$(BIN)tsearch.o: tree/search.cpp ../inc/tree.h
 	$(CC) $(CFLAGS) $< -o $@
-$(BIN)chainmisc.o: chain_utils/chain_misc.cpp ../inc/chain_utils.h
+$(BIN)tmisc.o: tree/chain_misc.cpp ../inc/tree.h
 	$(CC) $(CFLAGS) $< -o $@
 
 # nodes
