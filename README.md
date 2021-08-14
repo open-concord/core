@@ -19,24 +19,9 @@ You can find stable releases of both the SO and DLL under this repository's rele
 
 ## Building from source
 Making a SO <ins>On Unix</ins>
-
-- folder_location refers to the install location of Concord, which is usually the /usr/ folder on linux, but it just as well could be an arbitrary folder (in which event you'd have to pass `-I/path/to/arbitrary/folder/` in the linking process)
+To install globally, you can simply use:
 ```
-// building the lib
-> cd src
-> make unix
-
-// move shared lib to installation folder
-> sudo mv <so_file> <folder_location/lib>
-
-// update libs (install concord lib)
-> sudo ldconfig
-
-// check that concord lib is installed
-> ldconfig -p | grep <so_file>
-
-// copy header files to <folder_location/include>
-> cp -r /path/to/cloned/repo/include /path/to/folder/location/include
+> make install_unix
 ```
 You're now able to use the Concord share lib!
 <br>

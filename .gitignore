@@ -1,6 +1,6 @@
 *.block
 /chains/
-src/_bin/*
+src/_bin/*.o
 /.vscode/
 *.so
 *.dll
