@@ -27,7 +27,6 @@ OBJ = $(BIN)lockmsg.o \
 	$(BIN)miner.o \
 	$(BIN)time.o \
 	$(BIN)tree.o \
-	$(BIN)filetree.o \
 	$(BIN)nlogic.o \
 	$(BIN)nconn.o \
 	$(BIN)nnode.o \
@@ -74,9 +73,6 @@ $(BIN)miner.o: miner/miner.cpp ../inc/miner.h
 	$(CC) $(CFLAGS) $< -o $@
 
 $(BIN)time.o: time/timewizard.cpp ../inc/timewizard.h
-	$(CC) $(CFLAGS) $< -o $@
-
-$(BIN)filetree.o: tree/filetree.cpp ../inc/tree.h
 	$(CC) $(CFLAGS) $< -o $@
 
 $(BIN)tree.o: tree/tree.cpp ../inc/tree.h

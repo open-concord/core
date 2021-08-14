@@ -8,8 +8,18 @@ class Tree {
     private:
         //int pow;
         std::vector<std::vector<std::string>> local_chain;
+
+        std::string target_dir;
+
         int pow = 0;
+        bool dir_linked = false;
     public:
+        Tree();
+        
+        Tree(std::string dir);
+
+        void load(std::string dir);
+
         void set_pow_req(int pow_req);
 
         // where h1 is the new content, and h0 is prev hash
@@ -20,6 +30,8 @@ class Tree {
         bool verify_chain();
 
         void chain_push(std::vector<std::string> block);
+
+        void save_latest();
 };
 
 class FileTree {

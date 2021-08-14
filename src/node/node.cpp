@@ -35,18 +35,12 @@ std::vector<std::string> get_directories(const std::string& s)
 }
 
 // overarching node instance
-Node::Node(int queue, unsigned short int port, std::string chains_dir, std::vector<std::string> desired_trips, boost::function<void(std::string, size_t)> blocks_cb) {
+Node::Node(int queue, unsigned short int port, std::map<std::string, Tree> cm, boost::function<void(std::string, size_t)> blocks_cb) {
     boost::asio::ip::tcp::endpoint endpoint{boost::asio::ip::tcp::v4(), port};
     this->queue = queue;
     this->chains_dir = chains_dir;
     this->blocks_callback = blocks_cb;
-    if ((this->chains_dir).back() != '/') this->chains_dir += "/";
-    for (auto dtrip : desired_trips) fs::create_directory(this->chains_dir + dtrip);
-    for (auto dir : get_directories(this->chains_dir)) {
-        if (dir.length() == 32) { //tripcode dirs
-            (this->chains)[dir].load(this->chains_dir + dir);
-        }
-    }
+    this->chains = cm;
 }
 
 void Node::start() {
