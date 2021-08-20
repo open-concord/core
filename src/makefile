@@ -27,11 +27,13 @@ OBJ = $(BIN)lockmsg.o \
 	$(BIN)miner.o \
 	$(BIN)ttime.o \
 	$(BIN)tree.o \
+	$(BIN)tbenc.o \
 	$(BIN)tmisc.o \
-	$(BIN)nlogic.o \
-	$(BIN)nconn.o \
-	$(BIN)nnode.o \
 	$(BIN)b64.o
+
+#	$(BIN)nlogic.o \
+	$(BIN)nconn.o \
+	$(BIN)nnode.o
 
 default: unix
 
@@ -82,12 +84,12 @@ $(BIN)tbenc.o: tree/block_enc.cpp ../inc/tree.h
 	
 
 # nodes
-$(BIN)nlogic.o: node/logic.cpp ../inc/node.h
-	$(CC) $(CFLAGS) $< -o $@
-$(BIN)nconn.o: node/conn.cpp ../inc/node.h
-	$(CC) $(CFLAGS) $< -o $@
-$(BIN)nnode.o: node/node.cpp ../inc/node.h
-	$(CC) $(CFLAGS) $< -o $@
+#$(BIN)nlogic.o: node/logic.cpp ../inc/node.h
+#	$(CC) $(CFLAGS) $< -o $@
+#$(BIN)nconn.o: node/conn.cpp ../inc/node.h
+#	$(CC) $(CFLAGS) $< -o $@
+#$(BIN)nnode.o: node/node.cpp ../inc/node.h
+#	$(CC) $(CFLAGS) $< -o $@
 
 # crypt
 $(BIN)lockmsg.o: crypt++/lockmsg.cpp ../inc/crypt++.h

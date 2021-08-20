@@ -73,10 +73,10 @@ void Tree::gen_block(std::string cont, std::string s_trip, int p_count, std::str
     assert(c_trip.length() == 24);
     std::vector<std::string> childless_hashes;
     std::vector<std::string> p_hashes;
-    for (const auto& [hash, block] : (this->chain)) {
+    for (const auto& [hash, block] : get_chain()) {
         if (block.c_hashes.size() == 0) childless_hashes.push_back(hash);
     }
-    assert(childless_hashes.size() > 0); //0 childless hashes means a cyclical chain
+    if (!get_chain().empty()) assert(childless_hashes.size() > 0); //0 childless hashes means a cyclical chain
     //there's no point in using blocks with existing children as hashes; we can get the same reliance by using their children
     std::experimental::sample(
         childless_hashes.begin(),
