@@ -25,9 +25,8 @@ OBJ = $(BIN)lockmsg.o \
 	$(BIN)DSA.o \
 	$(BIN)hash.o \
 	$(BIN)miner.o \
-	$(BIN)time.o \
+	$(BIN)ttime.o \
 	$(BIN)tree.o \
-	$(BIN)tsearch.o \
 	$(BIN)tmisc.o \
 	$(BIN)nlogic.o \
 	$(BIN)nconn.o \
@@ -68,17 +67,19 @@ $(BIN)hash.o: hash/hash.cpp ../inc/hash.h
 $(BIN)miner.o: miner/miner.cpp ../inc/miner.h
 	$(CC) $(CFLAGS) $< -o $@
 
-$(BIN)time.o: time/timewizard.cpp ../inc/timewizard.h
-	$(CC) $(CFLAGS) $< -o $@
-
 $(BIN)tree.o: tree/tree.cpp ../inc/tree.h
 	$(CC) $(CFLAGS) $< -o $@
 
 # chain utils
-$(BIN)tsearch.o: tree/search.cpp ../inc/tree.h
-	$(CC) $(CFLAGS) $< -o $@
+#$(BIN)tsearch.o: tree/search.cpp ../inc/tree.h
+#	$(CC) $(CFLAGS) $< -o $@
 $(BIN)tmisc.o: tree/chain_misc.cpp ../inc/tree.h
 	$(CC) $(CFLAGS) $< -o $@
+$(BIN)ttime.o: tree/time_enc.cpp ../inc/tree.h
+	$(CC) $(CFLAGS) $< -o $@
+$(BIN)tbenc.o: tree/block_enc.cpp ../inc/tree.h
+	$(CC) $(CFLAGS) $< -o $@
+	
 
 # nodes
 $(BIN)nlogic.o: node/logic.cpp ../inc/node.h
@@ -103,4 +104,4 @@ $(BIN)AES.o: crypt++/AES.cpp ../inc/crypt++.h
 
 clean:
 	cd $(BIN); rm -rf *o main
-	rm libconcord.so
+	rm -f libconcord.so
