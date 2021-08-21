@@ -1,5 +1,4 @@
 #include "crypto++/sha.h"
-#include "crypto++/hex.h"
 
 #include <string>
 #include <fstream>
@@ -37,7 +36,7 @@ std::string calc_hash (bool use_disk, std::string target, int outlen) {
     
     std::string output(reinterpret_cast<const char*>(&abDigest[0]), outlen);
     return output;
-};
+}
 
 std::string gen_trip(size_t base_chars, size_t out_chars) {
     return b64_encode(gen_string(base_chars), out_chars);

@@ -20,7 +20,7 @@ std::string hex_encode(std::string in_string) {
         )
     );
     // return output string
-    std::string enc_string = encoded.substr(0, encoded.length() - 1); //a null character we don't want gets included
+    std::string enc_string = encoded.substr(0, encoded.length());
     return enc_string;
 }
 
