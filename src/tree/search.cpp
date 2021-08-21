@@ -9,7 +9,7 @@
 #include <boost/bind/bind.hpp>
 
 #include "../../inc/crypt++.h"
-#include "../../inc/b64.h"
+#include "../../inc/strenc.h"
 #include "../../inc/tree.h"
 
 using namespace boost::placeholders;

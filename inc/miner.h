@@ -1,4 +1,5 @@
 #include <string>
+#include <array>
 
 #pragma once
 
@@ -16,5 +17,5 @@ class Miner {
         std::string generate_nonce();
 
         // genning nonce satisfying pow
-        std::string generate_valid_nonce(bool debug_info, std::string content);
+        std::array<std::string, 2> generate_valid_nonce(bool debug_info, std::string content);
 };

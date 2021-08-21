@@ -29,7 +29,9 @@ OBJ = $(BIN)lockmsg.o \
 	$(BIN)tree.o \
 	$(BIN)tbenc.o \
 	$(BIN)tmisc.o \
-	$(BIN)b64.o
+	$(BIN)b64.o \
+	$(BIN)hexstr.o \
+	$(BIN)strutil.o
 
 #	$(BIN)nlogic.o \
 	$(BIN)nconn.o \
@@ -60,7 +62,13 @@ win: $(OBJ)
 $(BIN)main.o: main.cpp
 	$(CC) $(CFLAGS) $< -o $@
 
-$(BIN)b64.o: b64/b64.cpp ../inc/b64.h
+$(BIN)b64.o: strenc/b64.cpp ../inc/strenc.h
+	$(CC) $(CFLAGS) $< -o $@
+
+$(BIN)hexstr.o: strenc/hexstr.cpp ../inc/strenc.h
+	$(CC) $(CFLAGS) $< -o $@
+
+$(BIN)strutil.o: strenc/strutil.cpp ../inc/strenc.h
 	$(CC) $(CFLAGS) $< -o $@
 
 $(BIN)hash.o: hash/hash.cpp ../inc/hash.h

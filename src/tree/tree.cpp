@@ -10,7 +10,7 @@
 #include "../../inc/miner.h"
 #include "../../inc/hash.h"
 #include "../../inc/tree.h"
-#include "../../inc/b64.h"
+#include "../../inc/strenc.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -130,7 +130,7 @@ std::string hash_concat(block input) {
 
 bool verify_block(block to_verify, int pow) {
 
-    std::string result_hash = calc_hash(false, hash_concat(to_verify) + to_verify.nonce);
+    std::string result_hash = hex_encode(calc_hash(false, hash_concat(to_verify) + to_verify.nonce));
     if (result_hash != to_verify.hash) return false;
     for (int i = 0; i < pow; i++) {
         if (result_hash.at(i) != '0') return false;
@@ -148,8 +148,8 @@ block construct_block(std::string cont, std::vector<std::string> p_hashes, int p
     output.c_trip = c_trip;
     output.cont = cont;
     output.p_hashes = p_hashes;
-    std::string concat_data = hash_concat(output);
-    output.nonce = local_miner.generate_valid_nonce(false, concat_data);
-    output.hash = calc_hash(false, concat_data + output.nonce);
+    std::array<std::string, 2> nonce_result = local_miner.generate_valid_nonce(false, hash_concat(output));
+    output.nonce = nonce_result[0];
+    output.hash = nonce_result[1];
     return output;
 }

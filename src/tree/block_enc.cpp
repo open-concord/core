@@ -3,7 +3,7 @@
 #include <string>
 
 #include "tree.h"
-#include "b64.h"
+#include "strenc.h"
 
 json block_to_json(block input) {
     json output;

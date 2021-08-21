@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "../../inc/crypt++.h"
-#include "../../inc/b64.h"
+#include "../../inc/strenc.h"
 #include "../../inc/tree.h"
 
 std::map<char, std::vector<std::string>> qtypes {

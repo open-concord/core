@@ -9,7 +9,7 @@
 #include <boost/asio.hpp>
 
 #include "../../inc/node.h"
-#include "../../inc/b64.h"
+#include "../../inc/strenc.h"
 #include "../../inc/crypt++.h"
 #include "../../inc/tree.h"
 #include <nlohmann/json.hpp>

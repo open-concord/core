@@ -2,17 +2,17 @@
 #include "crypto++/hex.h"
 
 #include <string>
-#include <iostream>
 #include <fstream>
 
 #include "../../inc/hash.h"
-#include "../../inc/b64.h"
+#include "../../inc/strenc.h"
 
 using namespace CryptoPP;
 // read from file or raw      
-std::string calc_hash (bool use_disk, std::string target) {
+std::string calc_hash (bool use_disk, std::string target, int outlen) {
     // if use_disk is true, target is a file name
     // if use_disk isn't than it's raw text
+    if (outlen == -1) outlen = SHA256::DIGESTSIZE;
 
     std::string outstr;
 
@@ -35,16 +35,8 @@ std::string calc_hash (bool use_disk, std::string target) {
 
     SHA256().CalculateDigest(abDigest, pbData, nDataLen);
     
-    std::string encoded;
-
-    StringSource ss(abDigest, SHA256::DIGESTSIZE, true,
-        new HexEncoder(
-            // pipe encoded byte array to output string
-            new StringSink(encoded)
-        )
-    );
-
-    return encoded;
+    std::string output(reinterpret_cast<const char*>(&abDigest[0]), outlen);
+    return output;
 };
 
 std::string gen_trip(size_t base_chars, size_t out_chars) {
