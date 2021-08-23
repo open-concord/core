@@ -1,11 +1,13 @@
 #include <string>
-#include <vector>
 #include <array>
 #include <cassert>
 #include <iostream>
+#include <unordered_set>
+#include <vector>
 #include <algorithm>
 #include <experimental/algorithm>
-#include  <random>
+#include <random>
+#include <iostream>
 
 #include "../../inc/miner.h"
 #include "../../inc/hash.h"
@@ -42,6 +44,8 @@ void Tree::load(std::string dir) {
 
     fs::path p(this->target_dir);
 
+    std::vector<block> loaded_blocks;
+
     for(auto& entry : boost::make_iterator_range(fs::directory_iterator(p), {})) {
         std::string path_str = entry.path().string();
         if (path_str.substr(path_str.length() - 6) != ".block") continue; //only want .block files
@@ -54,14 +58,11 @@ void Tree::load(std::string dir) {
             saved_block.read(&block_data[0], block_data.size());
             saved_block.close();
             block parsed_block = json_to_block(json::parse(block_data));
-            (this->chain)[parsed_block.hash] = parsed_block;
+            loaded_blocks.push_back(parsed_block);
         }
         else continue;
     }
-    //now that we've loaded the chain, we need to link it (since we can't be sure of load order, we need to link after everything is available)
-    for (const auto& [hash, block] : get_chain()) {
-        link_block(block);
-    }
+    batch_push(loaded_blocks, false);
 }
 
 void Tree::set_pow_req(int POW_req) {
@@ -71,17 +72,13 @@ void Tree::set_pow_req(int POW_req) {
 void Tree::gen_block(std::string cont, std::string s_trip, int p_count, std::string c_trip) {
     assert(s_trip.length() == 24);
     assert(c_trip.length() == 24);
-    std::vector<std::string> childless_hashes;
-    std::vector<std::string> p_hashes;
-    for (const auto& [hash, block] : get_chain()) {
-        if (block.c_hashes.size() == 0) childless_hashes.push_back(hash);
-    }
-    if (!get_chain().empty()) assert(childless_hashes.size() > 0); //0 childless hashes means a cyclical chain
     //there's no point in using blocks with existing children as hashes; we can get the same reliance by using their children
+    std::unordered_set<std::string> childless_hashes = get_childless_hashes(); 
+    std::unordered_set<std::string> p_hashes;
     std::experimental::sample(
         childless_hashes.begin(),
         childless_hashes.end(),
-        std::back_inserter(p_hashes),
+        std::inserter(p_hashes, p_hashes.begin()),
         p_count,
         std::mt19937{std::random_device{}()}
     );
@@ -102,15 +99,48 @@ bool Tree::verify_chain() {
     return true;
 }
 
+std::unordered_set<std::string> Tree::get_childless_hashes() {
+    std::unordered_set<std::string> childless_hashes;
+    for (const auto& [hash, block] : get_chain()) {
+        if (block.c_hashes.size() == 0) childless_hashes.insert(hash);
+    }
+    if (!get_chain().empty()) assert(childless_hashes.size() > 0); //0 childless hashes means a cyclical chain; something is horribly wrong
+    return childless_hashes;
+}
+
+std::unordered_set<std::string> Tree::get_parent_hash_union(std::unordered_set<std::string> c_hashes) {
+    std::unordered_set<std::string> p_hash_union;
+    for (const auto& ch: c_hashes) {
+        for (const auto& ph : get_chain()[ch].p_hashes) {
+            p_hash_union.insert(ph);
+        }
+    }
+    return p_hash_union;
+}
+
 void Tree::chain_push(block to_push) {
     (this->chain)[to_push.hash] = to_push;
     link_block(to_push);
     save(to_push);
 }
 
+void Tree::batch_push(std::vector<block> to_push_set, bool save_new) {
+    for (const auto& to_push_block : to_push_set) {
+        (this->chain)[to_push_block.hash] = to_push_block;
+    }
+    for (const auto& [hash, block] : get_chain()) {
+        link_block(block);
+    }
+    if (save_new) {
+        for (const auto& pushed_block : to_push_set) { 
+            save(pushed_block);
+        }
+    }
+}
+
 void Tree::link_block(block to_link) {
     for (auto ph : to_link.p_hashes) {
-        (this->chain)[ph].c_hashes.push_back(to_link.hash);
+        (this->chain)[ph].c_hashes.insert(to_link.hash);
     }
 }
 
@@ -138,7 +168,7 @@ bool verify_block(block to_verify, int pow) {
     return true;
 }
 
-block construct_block(std::string cont, std::vector<std::string> p_hashes, int pow, std::string s_trip, std::string c_trip) {
+block construct_block(std::string cont, std::unordered_set<std::string> p_hashes, int pow, std::string s_trip, std::string c_trip) {
     Miner local_miner(pow);
 
     unsigned long long time = get_raw_time();

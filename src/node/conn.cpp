@@ -11,6 +11,7 @@
 // std
 #include <string>
 #include <map>
+#include <unordered_set>
 #include <chrono>
 #include <iostream>
 #include <thread>
@@ -20,12 +21,12 @@
 #include <nlohmann/json.hpp>
 
 // Connection instance
-Conn::Conn(std::map<std::string, Tree>* pchains, boost::function<void(std::string, size_t)> pblocks_cb, boost::asio::io_context& io_ctx) : parent_chains(pchains), parent_blocks_callback(pblocks_cb), tsock(io_ctx) {
+Conn::Conn(std::map<std::string, Tree>* pchains, boost::function<void(std::unordered_set<std::string>)> pblocks_cb, boost::asio::io_context& io_ctx) : parent_chains(pchains), parent_blocks_callback(pblocks_cb), tsock(io_ctx) {
     this->server = true;
     this->local = (this->tsock).remote_endpoint().address().is_loopback();
 }
 
-Conn::ptr Conn::create(std::map<std::string, Tree>* pchains, boost::function<void(std::string, size_t)> pblocks_cb, boost::asio::io_context& io_ctx) {
+Conn::ptr Conn::create(std::map<std::string, Tree>* pchains, boost::function<void(std::unordered_set<std::string>)> pblocks_cb, boost::asio::io_context& io_ctx) {
     return ptr(new Conn(pchains, pblocks_cb, io_ctx));
 }
 boost::asio::ip::tcp::socket& Conn::socket() {

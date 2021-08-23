@@ -1,5 +1,6 @@
 #include <string>
 #include <vector>
+#include <unordered_set>
 #include <map>
 #include <array>
 #include <boost/function.hpp>
@@ -30,8 +31,8 @@ struct block {
     std::string c_trip;
     std::string cont;
     std::string hash;
-    std::vector<std::string> p_hashes;
-    std::vector<std::string> c_hashes; //this property is for chain analysis and isn't actually saved
+    std::unordered_set<std::string> p_hashes;
+    std::unordered_set<std::string> c_hashes; //this property is for chain analysis and isn't actually saved
 };
 
 bool verify_block(block to_verify, int pow);
@@ -40,7 +41,7 @@ json block_to_json(block input);
 
 block json_to_block(json input);
 
-block construct_block(std::string cont, std::vector<std::string> p_hashes, int pow, std::string s_trip, std::string c_trip = std::string(24, '='));
+block construct_block(std::string cont, std::unordered_set<std::string> p_hashes, int pow, std::string s_trip, std::string c_trip = std::string(24, '='));
 
 class Tree {
     private:
@@ -68,9 +69,15 @@ class Tree {
 
         std::map<std::string, block> get_chain();
 
+        std::unordered_set<std::string> get_childless_hashes();
+
+        std::unordered_set<std::string> get_parent_hash_union(std::unordered_set<std::string> c_hashes);
+
         //std::vector<json> search(char message_type, std::string target_trip, std::string key, boost::function<bool(json)> filter = no_filter, int start_b = -1, int end_b = -1);
 
         bool verify_chain();
 
         void chain_push(block to_push);
+
+        void batch_push(std::vector<block> to_push_set, bool save_new = true);
 };

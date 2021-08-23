@@ -17,24 +17,20 @@
 #include <memory>
 #include <string>
 #include <map>
+#include <unordered_set>
 #include <chrono>
 #include <vector>
 
 using json = nlohmann::json;
 
-struct user_keys {
-    std::map<std::string, std::string> server_keys;
-    std::string dsa_pri_key;
-    std::string rsa_pri_key;
-};
-
 struct conn_context {
-    std::vector<std::vector<std::string>> wchain;
+    std::vector<block> new_blocks;
     std::string chain_trip;
-    size_t lastbi;
+    std::unordered_set<std::string> seen_hashes;
+    std::unordered_set<std::string> last_layer;
     size_t k;
     size_t pow_min;
-    std::map<std::string, user_keys> user_keys_map;
+    bool first_layer = true;
 };
 
 class Conn : public boost::enable_shared_from_this<Conn> {
@@ -42,7 +38,7 @@ class Conn : public boost::enable_shared_from_this<Conn> {
         // basically just a shared_ptr of self
         typedef std::shared_ptr<Conn> ptr;
     private:
-        Conn(std::map<std::string, Tree>*, boost::function<void(std::string, size_t)>, boost::asio::io_context& io_ctx);
+        Conn(std::map<std::string, Tree>*, boost::function<void(std::unordered_set<std::string>)>, boost::asio::io_context& io_ctx);
         boost::asio::ip::tcp::socket tsock;   
     public:
         std::map<std::string, Tree>* parent_chains;
@@ -56,7 +52,7 @@ class Conn : public boost::enable_shared_from_this<Conn> {
         bool server; // which capacity client is currently serving in
         bool local; // is local connection?
 
-        static ptr create(std::map<std::string, Tree>*, boost::function<void(std::string, size_t)>, boost::asio::io_context& io_ctx);
+        static ptr create(std::map<std::string, Tree>*, boost::function<void(std::unordered_set<std::string>)>, boost::asio::io_context& io_ctx);
         boost::asio::ip::tcp::socket& socket();
         // async util func
         void initiate_comms(std::string msg);
@@ -85,7 +81,6 @@ class Node {
         int queue;
 
         // past connection retention
-        std::string chains_dir;
         struct khost {
             std::string address;
             unsigned short int port;
@@ -96,7 +91,7 @@ class Node {
     public:
         std::map<std::string /*trip*/, Tree /*chain model*/> chains;
 
-        Node(int queue, unsigned short int port, std::map<std::string, Tree> cm, boost::function<void(std::string, size_t)> blocks_cb);
+        Node(int queue, unsigned short int port, std::map<std::string, Tree> cm, boost::function<void(std::unordered_set<std::string>)> blocks_cb);
 
         // start listening
         void start();
