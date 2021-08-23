@@ -36,6 +36,23 @@ void update_chain(Conn *conn) {
     conn->parent_blocks_callback(new_block_hashes);
 }
 
+void load_new_blocks(conn_context& ctx, std::vector<json> prov_blocks) {
+    std::vector<std::string> new_block_jsons = prov_blocks.get<std::vector<std::string>>();
+    for (const auto& new_block_json : new_block_jsons) {
+        ctx.new_blocks.push_back(json_to_block(new_block_json));
+    }
+}
+
+void load_req_blocks(json& ret, std::vector<std::string> req_hashes, Tree tree) {
+    std::vector<json> provided_blocks;
+
+    for (const auto& req_hash : cont["req_hashes"]) {
+        provided_blocks.push_back(block_to_json(TREE.get_chain()[req_hash]));
+    }
+
+    ret["CONTENT"]["provided_blocks"] = provided_blocks;
+}
+
 std::unordered_set<std::string> iterate_layer(std::unordered_set<std::string> layer, std:::unordered_set<std::string> seen_hashes, Tree tree) {
     std::unordered_set<std::string> unseen_hashes;
     std::unordered_set<std::string> p_hash_union = tree.get_parent_hash_union(layer);
@@ -65,21 +82,11 @@ json send_blocks(Conn *conn, json cont) {
 
         //send the blocks that the client requested
 
-        std::vector<json> provided_blocks;
-
-        for (const auto& req_hash : cont["req_hashes"]) {
-            provided_blocks.push_back(block_to_json(TREE.get_chain()[req_hash]));
-        }
-
-        ret["CONTENT"]["provided_blocks"] = provided_blocks;
+        load_req_blocks(ret, TREE, cont["req_hashes"]);
 
         //retrieve blocks that the client gave us
 
-        std::vector<std::string> new_block_jsons = cont["provided_blocks"].get<std::vector<std::string>>(); 
-
-        for (const auto& new_block_json : new_block_jsons) {
-            new_blocks.push_back(json_to_block(new_block_json));
-        }
+        load_new_blocks(CTX, cont["provided_blocks"]);
 
         //send the next layers of hashes
         std::vector<std::vector<std::string>> hash_layers;
@@ -119,7 +126,6 @@ json begin_sending_blocks(Conn *conn, json cont) {
 
         CTX.chain_trip = cont["chain"];
         CTX.k = cont["k"];
-        CTX.pow_min = json(TREE.get_chain()[0][5])["p"];
         CTX.last_layer = TREE.get_childless_hashes();
 
         //set up childless hashes vector
@@ -169,21 +175,11 @@ json end_sending_blocks(Conn *conn, json cont) {
 
         //send the last requested blocks
 
-        std::vector<json> provided_blocks;
-
-        for (const auto& req_hash : cont["req_hashes"]) {
-            provided_blocks.push_back(block_to_json(TREE.get_chain()[req_hash]));
-        }
-
-        ret["CONTENT"]["provided_blocks"] = provided_blocks;
+        load_req_blocks(ret, TREE, cont["req_hashes"]);
 
         //receive the last of our blocks and update the chain
 
-        std::vector<std::string> new_block_jsons = cont["provided_blocks"].get<std::vector<std::string>>(); 
-
-        for (const auto& new_block_json : new_block_jsons) {
-            new_blocks.push_back(json_to_block(new_block_json));
-        }
+        load_new_blocks(CTX, cont["provided_blocks"]);
 
         update_chain(conn);
 
@@ -204,11 +200,7 @@ json evaluate_blocks(Conn *conn, json cont) {
 
         // retrieve blocks that the host gave us
 
-        std::vector<std::string> new_block_jsons = cont["provided_blocks"].get<std::vector<std::string>>(); 
-
-        for (const auto& new_block_json : new_block_jsons) {
-            new_blocks.push_back(json_to_block(new_block_json));
-        }
+        load_new_blocks(CTX, cont["provided_blocks"]);
 
         // below: mimicking host behavior to compare contents at each layer with their respective trees
         
@@ -271,11 +263,7 @@ json end_evaluating_blocks(Conn *conn, json cont) {
 
         // retrieve our last blocks
 
-        std::vector<std::string> new_block_jsons = cont["provided_blocks"].get<std::vector<std::string>>(); 
-
-        for (const auto& new_block_json : new_block_jsons) {
-            new_blocks.push_back(json_to_block(new_block_json));
-        }
+        load_new_blocks(CTX, cont);
 
         return ret;
     } catch (int err) {
