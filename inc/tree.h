@@ -3,6 +3,7 @@
 #include <unordered_set>
 #include <map>
 #include <array>
+#include <compare>
 #include <boost/function.hpp>
 #include <nlohmann/json.hpp>
 
@@ -26,13 +27,19 @@ unsigned long long string_to_raw_time(std::string str_time);
 
 struct block {
     unsigned long long time;
+    unsigned long long reception_time;
     std::string nonce;
     std::string s_trip;
     std::string c_trip;
     std::string cont;
     std::string hash;
     std::unordered_set<std::string> p_hashes;
-    std::unordered_set<std::string> c_hashes; //this property is for chain analysis and isn't actually saved
+    //these properties are for chain analysis and aren't actually saved
+    std::unordered_set<std::string> c_hashes;
+
+    std::strong_ordering operator<=>(const block& other) const {
+        return time <=> other.time;
+    }
 };
 
 bool verify_block(block to_verify, int pow);
@@ -55,7 +62,7 @@ class Tree {
 
         void save(block to_save);
         
-        void link_block(block to_link);
+        void link_block(block  to_link);
     public:
         Tree();
         
@@ -65,11 +72,15 @@ class Tree {
 
         void set_pow_req(int pow_req);
 
-        void gen_block(std::string cont, std::string s_trip, int p_count = 2, std::string c_trip = std::string(24, '='));
+        void gen_block(std::string cont, std::string s_trip, int p_count = 3, std::string c_trip = std::string(24, '='));
 
         std::map<std::string, block> get_chain();
 
-        std::unordered_set<std::string> get_childless_hashes();
+        bool is_childless(block to_check);
+
+        bool is_intraserver_childless(block to_check, std::string server_trip);
+
+        std::unordered_set<std::string> get_qualifying_hashes(boost::function<bool(Tree*, block)> qual_func);
 
         std::unordered_set<std::string> get_parent_hash_union(std::unordered_set<std::string> c_hashes);
 

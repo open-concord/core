@@ -3,7 +3,7 @@ SHELL = /bin/sh
 # flag for /include dir
 IN_DIR = -I../inc/ -I/usr/include/boost
 # c/cpp standard
-CC = g++
+CC = g++ -std=c++20
 # compile-time flags
 CFLAGS = -c -g -Wall -fPIC $(IN_DIR)
 # lib flags

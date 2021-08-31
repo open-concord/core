@@ -18,10 +18,14 @@
 #include <sys/stat.h>
 #include <stdexcept>
 #include <fstream>
+#include <boost/function.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/range/iterator_range.hpp>
 
 namespace fs = boost::filesystem;
+
+using namespace boost::placeholders;
 
 struct stat info;
 
@@ -73,15 +77,26 @@ void Tree::gen_block(std::string cont, std::string s_trip, int p_count, std::str
     assert(s_trip.length() == 24);
     assert(c_trip.length() == 24);
     //there's no point in using blocks with existing children as hashes; we can get the same reliance by using their children
-    std::unordered_set<std::string> childless_hashes = get_childless_hashes(); 
+    std::unordered_set<std::string> intra_childless_hashes = get_qualifying_hashes(boost::bind(&Tree::is_intraserver_childless, _1, _2, s_trip)); 
     std::unordered_set<std::string> p_hashes;
-    std::experimental::sample(
-        childless_hashes.begin(),
-        childless_hashes.end(),
+    std::sample(
+        intra_childless_hashes.begin(),
+        intra_childless_hashes.end(),
         std::inserter(p_hashes, p_hashes.begin()),
         p_count,
         std::mt19937{std::random_device{}()}
     );
+    int p_remainder = intra_childless_hashes.size() - p_count;
+    if (p_remainder > 0) {
+        std::unordered_set<std::string> childless_hashes = get_qualifying_hashes(&Tree::is_childless);
+        std::sample(
+            childless_hashes.begin(),
+            childless_hashes.end(),
+            std::inserter(p_hashes, p_hashes.begin()),
+            p_remainder,
+            std::mt19937{std::random_device{}()}
+        );
+    }
     chain_push(construct_block(cont, p_hashes, this->pow, s_trip, c_trip));
 }
 
@@ -92,20 +107,34 @@ std::map<std::string, block> Tree::get_chain() {
 bool Tree::verify_chain() {
     for (const auto& [hash, block] : get_chain()) {
         if (!verify_block(block, this->pow)) return false; //make sure every hash is valid.
+        bool server_connected = (block.p_hashes.size() == 0);
         for (auto ph : block.p_hashes) {
             if (get_chain().find(ph) == get_chain().end()) return false; //parent hashes all need to exist in the chain
+            if (get_chain()[ph].s_trip == block.s_trip) server_connected = true;
         }
+        if (!server_connected) return false;
     }
     return true;
 }
 
-std::unordered_set<std::string> Tree::get_childless_hashes() {
-    std::unordered_set<std::string> childless_hashes;
-    for (const auto& [hash, block] : get_chain()) {
-        if (block.c_hashes.size() == 0) childless_hashes.insert(hash);
+bool Tree::is_childless(block to_check) {
+    return (to_check.c_hashes.size() == 0);
+}
+
+bool Tree::is_intraserver_childless(block to_check, std::string server_trip) {
+    if (to_check.s_trip != server_trip) return false;
+    for (auto ch : to_check.c_hashes) {
+        if (get_chain()[ch].s_trip == server_trip) return false;
     }
-    if (!get_chain().empty()) assert(childless_hashes.size() > 0); //0 childless hashes means a cyclical chain; something is horribly wrong
-    return childless_hashes;
+    return true;
+}
+
+std::unordered_set<std::string> Tree::get_qualifying_hashes(boost::function<bool(Tree*, block)> qual_func) {
+    std::unordered_set<std::string> qualifying_hashes;
+    for (const auto& [hash, block] : get_chain()) {
+        if (qual_func(this, block)) qualifying_hashes.insert(hash);
+    }
+    return qualifying_hashes;
 }
 
 std::unordered_set<std::string> Tree::get_parent_hash_union(std::unordered_set<std::string> c_hashes) {

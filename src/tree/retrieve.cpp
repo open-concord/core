@@ -19,6 +19,9 @@ void apply_member_change(std::map<std::string, std::string>& m_keys, json m_data
     else if (m_data["t"] == "rem") m_keys[m_data["d"]["nm"]] = ""; //remove member key
 }
 
+std::vector<block> Tree::retrieve(char message_type)
+
+/*
 std::vector<json> Tree::search(char message_type, std::string target_trip, std::string key, boost::function<bool(json)> filter, int start_b, int end_b) {
     //note: depending on message_type, key can be an AES key or PEM RSA key
     auto chain = get_chain();
@@ -83,3 +86,4 @@ std::vector<json> Tree::search(char message_type, std::string target_trip, std::
     }
     return outputs;
 }
+*/
