@@ -50,6 +50,8 @@ block json_to_block(json input);
 
 block construct_block(std::string cont, std::unordered_set<std::string> p_hashes, int pow, std::string s_trip, std::string c_trip = std::string(24, '='));
 
+std::vector<std::string> order_hashes(std::unordered_set<std::string> input_hashes);
+
 class Tree {
     private:
         //int pow;
@@ -72,14 +74,24 @@ class Tree {
 
         void set_pow_req(int pow_req);
 
-        void gen_block(std::string cont, std::string s_trip, int p_count = 3, std::string c_trip = std::string(24, '='));
+        void gen_block(std::string cont, std::string s_trip, std::unordered_set<std::string> p_hashes, std::string c_trip = std::string(24, '='));
+
+        std::unordered_set<std::string> find_p_hashes(std::string s_trip, int p_count = 3);
 
         std::map<std::string, block> get_chain();
 
         bool is_childless(block to_check);
 
+        bool is_orphan(block to_check);
+
         bool is_intraserver_childless(block to_check, std::string server_trip);
 
+        bool is_intraserver_orphan(block to_check, std::string server_trip);
+
+        int intraserver_child_count(block to_check, std::string server_trip);
+
+        int intraserver_parent_count(block to_check, std::string server_trip);
+        
         std::unordered_set<std::string> get_qualifying_hashes(boost::function<bool(Tree*, block)> qual_func);
 
         std::unordered_set<std::string> get_parent_hash_union(std::unordered_set<std::string> c_hashes);

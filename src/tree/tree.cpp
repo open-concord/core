@@ -73,9 +73,13 @@ void Tree::set_pow_req(int POW_req) {
     this->pow = POW_req;
 }
 
-void Tree::gen_block(std::string cont, std::string s_trip, int p_count, std::string c_trip) {
+void Tree::gen_block(std::string cont, std::string s_trip, std::unordered_set<std::string> p_hashes, std::string c_trip) {
     assert(s_trip.length() == 24);
     assert(c_trip.length() == 24);
+    chain_push(construct_block(cont, p_hashes, this->pow, s_trip, c_trip));
+}
+
+std::unordered_set<std::string> Tree::find_p_hashes(std::string s_trip, int p_count) {
     //there's no point in using blocks with existing children as hashes; we can get the same reliance by using their children
     std::unordered_set<std::string> intra_childless_hashes = get_qualifying_hashes(boost::bind(&Tree::is_intraserver_childless, _1, _2, s_trip)); 
     std::unordered_set<std::string> p_hashes;
@@ -97,7 +101,7 @@ void Tree::gen_block(std::string cont, std::string s_trip, int p_count, std::str
             std::mt19937{std::random_device{}()}
         );
     }
-    chain_push(construct_block(cont, p_hashes, this->pow, s_trip, c_trip));
+    return p_hashes;
 }
 
 std::map<std::string, block> Tree::get_chain() {
@@ -121,12 +125,42 @@ bool Tree::is_childless(block to_check) {
     return (to_check.c_hashes.size() == 0);
 }
 
+bool Tree::is_orphan(block to_check) {
+    return (to_check.p_hashes.size() == 0);
+}
+
 bool Tree::is_intraserver_childless(block to_check, std::string server_trip) {
     if (to_check.s_trip != server_trip) return false;
     for (auto ch : to_check.c_hashes) {
         if (get_chain()[ch].s_trip == server_trip) return false;
     }
     return true;
+}
+
+bool Tree::is_intraserver_orphan(block to_check, std::string server_trip) {
+    if (to_check.s_trip != server_trip) return false;
+    for (auto ch : to_check.p_hashes) {
+        if (get_chain()[ch].s_trip == server_trip) return false;
+    }
+    return true;
+}
+
+int Tree::intraserver_child_count(block to_check, std::string server_trip) {
+    if (to_check.s_trip != server_trip) return 0;
+    int result = 0;
+    for (auto ch : to_check.c_hashes) {
+        if (get_chain()[ch].s_trip == server_trip) result++;
+    }
+    return result;
+}
+
+int Tree::intraserver_parent_count(block to_check, std::string server_trip) {
+    if (to_check.s_trip != server_trip) return 0;
+    int result = 0;
+    for (auto ch : to_check.p_hashes) {
+        if (get_chain()[ch].s_trip == server_trip) result++;
+    }
+    return result;
 }
 
 std::unordered_set<std::string> Tree::get_qualifying_hashes(boost::function<bool(Tree*, block)> qual_func) {
@@ -181,9 +215,16 @@ void Tree::save(block to_save) {
     block_file.close();
 }
 
+std::vector<std::string> order_hashes(std::unordered_set<std::string> input_hashes) {
+    std::vector<std::string> hashes_vector;
+    std::copy(input_hashes.begin(), input_hashes.end(), std::back_inserter(hashes_vector));
+    std::sort(hashes_vector.begin(), hashes_vector.end(), std::greater<std::string>());
+    return hashes_vector;
+}
+
 std::string hash_concat(block input) {
     std::string concat_data = b64_encode(raw_time_to_string(input.time)) + input.s_trip + input.cont; //b64 timestr encoding is only for safety
-    for (auto ph : input.p_hashes) concat_data += ph;
+    for (auto ph : order_hashes(input.p_hashes)) concat_data += ph;
     return concat_data;
 }
 

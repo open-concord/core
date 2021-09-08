@@ -8,10 +8,9 @@
 
 using namespace CryptoPP;
 // read from file or raw      
-std::string calc_hash (bool use_disk, std::string target, int outlen) {
+std::string calc_hash (bool use_disk, std::string target) {
     // if use_disk is true, target is a file name
     // if use_disk isn't than it's raw text
-    if (outlen == -1) outlen = SHA256::DIGESTSIZE;
 
     std::string outstr;
 
@@ -34,10 +33,11 @@ std::string calc_hash (bool use_disk, std::string target, int outlen) {
 
     SHA256().CalculateDigest(abDigest, pbData, nDataLen);
     
-    std::string output(reinterpret_cast<const char*>(&abDigest[0]), outlen);
+    std::string output(reinterpret_cast<const char*>(&abDigest[0]), SHA256::DIGESTSIZE);
     return output;
 }
 
-std::string gen_trip(size_t base_chars, size_t out_chars) {
-    return b64_encode(gen_string(base_chars), out_chars);
+std::string gen_trip(std::string data, size_t outlen) {
+    std::string raw_hash = b64_encode(calc_hash(false, data), outlen);
+    return raw_hash.substr(0, outlen);
 }
