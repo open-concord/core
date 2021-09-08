@@ -94,7 +94,7 @@ class Server {
     public:
         Server(Tree& parent_tree, std::string AES_key, user load_user = user());
     
-        member create_member(keypair pub_keys);
+        member create_member(keypair pub_keys, std::vector<std::string> init_roles = std::vector<std::string>());
 
         branch get_root_branch();
 
