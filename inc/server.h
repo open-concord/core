@@ -93,6 +93,8 @@ class Server {
         void load_branch_forward(std::string fb_hash, branch_context ctx = branch_context());
     public:
         Server(Tree& parent_tree, std::string AES_key, user load_user = user());
+    
+        member create_member(keypair pub_keys);
 
         branch get_root_branch();
 
