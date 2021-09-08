@@ -18,8 +18,6 @@
 #include <functional>
 #include "../../inc/node.h"
 
-#include <nlohmann/json.hpp>
-
 // Connection instance
 Conn::Conn(std::map<std::string, Tree>* pchains, boost::function<void(std::unordered_set<std::string>)> pblocks_cb, boost::asio::io_context& io_ctx) : parent_chains(pchains), parent_blocks_callback(pblocks_cb), tsock(io_ctx) {
     this->server = true;
@@ -56,8 +54,8 @@ void Conn::initiate_comms(std::string msg) {
             boost::asio::placeholders::error
             )
     );
-} 
-// check if we're done (logic-wise)in case of 
+}
+// check if we're done (logic-wise)in case of
 void Conn::send_done(const boost::system::error_code& err) {
     if (!err) {
         if (this->done) {
@@ -92,5 +90,5 @@ void Conn::handle() {
         std::string msg = message_logic(this);
         send(msg);
     }
-    
+
 }
