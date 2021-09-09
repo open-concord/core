@@ -39,7 +39,7 @@ struct user {
 
 struct member {
     user* user_ref;
-    std::vector<std::string> roles;
+    std::vector<std::string> roles; //doesn't need to be ordered, is for convenience.
 }
 
 struct role {
@@ -54,6 +54,7 @@ struct role {
 
 struct message {
     std::string hash;
+    char supertype;
     char type;
     json data;
 
@@ -74,7 +75,16 @@ struct branch_context {
     std::map<std::string, role> roles;
 
     branch_context() {
-
+        //by default, the creator role exists.
+        role creator_role;
+        creator_role.is_muted = false;
+        creator_role.can_invite = true;
+        creator_role.can_rem = true;
+        creator_role.can_role_grant = true;
+        creator_role.can_role_create = true;
+        creator_role.can_configure = true;
+        creator_role.primacy = 0;
+        roles["creator"] = creator_role;
     }
 }
 
