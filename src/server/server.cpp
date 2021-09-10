@@ -3,6 +3,7 @@
 #include "../../strenc.h"
 #include "../../crypt++.h"
 
+#include <limits>
 #include <map>
 #include <unordered_set>
 #include <vector>
@@ -12,6 +13,39 @@
 
 
 using json = nlohmann::json;
+
+branch_context::branch_context()  {
+    //by default, the creator role exists.
+    role creator_role;
+    creator_role.is_muted = false;
+    creator_role.can_invite = true;
+    creator_role.can_rem = true;
+    creator_role.can_role_grant = true;
+    creator_role.can_role_create = true;
+    creator_role.can_configure = true;
+    creator_role.primacy = 0;
+    roles["creator"] = creator_role;
+}
+
+unsigned int branch_context::min_primacy(member target) {
+    unsigned int min = std::numeric_limits<int>::max();
+    for (auto name : member.roles) {
+        unsigned int role_primacy = ((this->roles)[name]).primacy;
+        if (role_primacy < min) {
+            min = role_primacy;
+        }
+    }
+    return min;
+}
+
+bool branch_context::has_feature(member target, int index) {
+    bool result = false;
+    for (auto name : member.roles) {
+        bool role_feature = ((this->roles)[name]).features[index];
+        result = (result || role_feature)
+    }
+    return result;
+}
 
 Server::Server(Tree& parent_tree, std::string AES_key, user load_user) : tree(parent_tree) {
     this->raw_AES_key = b64_decode(AES_key);
@@ -23,7 +57,7 @@ Server::Server(Tree& parent_tree, std::string AES_key, user load_user) : tree(pa
     load_branch_forward(this->root_fb);
 }
 
-member create_member(keypair pub_keys, std::vector<std::string> initial_roles) {
+member Server::create_member(keypair pub_keys, std::vector<std::string> initial_roles) {
     user temp_user(pub_keys);
     (this->known_users)[temp_user.u_trip] = temp_user;
     member temp_member;
@@ -32,66 +66,36 @@ member create_member(keypair pub_keys, std::vector<std::string> initial_roles) {
     return temp_member;
 }
 
-void load_branch_forward(std::string fb_hash, branch_context ctx) {
-    block active_block = tree.get_chain()[fb_hash]; //start on the branch's first block
-
-    while (tree.intraserver_child_count(active_block) == 0) {
+void Server::load_branch_forward(std::string fb_hash, branch_context ctx) {
+    block& active_block = tree.get_chain()[fb_hash]; //start on the branch's first block
+    branch& target_branch = (this->branches)[fb_hash];
+    //see how far the linear part goes
+    while (tree.intraserver_child_count(active_block) == 1) {
         //message digestion logic
         try {
             std::array<std::string, 2> raw_unlocked = unlock_msg(active_block.cont, false, this->raw_AES_key);
-            json claf_data = json::parse(raw_unlocked[0]);
-            assert(content_hash_concat(active_block.time, active_block.s_trip, active_block.p_hashes) == (std::string) claf_data["h"]);
-
-            //nserv needs to be checked before membership
-            if (ctx.members.empty() && claf_data["st"] == "a" && claf_data["t"] == "nserv") {
-                keypair creator_pubset(claf_data["d"]["cms"]["sig_pubk"], claf_data["d"]["cms"]["enc_pubk"]);
-                member temp_member = create_member(creator_pubset, std::vector<std::string>({"creator"}));
-                ctx.members[(*member.user_ref).u_trip] = temp_member;
+            std::string content_hash = b64_encode(calc_hash(false, content_hash_concat(active_block.time, active_block.s_trip, active_block.p_hashes)));
+            json claf_data = json::parse(content);
+            if (apply_data(ctx, claf_data, raw_unlocked[0], raw_unlocked[1], content_hash)) {
+                //add an actual message if we can
+                message result;
+                result.hash = active_block.hash;
+                result.supertype = std::string(claf_data["st"]);
+                result.type = std::string(claf_data["t"]);
+                result.data = claf_data["d"];
+                result.ref = &active_block;
+                target_branch.messages.push_back(result);
             }
-
-            //make sure this is properly signed by an actual member
-            member author_member = ctx.members[claf_data["a"]]
-            user author = *(author_member.user_ref);
-            std::string author_raw_sigkey = author.pub_keys.DSA_key;
-            assert(DSA_verify(author_raw_sigkey, raw_unlocked[1], active_block.cont));
-
-            if (claf_data["st"] == "c") {
-                for (const auto& [name, role] : member.roles) {
-                    assert(!role.is_muted);
-                }
-            } 
-            else if (claf_data["st"] == "a") {
-                if (claf_data["t"] == "invite") {
-                    std::vector<json> keysets = claf_data["d"]["nms"];
-                    for (auto keyset : keysets) {
-                        keypair nm_pubset(keyset["sig_pubk"], keyset["enc_pubk"]);
-                        member temp_member = create_member(nm_pubset);
-                        ctx.members[(*member.user_ref).u_trip] = temp_member;
-                    }
-                }
-                else if (claf_data["t"] == "rem") {
-                    //TODO: add this beast
-                }
-            }
-            else if (claf_data["st"] == "r") {
-                if (claf_data["t"] == "crole") {
-                    //TODO: conversion methods in the works
-                }
-                else if (claf_data["t"] == "grole") {
-                    ctx.members[claf_data["d"]["tu"]].roles.push_back(claf_data["d"]["tr"]);
-                }
-                else if (claf_data["t"] == "rrole") {
-                    member& member_ref = ctx.members[claf_data["d"]["tu"]];
-                    std::remove(member_ref.roles.begin(), member_ref.end(), claf_data["d"]["tr"]);
-                }
-            }
-            else if (claf_data["st"] == "s") {
-                json& target;
-                for (auto index : std::vector<std::string>(claf_data["d"]["sn"])) {
-                    target = target[index];
-                }
-                target = claf_data["d"]["sv"];
+            else {
+                throw; //failure to apply data
             }
         }
+
+        for (auto child_block : active_block.c_hashes) {
+            if ()
+        }
     }
+    target_branch.ctx = ctx; //context is established now.
+
+    
 }

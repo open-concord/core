@@ -1,5 +1,6 @@
 #include "tree.h"
 
+#include <array>
 #include <map>
 #include <nlohmann/json.hpp>
 
@@ -9,9 +10,7 @@ struct keypair {
     std::string DSA_key;
     std::string RSA_key;
 
-    keypair(std::string dsak, std::string rsak) : DSA_key(dsak), RSA_key(rsak) {
-
-    }
+    keypair(std::string dsak, std::string rsak) : DSA_key(dsak), RSA_key(rsak) {}
 }
 
 struct user {
@@ -32,9 +31,7 @@ struct user {
         this->trip = gen_trip(pubset.DSA_key + pubset.RSA_key, 24);
     }
 
-    user(std::string tripcode, keypair priset) : u_trip(tripcode), pri_keys(priset) {
-
-    }
+    user(std::string tripcode, keypair priset) : u_trip(tripcode), pri_keys(priset) {}
 }
 
 struct member {
@@ -43,13 +40,15 @@ struct member {
 }
 
 struct role {
-    bool is_muted;
-    bool can_invite;
-    bool can_rem;
-    bool can_role_grant;
-    bool can_role_create;
-    bool can_configure;
+    std::array<int, 6> features;
     unsigned int primacy;
+
+    bool is_mute() return features[0];
+    bool can_invite() return features[1];
+    bool can_rem() return features[2];
+    bool can_rgrant() return features[3];
+    bool can_rcreate() return features[4];
+    bool can_edit() return features[5];
 }
 
 struct message {
@@ -64,31 +63,26 @@ struct message {
 struct branch {
     std::string first_hash;
     std::vector<messages> messages;
+    branch_context ctx;
 
     std::unordered_set<branch*> pt_c_branches;
     std::unordered_set<branch*> pt_p_branches;
 }
 
-struct branch_context {
-    json settings;
-    std::map<std::string, member> members;
-    std::map<std::string, role> roles;
-
-    branch_context() {
-        //by default, the creator role exists.
-        role creator_role;
-        creator_role.is_muted = false;
-        creator_role.can_invite = true;
-        creator_role.can_rem = true;
-        creator_role.can_role_grant = true;
-        creator_role.can_role_create = true;
-        creator_role.can_configure = true;
-        creator_role.primacy = 0;
-        roles["creator"] = creator_role;
-    }
-}
-
 std::string content_hash_concat(std::string time, std::string s_trip, std::unordered_set<std::string> p_hashes);
+
+class branch_context {
+    public:
+        json settings;
+        std::map<std::string, member> members;
+        std::map<std::string, role> roles;
+
+        branch_context();
+
+        int min_primacy(member target);
+
+        apply_data()
+}
 
 class Server {
     private:
@@ -105,6 +99,8 @@ class Server {
         Server(Tree& parent_tree, std::string AES_key, user load_user = user());
     
         member create_member(keypair pub_keys, std::vector<std::string> init_roles = std::vector<std::string>());
+
+        bool apply_data(branch_context& ctx, json claf_data, std::string content, std::string signature, std::string content_hash)
 
         branch get_root_branch();
 
