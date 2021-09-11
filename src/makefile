@@ -31,7 +31,9 @@ OBJ = $(BIN)lockmsg.o \
 	$(BIN)tmisc.o \
 	$(BIN)b64.o \
 	$(BIN)hexstr.o \
-	$(BIN)strutil.o
+	$(BIN)strutil.o \
+	$(BIN)smisc.o \
+	$(BIN)server.o
 
 #	$(BIN)nlogic.o \
 	$(BIN)nconn.o \
@@ -90,6 +92,9 @@ $(BIN)ttime.o: tree/time_enc.cpp ../inc/tree.h
 $(BIN)tbenc.o: tree/block_enc.cpp ../inc/tree.h
 	$(CC) $(CFLAGS) $< -o $@
 	
+#server
+$(BIN)server.o: server/server.cpp ../inc/server.h
+$(BIN)smisc.o: server/claf_misc.cpp ../inc/server.h
 
 # nodes
 #$(BIN)nlogic.o: node/logic.cpp ../inc/node.h
