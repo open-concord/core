@@ -22,6 +22,7 @@ bool Server::apply_data(branch_context& ctx, json claf_data, std::string content
         keypair creator_pubset(claf_data["d"]["cms"]["sig_pubk"], claf_data["d"]["cms"]["enc_pubk"]);
         member temp_member = create_member(creator_pubset, std::vector<std::string>({"creator"}));
         ctx.members[(*member.user_ref).u_trip] = temp_member;
+        return true;
     }
 
     //make sure this is properly signed by an actual member
@@ -55,12 +56,23 @@ bool Server::apply_data(branch_context& ctx, json claf_data, std::string content
         }
         else {
             if (!ctx.has_feature(author_member, 3)) return false; //3 is grole/rrole
+            auto& altered_member = ctx.members[claf_data["d"]["tu"]];
+            std::string target_role = claf_data["d"]["tr"];
+            int type_multiplier;
             if (claf_data["t"] == "grole") {
-                ctx.members[claf_data["d"]["tu"]].roles.push_back(claf_data["d"]["tr"]);
-            }
+                type_multiplier = 1;
+            } 
             else if (claf_data["t"] == "rrole") {
-                member& member_ref = ctx.members[claf_data["d"]["tu"]];
-                std::remove(member_ref.roles.begin(), member_ref.end(), claf_data["d"]["tr"]);
+                type_multiplier = -1;
+            }
+            else return false;
+
+            if (altered_member.roles.count(target_role) == 0) {
+                altered_member.roles[target_role] = type_multiplier;
+            }
+            else if (type_multiplier * altered_member.roles[target_role] < 0) {
+                altered_member.roles[target_role] *= -1;
+                altered_member.roles[target_role] += type_multiplier;
             }
         }
     }
@@ -72,6 +84,7 @@ bool Server::apply_data(branch_context& ctx, json claf_data, std::string content
         }
         target = claf_data["d"]["sv"];
     }
+    else return false;
 
     return true;
 }

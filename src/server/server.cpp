@@ -49,7 +49,7 @@ branch_context::branch_context(std::unordered_set<branch_context> input_context)
                 (this->members)[hash] = in_member;
             }
         }
-        
+
         //also select role versions by rank
         for (const auto& [name, role_pair] : input_context.roles) {
             if (role_pair.second > (this->roles)[name].second) {
@@ -100,7 +100,9 @@ member Server::create_member(keypair pub_keys, std::vector<std::string> initial_
     (this->known_users)[temp_user.u_trip] = temp_user;
     member temp_member;
     temp_member.user_ref = &((this->known_users)[temp_user.u_trip]);
-    temp_member.roles = initial_roles;
+    for (auto init_role : initial_roles) {
+        temp_member.roles[init_role] = 1;
+    }
     return temp_member;
 }
 
