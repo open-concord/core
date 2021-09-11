@@ -8,29 +8,66 @@
 #include <unordered_set>
 #include <vector>
 #include <array>
+#include <cmath>
+
 #include <nlohmann/json.hpp>
 #include <boost/bind/bind.hpp>
 
 
 using json = nlohmann::json;
 
-branch_context::branch_context()  {
+void branch_context::initialize_roles()  {
     //by default, the creator role exists.
     role creator_role;
-    creator_role.is_muted = false;
-    creator_role.can_invite = true;
-    creator_role.can_rem = true;
-    creator_role.can_role_grant = true;
-    creator_role.can_role_create = true;
-    creator_role.can_configure = true;
+    creator_role.features[0] = false;
+    for (int i = 1; i < creator_role.features.size(); i++) creator_role.features[i] = 0;
     creator_role.primacy = 0;
     roles["creator"] = creator_role;
 }
 
+branch_context::branch_context() {
+    initialize_roles();
+}
+
+branch_context::branch_context(std::unordered_set<branch_context> input_context) {
+    for (auto input_context : input_contexts) {
+        //rank selections for equal rank are random.
+        //they can also be easily manipulated by repeated definition
+        //this is of no consequence; the point is that action is chosen over inaction
+        //all of these are privileges given to high-ranking users, and all of them can easily be removed if (to trivial and reversible effect) abused
+
+        //make the highest-rank role selections and simultaneously get union of membership
+        for (const auto& [hash, in_member] : input_context.members) {
+            if ((this->members)[hash].count(hash) == 1) {
+                for (const auto& [name, rank] : in_member.roles_ranks) {
+                    if (std::abs(rank) > std::abs((this->members)[hash].roles_ranks[name])) {
+                        (this->members)[hash].roles_ranks[name] = rank;
+                    }
+                }
+            } 
+            else {
+                (this->members)[hash] = in_member;
+            }
+        }
+        
+        //also select role versions by rank
+        for (const auto& [name, role_pair] : input_context.roles) {
+            if (role_pair.second > (this->roles)[name].second) {
+                (this->roles)[name] = role_pair;
+            }
+        }
+
+        //very hacky, order- (which is random) dependent json merging.
+        (this->settings).merge_patch(input_context.settings);
+
+    }
+}
+
 unsigned int branch_context::min_primacy(member target) {
     unsigned int min = std::numeric_limits<int>::max();
-    for (auto name : member.roles) {
-        unsigned int role_primacy = ((this->roles)[name]).primacy;
+    for (auto name_pair : member.roles) {
+        if (name_pair.second < 0) continue;
+        unsigned int role_primacy = ((this->roles)[name.first]).primacy;
         if (role_primacy < min) {
             min = role_primacy;
         }
@@ -40,9 +77,10 @@ unsigned int branch_context::min_primacy(member target) {
 
 bool branch_context::has_feature(member target, int index) {
     bool result = false;
-    for (auto name : member.roles) {
-        bool role_feature = ((this->roles)[name]).features[index];
-        result = (result || role_feature)
+    for (auto name_pair : member.roles) {
+        if (name_pair.second < 0) continue;
+        bool role_feature = ((this->roles)[name_pair.first]).features[index];
+        result = (result || role_feature);
     }
     return result;
 }
@@ -66,11 +104,19 @@ member Server::create_member(keypair pub_keys, std::vector<std::string> initial_
     return temp_member;
 }
 
-void Server::load_branch_forward(std::string fb_hash, branch_context ctx) {
+void Server::load_branch_forward(std::string fb_hash) {
     block& active_block = tree.get_chain()[fb_hash]; //start on the branch's first block
-    branch& target_branch = (this->branches)[fb_hash];
-    //see how far the linear part goes
-    while (tree.intraserver_child_count(active_block) == 1) {
+    auto& target_pair = (this->branches)[fb_hash].first;
+    std::unordered_set<std::string> seed_hashes;
+
+    branch& target_branch target_pair.first;
+
+    //merge contexts
+    branch_context ctx(target_pair.second);
+    
+
+    //see how far the linear part goes; we'll stop when there are multiple children
+    while (true) {
         //message digestion logic
         try {
             std::array<std::string, 2> raw_unlocked = unlock_msg(active_block.cont, false, this->raw_AES_key);
@@ -90,12 +136,30 @@ void Server::load_branch_forward(std::string fb_hash, branch_context ctx) {
                 throw; //failure to apply data
             }
         }
-
-        for (auto child_block : active_block.c_hashes) {
-            if ()
+        //see if we're still linear
+        std::unordered_set<std::string> intraserver_c_hashes;
+        for (auto c_hash : active_block.c_hashes) {
+            if (tree.get_chain()[c_hash].s_trip == (this->s_trip)) {
+                intraserver_c_hashes.insert(c_hash);
+            }
+        }
+        if (intraserver_c_hashes.size() == 1) {
+            active_block = tree.get_chain()[*(intraserver_c_hashes.begin())];
+        } else {
+            //no longer linear
+            seed_hashes = intraserver_c_hashes;
+            break;
         }
     }
     target_branch.ctx = ctx; //context is established now.
-
-    
+    for (auto seed_hash : seed_hashes) {
+        auto& seed_pair = (this->branches)[seed_hash];
+        seed_pair.second.insert(ctx);
+        //if all the contexts are in, we can load the branch
+        if (seed_pair.second.size() == tree.intraserver_parent_count(tree.get_chain()[seed_hash])) {
+            seed_pair.first = load_branch_forward(seed_hash);
+        }
+        (this->pt_c_branches).insert(&seed_pair.first);
+        seed_pair.first.pt_p_branches.insert(this);
+    }
 }

@@ -36,7 +36,7 @@ struct user {
 
 struct member {
     user* user_ref;
-    std::vector<std::string> roles; //doesn't need to be ordered, is for convenience.
+    std::map<std::string, int> roles_ranks; //doesn't need to be ordered, is for convenience.
 }
 
 struct role {
@@ -72,16 +72,20 @@ struct branch {
 std::string content_hash_concat(std::string time, std::string s_trip, std::unordered_set<std::string> p_hashes);
 
 class branch_context {
+    private:
+        void initialize_roles();
     public:
         json settings;
         std::map<std::string, member> members;
-        std::map<std::string, role> roles;
+        std::map<std::string, std::pair<role, int>> roles;
 
         branch_context();
 
+        branch_context(std::unordered_set<branch_context> input_contexts);
+
         int min_primacy(member target);
 
-        apply_data()
+        bool has_feature(member target, int index);
 }
 
 class Server {
@@ -91,10 +95,9 @@ class Server {
         std::string raw_AES_key;
         std::string root_fb;
         std::map<std::string, user> known_users;
-        std::map<std::string, role> known_roles;
-        std::map<std::string, branch> branches;
+        std::map<std::string, std::pair<branch, std::unordered_set<branch_context>>> branches;
 
-        void load_branch_forward(std::string fb_hash, branch_context ctx = branch_context());
+        void load_branch_forward(std::string fb_hash);
     public:
         Server(Tree& parent_tree, std::string AES_key, user load_user = user());
     
