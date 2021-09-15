@@ -1,6 +1,5 @@
 #include <string>
 #include <array>
-#include <openssl/rand.h>
 #include <cstring>
 #include <sstream>
 #include <iomanip>
@@ -33,7 +32,7 @@ std::array<std::string, 2> Miner::generate_valid_nonce(bool debug_info, std::str
 
     while (!this->check_valid_hash(rhash)) {
         // TODO: add error handling
-        nonce = gen_trip(16, 24);
+        nonce = b64_encode(gen_string(16), 24);
         rhash = hex_encode(calc_hash(false, content + nonce));
         if (debug_info) std::cout << "Used nonce " << nonce << " to generate hash " << rhash << std::endl;
     }
