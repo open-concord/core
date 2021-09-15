@@ -1,12 +1,14 @@
 #include "../../inc/server.h"
 #include "../../inc/tree.h"
+#include "../../inc/crypt++.h"
+#include "../../inc/strenc.h"
 #include <string>
 #include <set>
 #include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
 
-std::string content_hash_concat(std::string time, std::string s_trip, std::unordered_set<std::string> p_hashes) {
+std::string content_hash_concat(long long unsigned int time, std::string s_trip, std::unordered_set<std::string> p_hashes) {
     std::string concat_data = b64_encode(raw_time_to_string(time)) + s_trip; //b64 timestr encoding is only for safety
     for (auto ph : order_hashes(p_hashes)) concat_data += ph;
     return concat_data;
@@ -21,7 +23,7 @@ bool Server::apply_data(branch_context& ctx, json claf_data, std::string content
     if (ctx.members.empty() && claf_data["st"] == "a" && claf_data["t"] == "nserv") {
         keypair creator_pubset(claf_data["d"]["cms"]["sig_pubk"], claf_data["d"]["cms"]["enc_pubk"]);
         member temp_member = create_member(creator_pubset, std::vector<std::string>({"creator"}));
-        ctx.members[(*member.user_ref).u_trip] = temp_member;
+        ctx.members[(*(temp_member.user_ref)).u_trip] = temp_member;
         return true;
     }
 
@@ -42,7 +44,7 @@ bool Server::apply_data(branch_context& ctx, json claf_data, std::string content
             for (auto keyset : keysets) {
                 keypair nm_pubset(keyset["sig_pubk"], keyset["enc_pubk"]);
                 member temp_member = create_member(nm_pubset);
-                ctx.members[(*member.user_ref).u_trip] = temp_member;
+                ctx.members[(*(temp_member.user_ref)).u_trip] = temp_member;
             }
         }
         else if (claf_data["t"] == "rem") {
@@ -67,22 +69,23 @@ bool Server::apply_data(branch_context& ctx, json claf_data, std::string content
             }
             else return false;
 
-            if (altered_member.roles.count(target_role) == 0) {
-                altered_member.roles[target_role] = type_multiplier;
+            if (altered_member.roles_ranks.count(target_role) == 0) {
+                altered_member.roles_ranks[target_role] = type_multiplier;
             }
-            else if (type_multiplier * altered_member.roles[target_role] < 0) {
-                altered_member.roles[target_role] *= -1;
-                altered_member.roles[target_role] += type_multiplier;
+            else if (type_multiplier * altered_member.roles_ranks[target_role] < 0) {
+                altered_member.roles_ranks[target_role] *= -1;
+                altered_member.roles_ranks[target_role] += type_multiplier;
             }
         }
     }
     else if (claf_data["st"] == "s") {
         if (!ctx.has_feature(author_member, 5)) return false; //5 is can_edit
-        json& target;
-        for (auto index : std::vector<std::string>(claf_data["d"]["sn"])) {
-            target = target[index];
+        json* moving_ref;
+        std::vector<std::string> indices = claf_data["d"]["sn"];
+        for (auto index : indices) {
+            moving_ref = &((*moving_ref)[index]);
         }
-        target = claf_data["d"]["sv"];
+        *moving_ref = claf_data["d"]["sv"];
     }
     else return false;
 
