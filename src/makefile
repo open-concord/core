@@ -28,7 +28,6 @@ OBJ = $(BIN)lockmsg.o \
 	$(BIN)ttime.o \
 	$(BIN)tree.o \
 	$(BIN)tbenc.o \
-	$(BIN)tmisc.o \
 	$(BIN)b64.o \
 	$(BIN)hexstr.o \
 	$(BIN)strutil.o \
@@ -85,8 +84,6 @@ $(BIN)tree.o: tree/tree.cpp ../inc/tree.h
 # chain utils
 #$(BIN)tsearch.o: tree/search.cpp ../inc/tree.h
 #	$(CC) $(CFLAGS) $< -o $@
-$(BIN)tmisc.o: tree/chain_misc.cpp ../inc/tree.h
-	$(CC) $(CFLAGS) $< -o $@
 $(BIN)ttime.o: tree/time_enc.cpp ../inc/tree.h
 	$(CC) $(CFLAGS) $< -o $@
 $(BIN)tbenc.o: tree/block_enc.cpp ../inc/tree.h

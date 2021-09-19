@@ -74,9 +74,9 @@ class Tree {
 
         void set_pow_req(int pow_req);
 
-        void gen_block(std::string cont, std::string s_trip, std::unordered_set<std::string> p_hashes, std::string c_trip = std::string(24, '='));
+        std::string gen_block(std::string cont, std::string s_trip, std::unordered_set<std::string> p_hashes, std::string c_trip = std::string(24, '='));
 
-        std::unordered_set<std::string> find_p_hashes(std::string s_trip, int p_count = 3);
+        std::unordered_set<std::string> find_p_hashes(std::string s_trip, std::unordered_set<std::string> base_p_hashes = std::unordered_set<std::string>(), int p_count = 3);
 
         std::map<std::string, block> get_chain();
 
