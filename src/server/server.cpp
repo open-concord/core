@@ -109,21 +109,43 @@ member Server::create_member(keypair pub_keys, std::vector<std::string> initial_
 }
 
 void Server::load_branch_forward(std::string fb_hash) {
-    block& active_block = tree.get_chain()[fb_hash]; //start on the branch's first block
-    auto& target_pair = (this->branches)[fb_hash];
+    block* active_block_ref = &(this->tree).get_chain()[fb_hash]; //start on the branch's first block
+    block active_block;
     std::unordered_set<std::string> seed_hashes;
 
-    branch& target_branch = target_pair.first;
+    if (((this->branches).count(fb_hash) > 0) || this->branches[fb_hash].first_hash.empty()) {
+        for (auto c_fb : (this->branches)[fb_hash].c_branch_fbs) {
+            (this->branches)[c_fb].p_branch_fbs.erase(fb_hash);
+        }
+    }
+    else {
+        (this->branches)[fb_hash].first_hash = fb_hash;
+    }
+
+    branch& target_branch = (this->branches)[fb_hash];
+    
+    target_branch.c_branch_fbs = std::unordered_set<std::string>();
+    target_branch.messages = std::vector<message>();
+
+    std::vector<branch_context> target_ctxs;
+
+    for (auto ctx_branch_fb : target_branch.p_branch_fbs) {
+        assert((this->branches).count(ctx_branch_fb) == 1);
+        target_ctxs.push_back((this->branches)[ctx_branch_fb].ctx);
+    }
 
     //merge contexts
-    branch_context ctx(target_pair.second);
+    branch_context ctx(target_ctxs);
+
+    target_branch.messages = std::vector<message>();
     
 
     //see how far the linear part goes; we'll stop when there are multiple children
     while (true) {
+        active_block = *active_block_ref;
         //message digestion logic
         try {
-            std::array<std::string, 2> raw_unlocked = unlock_msg(active_block.cont, false, this->raw_AES_key);
+            std::array<std::string, 2> raw_unlocked = unlock_msg(b64_decode(active_block.cont), false, this->raw_AES_key);
             std::string content_hash = b64_encode(calc_hash(false, content_hash_concat(active_block.time, active_block.s_trip, active_block.p_hashes)));
             json claf_data = json::parse(raw_unlocked[0]);
             if (apply_data(ctx, claf_data, raw_unlocked[0], raw_unlocked[1], content_hash)) {
@@ -133,7 +155,7 @@ void Server::load_branch_forward(std::string fb_hash) {
                 result.supertype = std::string(claf_data["st"]).at(0);
                 result.type = std::string(claf_data["t"]).at(0);
                 result.data = claf_data["d"];
-                result.ref = &active_block;
+                result.ref = active_block_ref;
                 target_branch.messages.push_back(result);
             }
             else {
@@ -143,30 +165,72 @@ void Server::load_branch_forward(std::string fb_hash) {
         catch(int err) {
             //something should go here
         }
+
         //see if we're still linear
         std::unordered_set<std::string> intraserver_c_hashes;
         for (auto c_hash : active_block.c_hashes) {
-            if (tree.get_chain()[c_hash].s_trip == (this->s_trip)) {
+            if ((this->tree).get_chain()[c_hash].s_trip == (this->s_trip)) {
                 intraserver_c_hashes.insert(c_hash);
             }
         }
         if (intraserver_c_hashes.size() == 1) {
-            active_block = tree.get_chain()[*(intraserver_c_hashes.begin())];
+            active_block_ref = &(this->tree).get_chain()[*(intraserver_c_hashes.begin())];
         } else {
             //no longer linear
             seed_hashes = intraserver_c_hashes;
             break;
         }
     }
-    target_branch.ctx = ctx; //context is established now.
+
+    target_branch.ctx = ctx; //context is established now
     for (auto seed_hash : seed_hashes) {
-        auto& seed_pair = (this->branches)[seed_hash];
-        seed_pair.second.push_back(ctx);
+        branch& seed_branch = (this->branches)[seed_hash];
         //if all the contexts are in, we can load the branch
-        if (seed_pair.second.size() == tree.intraserver_parent_count(tree.get_chain()[seed_hash], this->s_trip)) {
+        if (seed_branch.p_branch_fbs.size() == (this->tree).intraserver_parent_count((this->tree).get_chain()[seed_hash], this->s_trip)) {
             load_branch_forward(seed_hash);
         }
-        (target_branch.pt_c_branches).insert(&seed_pair.first);
-        seed_pair.first.pt_p_branches.insert(&target_branch);
+        target_branch.c_branch_fbs.insert(seed_branch.first_hash);
+        seed_branch.p_branch_fbs.insert(target_branch.first_hash);
     }
+}
+
+void Server::add_block(std::string hash) {
+    block* active_block_ref = &(this->tree).get_chain()[hash];
+    while (true) {
+        std::unordered_set<std::string> intraserver_p_hashes;
+        for (auto p_hash : (*active_block_ref).p_hashes) {
+            if ((this->tree).get_chain()[p_hash].s_trip == (this->s_trip)) {
+                intraserver_p_hashes.insert(p_hash);
+            }
+        }
+        if (intraserver_p_hashes.size() == 1) {
+            active_block_ref = &(this->tree).get_chain()[*(intraserver_p_hashes.begin())];
+        }
+        else {
+            load_branch_forward((*active_block_ref).hash);
+            break;
+        }
+    }
+}
+
+void Server::send_message(user author, json content, char st, char t, std::unordered_set<std::string> p_hashes) {
+    auto& local_tree = this->tree;
+    auto sending_time = get_raw_time();
+    std::unordered_set<std::string> target_p_hashes = local_tree.find_p_hashes(this->s_trip, p_hashes);
+    std::string content_hash = b64_encode(calc_hash(false, content_hash_concat(sending_time, this->s_trip, target_p_hashes)));
+
+    json full_msg = {
+        {"a", author.u_trip},
+        {"h", content_hash},
+        {"st", st},
+        {"d", content},
+    };
+    
+    if (t != '\0') full_msg["t"] = t;
+    
+    std::string encrypted_content = b64_encode(lock_msg(full_msg.dump(), false, b64_decode(author.pri_keys.DSA_key), (this->raw_AES_key)));
+
+    std::string target_hash = local_tree.gen_block(content, this->s_trip, target_p_hashes);
+    
+    add_block(target_hash);
 }

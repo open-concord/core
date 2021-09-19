@@ -73,24 +73,28 @@ void Tree::set_pow_req(int POW_req) {
     this->pow = POW_req;
 }
 
-void Tree::gen_block(std::string cont, std::string s_trip, std::unordered_set<std::string> p_hashes, std::string c_trip) {
+std::string Tree::gen_block(std::string cont, std::string s_trip, std::unordered_set<std::string> p_hashes, std::string c_trip) {
     assert(s_trip.length() == 24);
     assert(c_trip.length() == 24);
-    chain_push(construct_block(cont, p_hashes, this->pow, s_trip, c_trip));
+    block out_block = construct_block(cont, p_hashes, this->pow, s_trip, c_trip);
+    chain_push(out_block);
+    return out_block.hash;
 }
 
-std::unordered_set<std::string> Tree::find_p_hashes(std::string s_trip, int p_count) {
+std::unordered_set<std::string> Tree::find_p_hashes(std::string s_trip, std::unordered_set<std::string> base_p_hashes, int p_count) {
     //there's no point in using blocks with existing children as hashes; we can get the same reliance by using their children
+    std::unordered_set<std::string> p_hashes = base_p_hashes;
+
     std::unordered_set<std::string> intra_childless_hashes = get_qualifying_hashes(boost::bind(&Tree::is_intraserver_childless, _1, _2, s_trip)); 
-    std::unordered_set<std::string> p_hashes;
+
     std::sample(
         intra_childless_hashes.begin(),
         intra_childless_hashes.end(),
         std::inserter(p_hashes, p_hashes.begin()),
-        p_count,
+        std::min((int) (p_count - p_hashes.size()), 1),
         std::mt19937{std::random_device{}()}
     );
-    int p_remainder = intra_childless_hashes.size() - p_count;
+    int p_remainder = p_hashes.size() - p_count;
     if (p_remainder > 0) {
         std::unordered_set<std::string> childless_hashes = get_qualifying_hashes(&Tree::is_childless);
         std::sample(

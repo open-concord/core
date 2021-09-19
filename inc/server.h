@@ -85,8 +85,8 @@ struct branch {
     std::vector<message> messages;
     branch_context ctx;
 
-    std::unordered_set<branch*> pt_c_branches;
-    std::unordered_set<branch*> pt_p_branches;
+    std::unordered_set<std::string> c_branch_fbs;
+    std::unordered_set<std::string> p_branch_fbs;
 };
 
 std::string content_hash_concat(long long unsigned int time, std::string s_trip, std::unordered_set<std::string> p_hashes);
@@ -98,7 +98,7 @@ class Server {
         std::string raw_AES_key;
         std::string root_fb;
         std::map<std::string, user> known_users;
-        std::map<std::string, std::pair<branch, std::vector<branch_context>>> branches;
+        std::map<std::string, branch> branches;
 
         void load_branch_forward(std::string fb_hash);
     public:
@@ -110,7 +110,7 @@ class Server {
 
         branch get_root_branch();
 
-        void send_message(user author, json content);
+        void send_message(user author, json content, char st, char t = '\0', std::unordered_set<std::string> p_hashes = std::unordered_set<std::string>());
 
         void add_block(std::string hash);
 };
