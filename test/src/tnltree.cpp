@@ -1,11 +1,14 @@
 #include "concord/tree.h"
 #include "concord/hash.h"
+#include "concord/strenc.h"
+#include "concord/crypt++.h"
 #include <iostream>
 #include <string>
 
 int main() {
     std::cout << "OF" << std::endl;
-    std::string server_trip = gen_trip(16, 24);
+    std::string raw_aes = AES_keygen();      
+    std::string server_trip = gen_trip(b64_encode(raw_aes), 24);
 
     Tree example("example_chain_dir");
 
