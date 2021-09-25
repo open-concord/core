@@ -76,6 +76,7 @@ void Tree::set_pow_req(int POW_req) {
 std::string Tree::gen_block(std::string cont, std::string s_trip, std::unordered_set<std::string> p_hashes, std::string c_trip) {
     assert(s_trip.length() == 24);
     assert(c_trip.length() == 24);
+    if (p_hashes.size() == 0) p_hashes = find_p_hashes(s_trip);
     block out_block = construct_block(cont, p_hashes, this->pow, s_trip, c_trip);
     chain_push(out_block);
     return out_block.hash;
@@ -113,14 +114,22 @@ std::map<std::string, block> Tree::get_chain() {
 }
 
 bool Tree::verify_chain() {
+    std::map<std::string, bool> s_trip_seen;
     for (const auto& [hash, block] : get_chain()) {
         if (!verify_block(block, this->pow)) return false; //make sure every hash is valid.
-        bool server_connected = (block.p_hashes.size() == 0);
+        //If there were multiple server roots, we couldn't tell which was valid.
+        //P2P prevents the propagation of new roots, but this means we have
+        //to fail if there's more than one root
+        bool server_connected = false;
         for (auto ph : block.p_hashes) {
             if (get_chain().find(ph) == get_chain().end()) return false; //parent hashes all need to exist in the chain
             if (get_chain()[ph].s_trip == block.s_trip) server_connected = true;
         }
-        if (!server_connected) return false;
+        if (!server_connected) {
+            s_trip_seen[block.s_trip] = !s_trip_seen[block.s_trip]; //first will make true, second back to false
+            if (!s_trip_seen[block.s_trip]) return false; 
+            //if it's false (was true before, i.e. was flipped, so this is the second sighting) we fail
+        }
     }
     return true;
 }
