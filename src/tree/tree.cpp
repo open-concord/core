@@ -73,11 +73,11 @@ void Tree::set_pow_req(int POW_req) {
     this->pow = POW_req;
 }
 
-std::string Tree::gen_block(std::string cont, std::string s_trip, std::unordered_set<std::string> p_hashes, std::string c_trip) {
+std::string Tree::gen_block(std::string cont, std::string s_trip, unsigned long long set_time, std::unordered_set<std::string> p_hashes, std::string c_trip) {
     assert(s_trip.length() == 24);
     assert(c_trip.length() == 24);
     if (p_hashes.size() == 0) p_hashes = find_p_hashes(s_trip);
-    block out_block = construct_block(cont, p_hashes, this->pow, s_trip, c_trip);
+    block out_block = construct_block(cont, p_hashes, this->pow, s_trip, set_time, c_trip);
     chain_push(out_block);
     return out_block.hash;
 }
@@ -251,12 +251,11 @@ bool verify_block(block to_verify, int pow) {
     return true;
 }
 
-block construct_block(std::string cont, std::unordered_set<std::string> p_hashes, int pow, std::string s_trip, std::string c_trip) {
+block construct_block(std::string cont, std::unordered_set<std::string> p_hashes, int pow, std::string s_trip, unsigned long long set_time, std::string c_trip) {
     Miner local_miner(pow);
 
-    unsigned long long time = get_raw_time();
     block output;
-    output.time = time;
+    output.time = set_time;
     output.s_trip = s_trip;
     output.c_trip = c_trip;
     output.cont = cont;

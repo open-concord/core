@@ -48,7 +48,7 @@ json block_to_json(block input);
 
 block json_to_block(json input);
 
-block construct_block(std::string cont, std::unordered_set<std::string> p_hashes, int pow, std::string s_trip, std::string c_trip = std::string(24, '='));
+block construct_block(std::string cont, std::unordered_set<std::string> p_hashes, int pow, std::string s_trip, unsigned long long set_time = get_raw_time(), std::string c_trip = std::string(24, '='));
 
 std::vector<std::string> order_hashes(std::unordered_set<std::string> input_hashes);
 
@@ -74,7 +74,7 @@ class Tree {
 
         void set_pow_req(int pow_req);
 
-        std::string gen_block(std::string cont, std::string s_trip, std::unordered_set<std::string> p_hashes = std::unordered_set<std::string>(), std::string c_trip = std::string(24, '='));
+        std::string gen_block(std::string cont, std::string s_trip, unsigned long long set_time = get_raw_time(), std::unordered_set<std::string> p_hashes = std::unordered_set<std::string>(), std::string c_trip = std::string(24, '='));
 
         std::unordered_set<std::string> find_p_hashes(std::string s_trip, std::unordered_set<std::string> base_p_hashes = std::unordered_set<std::string>(), int p_count = 3);
 
