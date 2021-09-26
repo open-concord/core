@@ -87,21 +87,39 @@ bool branch_context::has_feature(member target, int index) {
     return result;
 }
 
-Server::Server(Tree& parent_tree, std::string AES_key, user load_user) : tree(parent_tree) {
+Server::Server(Tree& parent_tree, std::string AES_key, user load_user, std::string prev_AES_key) : tree(parent_tree), luser(load_user) {
     this->raw_AES_key = b64_decode(AES_key);
     this->s_trip = gen_trip(AES_key, 24);
     std::unordered_set<std::string> root_hashes = this->tree.get_qualifying_hashes(boost::bind(&Tree::is_intraserver_orphan, _1, _2, this->s_trip));
-    assert(root_hashes.size() == 1); //0 means the server doesn't exist. 2+ shouldn't be possible, as there are checks at every level for server connection.
-    this->root_fb = *(root_hashes.begin());
+    assert(root_hashes.size() <= 1); //0 means the server doesn't exist, but still, they could create it. 2+ shouldn't be possible, as there are checks at every level for server connection.
+    if (root_hashes.size() == 1) {
+        this->root_fb = *(root_hashes.begin());
+        load_branch_forward(this->root_fb);
+    } else if (root_hashes.size() == 0) {
+        json nserv_data = {
+            {"cms", {
+                {"enc_pubk", load_user.pub_keys.RSA_key},
+                {"sig_pubk", load_user.pub_keys.DSA_key}
+            }}
+        };
+        if (!prev_AES_key.empty()) nserv_data["prev_key"] = prev_AES_key;
+        this->root_fb = send_message(load_user, nserv_data, 'a', "nserv");
+    }
+}
 
-    load_branch_forward(this->root_fb);
+branch Server::get_root_branch() {
+    return (this->branches)[this->root_fb];
+}
+
+branch Server::get_branch(std::string fb) {
+    return (this->branches)[fb];
 }
 
 member Server::create_member(keypair pub_keys, std::vector<std::string> initial_roles) {
     user temp_user(pub_keys);
     (this->known_users)[temp_user.u_trip] = temp_user;
     member temp_member;
-    temp_member.user_ref = &((this->known_users)[temp_user.u_trip]);
+    temp_member.user_trip = temp_user.u_trip;
     for (auto init_role : initial_roles) {
         temp_member.roles_ranks[init_role] = 1;
     }
@@ -109,7 +127,7 @@ member Server::create_member(keypair pub_keys, std::vector<std::string> initial_
 }
 
 void Server::load_branch_forward(std::string fb_hash) {
-    block* active_block_ref = &(this->tree).get_chain()[fb_hash]; //start on the branch's first block
+    std::string working_hash = fb_hash; //start on the branch's first block
     block active_block;
     std::unordered_set<std::string> seed_hashes;
 
@@ -139,10 +157,9 @@ void Server::load_branch_forward(std::string fb_hash) {
 
     target_branch.messages = std::vector<message>();
     
-
     //see how far the linear part goes; we'll stop when there are multiple children
     while (true) {
-        active_block = *active_block_ref;
+        active_block = (this->tree).get_chain()[working_hash];
         //message digestion logic
         try {
             std::array<std::string, 2> raw_unlocked = unlock_msg(b64_decode(active_block.cont), false, this->raw_AES_key);
@@ -155,7 +172,6 @@ void Server::load_branch_forward(std::string fb_hash) {
                 result.supertype = std::string(claf_data["st"]).at(0);
                 result.type = std::string(claf_data["t"]).at(0);
                 result.data = claf_data["d"];
-                result.ref = active_block_ref;
                 target_branch.messages.push_back(result);
             }
             else {
@@ -165,7 +181,6 @@ void Server::load_branch_forward(std::string fb_hash) {
         catch(int err) {
             //something should go here
         }
-
         //see if we're still linear
         std::unordered_set<std::string> intraserver_c_hashes;
         for (auto c_hash : active_block.c_hashes) {
@@ -174,7 +189,7 @@ void Server::load_branch_forward(std::string fb_hash) {
             }
         }
         if (intraserver_c_hashes.size() == 1) {
-            active_block_ref = &(this->tree).get_chain()[*(intraserver_c_hashes.begin())];
+            working_hash = *(intraserver_c_hashes.begin());
         } else {
             //no longer linear
             seed_hashes = intraserver_c_hashes;
@@ -195,25 +210,25 @@ void Server::load_branch_forward(std::string fb_hash) {
 }
 
 void Server::add_block(std::string hash) {
-    block* active_block_ref = &(this->tree).get_chain()[hash];
+    std::string working_hash = hash;
     while (true) {
         std::unordered_set<std::string> intraserver_p_hashes;
-        for (auto p_hash : (*active_block_ref).p_hashes) {
+        for (auto p_hash : (this->tree).get_chain()[working_hash].p_hashes) {
             if ((this->tree).get_chain()[p_hash].s_trip == (this->s_trip)) {
                 intraserver_p_hashes.insert(p_hash);
             }
         }
         if (intraserver_p_hashes.size() == 1) {
-            active_block_ref = &(this->tree).get_chain()[*(intraserver_p_hashes.begin())];
+            working_hash = *(intraserver_p_hashes.begin());
         }
         else {
-            load_branch_forward((*active_block_ref).hash);
+            load_branch_forward(working_hash);
             break;
         }
     }
 }
 
-void Server::send_message(user author, json content, char st, char t, std::unordered_set<std::string> p_hashes) {
+std::string Server::send_message(user author, json content, char st, std::string t, std::unordered_set<std::string> p_hashes) {
     auto& local_tree = this->tree;
     auto sending_time = get_raw_time();
     std::unordered_set<std::string> target_p_hashes = local_tree.find_p_hashes(this->s_trip, p_hashes);
@@ -222,15 +237,17 @@ void Server::send_message(user author, json content, char st, char t, std::unord
     json full_msg = {
         {"a", author.u_trip},
         {"h", content_hash},
-        {"st", st},
+        {"st", std::string(1, st)},
         {"d", content},
     };
     
-    if (t != '\0') full_msg["t"] = t;
+    if (!t.empty()) full_msg["t"] = t;
     
     std::string encrypted_content = b64_encode(lock_msg(full_msg.dump(), false, b64_decode(author.pri_keys.DSA_key), (this->raw_AES_key)));
 
-    std::string target_hash = local_tree.gen_block(content, this->s_trip, target_p_hashes);
+    std::string target_hash = local_tree.gen_block(encrypted_content, this->s_trip, sending_time, target_p_hashes, author.u_trip);
     
     add_block(target_hash);
+
+    return target_hash;
 }

@@ -23,13 +23,13 @@ bool Server::apply_data(branch_context& ctx, json claf_data, std::string content
     if (ctx.members.empty() && claf_data["st"] == "a" && claf_data["t"] == "nserv") {
         keypair creator_pubset(claf_data["d"]["cms"]["sig_pubk"], claf_data["d"]["cms"]["enc_pubk"]);
         member temp_member = create_member(creator_pubset, std::vector<std::string>({"creator"}));
-        ctx.members[(*(temp_member.user_ref)).u_trip] = temp_member;
+        ctx.members[temp_member.user_trip] = temp_member;
         return true;
     }
 
     //make sure this is properly signed by an actual member
     member author_member = ctx.members[claf_data["a"]];
-    user author = *(author_member.user_ref);
+    user author = (this->known_users)[author_member.user_trip];
     std::string author_raw_sigkey = author.pub_keys.DSA_key;
     unsigned int author_primacy = ctx.min_primacy(author_member);
     if (!DSA_verify(author_raw_sigkey, signature, content)) return false;
@@ -44,7 +44,7 @@ bool Server::apply_data(branch_context& ctx, json claf_data, std::string content
             for (auto keyset : keysets) {
                 keypair nm_pubset(keyset["sig_pubk"], keyset["enc_pubk"]);
                 member temp_member = create_member(nm_pubset);
-                ctx.members[(*(temp_member.user_ref)).u_trip] = temp_member;
+                ctx.members[temp_member.user_trip] = temp_member;
             }
         }
         else if (claf_data["t"] == "rem") {
