@@ -218,6 +218,7 @@ void Tree::link_block(block to_link) {
     for (auto ph : to_link.p_hashes) {
         (this->chain)[ph].c_hashes.insert(to_link.hash);
     }
+    (this->seen_s_trips).insert(to_link.s_trip);
 }
 
 void Tree::save(block to_save) {

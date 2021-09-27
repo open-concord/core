@@ -38,11 +38,10 @@ class Conn : public boost::enable_shared_from_this<Conn> {
         // basically just a shared_ptr of self
         typedef std::shared_ptr<Conn> ptr;
     private:
-        Conn(std::map<std::string, Tree>*, boost::function<void(std::unordered_set<std::string>)>, boost::asio::io_context& io_ctx);
+        Conn(std::map<std::string, Tree>*, boost::asio::io_context& io_ctx);
         boost::asio::ip::tcp::socket tsock;   
     public:
         std::map<std::string, Tree>* parent_chains;
-        boost::function<void(std::string, size_t)> parent_blocks_callback;
 
         conn_context message_context;
         // util vars
@@ -52,7 +51,7 @@ class Conn : public boost::enable_shared_from_this<Conn> {
         bool server; // which capacity client is currently serving in
         bool local; // is local connection?
 
-        static ptr create(std::map<std::string, Tree>*, boost::function<void(std::unordered_set<std::string>)>, boost::asio::io_context& io_ctx);
+        static ptr create(std::map<std::string, Tree>*, boost::asio::io_context& io_ctx);
         boost::asio::ip::tcp::socket& socket();
         // async util func
         void initiate_comms(std::string msg);
@@ -87,11 +86,10 @@ class Node {
             std::chrono::high_resolution_clock::time_point last_verified;
         };
         std::vector<khost> known_hosts;
-        boost::function<void(std::string, size_t)> blocks_callback;
     public:
         std::map<std::string /*trip*/, Tree /*chain model*/> chains;
 
-        Node(int queue, unsigned short int port, std::map<std::string, Tree> cm, boost::function<void(std::unordered_set<std::string>)> blocks_cb);
+        Node(int queue, unsigned short int port, std::map<std::string, Tree> cm);
 
         // start listening
         void start();

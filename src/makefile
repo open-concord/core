@@ -7,7 +7,7 @@ CC = g++ -std=c++20
 # compile-time flags
 CFLAGS = -c -g -Wall -fPIC $(IN_DIR)
 # lib flags
-LFLAGS = -lcryptopp -pthread -lboost_system -lboost_filesystem -pthread
+LFLAGS = -lssl -lcryptopp -pthread -lboost_system -lboost_filesystem -pthread
 
 # object file sub-dir of src
 BIN = _bin/
@@ -32,9 +32,8 @@ OBJ = $(BIN)lockmsg.o \
 	$(BIN)hexstr.o \
 	$(BIN)strutil.o \
 	$(BIN)smisc.o \
-	$(BIN)server.o
-
-#	$(BIN)nlogic.o \
+	$(BIN)server.o \
+	$(BIN)nlogic.o \
 	$(BIN)nconn.o \
 	$(BIN)nnode.o
 
@@ -95,12 +94,12 @@ $(BIN)server.o: server/server.cpp ../inc/server.h
 $(BIN)smisc.o: server/claf_misc.cpp ../inc/server.h
 	$(CC) $(CFLAGS) $< -o $@
 # nodes
-#$(BIN)nlogic.o: node/logic.cpp ../inc/node.h
-#	$(CC) $(CFLAGS) $< -o $@
-#$(BIN)nconn.o: node/conn.cpp ../inc/node.h
-#	$(CC) $(CFLAGS) $< -o $@
-#$(BIN)nnode.o: node/node.cpp ../inc/node.h
-#	$(CC) $(CFLAGS) $< -o $@
+$(BIN)nlogic.o: node/logic.cpp ../inc/node.h
+	$(CC) $(CFLAGS) $< -o $@
+$(BIN)nconn.o: node/conn.cpp ../inc/node.h
+	$(CC) $(CFLAGS) $< -o $@
+$(BIN)nnode.o: node/node.cpp ../inc/node.h
+	$(CC) $(CFLAGS) $< -o $@
 
 # crypt
 $(BIN)lockmsg.o: crypt++/lockmsg.cpp ../inc/crypt++.h
