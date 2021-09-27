@@ -66,6 +66,8 @@ class Tree {
         
         void link_block(block  to_link);
     public:
+        std::unordered_set<std::string> seen_s_trips;
+        
         Tree();
         
         Tree(std::string dir);

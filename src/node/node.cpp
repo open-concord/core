@@ -35,11 +35,10 @@ std::vector<std::string> get_directories(const std::string& s)
 }
 
 // overarching node instance
-Node::Node(int queue, unsigned short int port, std::map<std::string, Tree> cm, boost::function<void(std::string, size_t)> blocks_cb) {
+Node::Node(int queue, unsigned short int port, std::map<std::string, Tree> cm) {
     boost::asio::ip::tcp::endpoint endpoint{boost::asio::ip::tcp::v4(), port};
     this->queue = queue;
-    this->chains_dir = chains_dir;
-    this->blocks_callback = blocks_cb;
+    //this->chains_dir = chains_dir;
     this->chains = cm;
 }
 
@@ -65,7 +64,7 @@ void Node::shutdown() {
 // awaits new connection and passes message to handler
 void Node::begin_next() {
     // create new connection instance
-    Conn::ptr new_conn = Conn::create(&(this->chains), this->blocks_callback, this->io_ctx);
+    Conn::ptr new_conn = Conn::create(&(this->chains), this->io_ctx);
 
     // await connection creation
     this->acceptor.async_accept(new_conn->socket(),
@@ -92,7 +91,7 @@ Conn::ptr Node::contact(std::string initial_content, std::string ip, int port) {
     // target info
     boost::asio::ip::tcp::endpoint ep(boost::asio::ip::address::from_string(ip), port);
     // socket creation
-    Conn::ptr new_conn = Conn::create(&(this->chains), this->blocks_callback, this->io_ctx);
+    Conn::ptr new_conn = Conn::create(&(this->chains), this->io_ctx);
     // not capable of doing async mental gymnastics to get async_connect hooked up
     // but I also don't want to write a helper func
     // *fix in alpha*
