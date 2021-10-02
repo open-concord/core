@@ -190,13 +190,15 @@ void Server::load_branch_forward(std::string fb_hash) {
             std::array<std::string, 2> raw_unlocked = unlock_msg(b64_decode(active_block.cont), false, this->raw_AES_key);
             std::string content_hash = b64_encode(calc_hash(false, content_hash_concat(active_block.time, active_block.s_trip, active_block.p_hashes)));
             json claf_data = json::parse(raw_unlocked[0]);
-            if (apply_data(ctx, claf_data, raw_unlocked[0], raw_unlocked[1], content_hash)) {
+            json extra;
+            if (apply_data(ctx, extra, claf_data, raw_unlocked[0], raw_unlocked[1], content_hash)) {
                 //add an actual message if we can
                 message result;
                 result.hash = active_block.hash;
                 result.supertype = std::string(claf_data["st"]).at(0);
                 result.type = std::string(claf_data["t"]).at(0);
                 result.data = claf_data["d"];
+                result.extra = extra;
                 target_branch.messages.push_back(result);
             }
             else {
