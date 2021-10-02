@@ -65,6 +65,7 @@ struct message {
     char supertype;
     char type;
     json data;
+    json extra;
 };
 
 class branch_context {
@@ -116,7 +117,7 @@ class Server {
     
         member create_member(keypair pub_keys, std::vector<std::string> init_roles = std::vector<std::string>());
 
-        bool apply_data(branch_context& ctx, json claf_data, std::string content, std::string signature, std::string content_hash);
+        bool apply_data(branch_context& ctx, json& extra, json claf_data, std::string content, std::string signature, std::string content_hash);
 
         branch get_root_branch();
 

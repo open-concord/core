@@ -2,6 +2,7 @@
 #include "../../inc/tree.h"
 #include "../../inc/crypt++.h"
 #include "../../inc/strenc.h"
+#include "../../inc/hash.h"
 #include <string>
 #include <set>
 #include <nlohmann/json.hpp>
@@ -14,7 +15,7 @@ std::string content_hash_concat(long long unsigned int time, std::string s_trip,
     return concat_data;
 }
 
-bool Server::apply_data(branch_context& ctx, json claf_data, std::string content, std::string signature, std::string content_hash) {
+bool Server::apply_data(branch_context& ctx, json& extra, json claf_data, std::string content, std::string signature, std::string content_hash) {
 
     //verify that all of the circumstances agree with those in the block
     if (content_hash != std::string(claf_data["h"])) return false; 
@@ -49,7 +50,32 @@ bool Server::apply_data(branch_context& ctx, json claf_data, std::string content
         }
         else if (claf_data["t"] == "rem") {
             if (!ctx.has_feature(author_member, 2)) return false; //2 is can_rem
-            //TODO: add this beast
+            std::unordered_set<std::string> nsk_indices;
+            for (auto& nsk_entry : (claf_data["d"]["nsk"]).items()) {
+                nsk_indices.insert(nsk_entry.key());
+            }
+            std::unordered_set<std::string> relevant_members;
+            std::vector<std::string> rem_users = claf_data["d"]["rms"];
+            //get unremoved members + make sure all are there
+            for (auto& [user_trip, member] : ctx.members) {
+                if (std::find(rem_users.begin(), rem_users.end(), user_trip) == rem_users.end()) {
+                    if (!claf_data["d"]["nsk"].contains(user_trip)) return false;
+                    relevant_members.insert(user_trip);
+                }
+            }
+            if (relevant_members.find((this->luser).u_trip) == relevant_members.end()) return false; //need luser to be a member, ofc
+            std::string encrypted_key = b64_decode(claf_data["d"]["nsk"][(this->luser).u_trip]);
+            std::string decrypted_key = RSA_decrypt(b64_decode(luser.pri_keys.RSA_key), encrypted_key);
+            std::string nserver_trip = calc_hash(false, decrypted_key);
+            if (nserver_trip != claf_data["d"]["nst"]) return false; //make sure this is the right key
+            for (auto& [user_trip, member] : ctx.members) { //first verify all members are included
+                std::string user_rsa_pubk = (this->known_users)[user_trip].pub_keys.RSA_key;
+                //make sure they have the right ciphertext for every other user as well
+                if (b64_encode(RSA_encrypt(b64_decode(user_rsa_pubk), b64_decode(decrypted_key))) != claf_data["d"]["nsk"][user_trip]) return false;
+            }
+            //now we know that everything is valid, so a new server is in order.
+            extra["s_trip"] = nserver_trip;
+            extra["s_key"] = decrypted_key;
         }
     }
     else if (claf_data["st"] == "r") {
