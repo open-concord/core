@@ -74,7 +74,6 @@ bool Server::apply_data(branch_context& ctx, json& extra, json claf_data, std::s
                 if (b64_encode(RSA_encrypt(b64_decode(user_rsa_pubk), b64_decode(decrypted_key))) != claf_data["d"]["nsk"][user_trip]) return false;
             }
             //now we know that everything is valid, so a new server is in order.
-            extra["s_trip"] = nserver_trip;
             extra["s_key"] = decrypted_key;
         }
     }
