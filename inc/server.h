@@ -99,6 +99,9 @@ class Server {
     private:
         Tree& tree;
         user luser;
+        std::unordered_set<std::string> constraint_heads;
+        std::unordered_set<std::string> constraint_path_fbs;
+        std::unordered_set<std::string> constraint_path_lbs; //makes fbs search faster
         std::string s_trip;
         std::string raw_AES_key;
         std::string root_fb;
@@ -106,8 +109,10 @@ class Server {
         std::map<std::string, branch> branches;
 
         void load_branch_forward(std::string fb_hash);
+
+        void backscan_constraint_path(std::string lb_hash);
     public:
-        Server(Tree& parent_tree, std::string AES_key, user load_user = user(), std::string prev_AES_key = std::string());
+        Server(Tree& parent_tree, std::string AES_key, user load_user = user(), std::string prev_AES_key = std::string(), std::unordered_set<std::string> heads = std::unordered_set<std::string>());
     
         member create_member(keypair pub_keys, std::vector<std::string> init_roles = std::vector<std::string>());
 

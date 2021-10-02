@@ -87,13 +87,18 @@ bool branch_context::has_feature(member target, int index) {
     return result;
 }
 
-Server::Server(Tree& parent_tree, std::string AES_key, user load_user, std::string prev_AES_key) : tree(parent_tree), luser(load_user) {
+Server::Server(Tree& parent_tree, std::string AES_key, user load_user, std::string prev_AES_key, std::unordered_set<std::string> heads) : tree(parent_tree), luser(load_user), constraint_heads(heads) {
     this->raw_AES_key = b64_decode(AES_key);
     this->s_trip = gen_trip(AES_key, 24);
     std::unordered_set<std::string> root_hashes = this->tree.get_qualifying_hashes(boost::bind(&Tree::is_intraserver_orphan, _1, _2, this->s_trip));
     assert(root_hashes.size() <= 1); //0 means the server doesn't exist, but still, they could create it. 2+ shouldn't be possible, as there are checks at every level for server connection.
     if (root_hashes.size() == 1) {
         this->root_fb = *(root_hashes.begin());
+        for (auto constraint_head : (this->constraint_heads)) {
+            //a little hacky, but with no constraint heads there will be no scanning
+            //strictly there should be an if statement on size != 0, but it doesn't change the logic.
+            backscan_constraint_path(constraint_head);
+        }
         load_branch_forward(this->root_fb);
     } else if (root_hashes.size() == 0) {
         json nserv_data = {
@@ -124,6 +129,26 @@ member Server::create_member(keypair pub_keys, std::vector<std::string> initial_
         temp_member.roles_ranks[init_role] = 1;
     }
     return temp_member;
+}
+
+void Server::backscan_constraint_path(std::string lb_hash) {
+    std::string working_hash = lb_hash;
+    (this->constraint_path_lbs).insert(lb_hash);
+    
+    while (true) {
+        block active_block = (this->tree).get_chain()[working_hash];
+        if (active_block.p_hashes.size() == 1) {
+            working_hash = *active_block.p_hashes.begin();
+        } else {
+            (this->constraint_path_fbs).insert(working_hash);
+            for (auto p_hash : active_block.p_hashes) {
+                if ((this->constraint_path_lbs).find(p_hash) == (this->constraint_path_lbs).end()) {
+                    backscan_constraint_path(p_hash);
+                }
+            }
+            break;
+        }
+    }
 }
 
 void Server::load_branch_forward(std::string fb_hash) {
@@ -181,6 +206,13 @@ void Server::load_branch_forward(std::string fb_hash) {
         catch(int err) {
             //something should go here
         }
+        //see if we've reached a head, assuming there are any
+        if (((this->constraint_heads).find(working_hash) != (this->constraint_path_fbs).end())) {
+            //we're done with this branch - cutoff time!
+            seed_hashes = std::unordered_set<std::string>(); //empty this
+            break;
+        }
+
         //see if we're still linear
         std::unordered_set<std::string> intraserver_c_hashes;
         for (auto c_hash : active_block.c_hashes) {
@@ -199,6 +231,10 @@ void Server::load_branch_forward(std::string fb_hash) {
 
     target_branch.ctx = ctx; //context is established now
     for (auto seed_hash : seed_hashes) {
+        if (((this->constraint_heads).size() > 0) && ((this->constraint_path_fbs).find(seed_hash) == (this->constraint_path_fbs).end())) {
+            //if there are any constraint heads, we need to make sure that this path will reach one of them.
+            continue;
+        }
         branch& seed_branch = (this->branches)[seed_hash];
         //if all the contexts are in, we can load the branch
         if (seed_branch.p_branch_fbs.size() == (this->tree).intraserver_parent_count((this->tree).get_chain()[seed_hash], this->s_trip)) {
@@ -210,6 +246,7 @@ void Server::load_branch_forward(std::string fb_hash) {
 }
 
 void Server::add_block(std::string hash) {
+    assert((this->constraint_heads).size() == 0); //if there are constraints, this should be static.
     std::string working_hash = hash;
     while (true) {
         std::unordered_set<std::string> intraserver_p_hashes;
@@ -229,6 +266,7 @@ void Server::add_block(std::string hash) {
 }
 
 std::string Server::send_message(user author, json content, char st, std::string t, std::unordered_set<std::string> p_hashes) {
+    assert((this->constraint_heads).size() == 0); //if there are constraints, this should be static.
     auto& local_tree = this->tree;
     auto sending_time = get_raw_time();
     std::unordered_set<std::string> target_p_hashes = local_tree.find_p_hashes(this->s_trip, p_hashes);

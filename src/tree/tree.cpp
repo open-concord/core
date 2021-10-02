@@ -86,13 +86,23 @@ std::unordered_set<std::string> Tree::find_p_hashes(std::string s_trip, std::uno
     //there's no point in using blocks with existing children as hashes; we can get the same reliance by using their children
     std::unordered_set<std::string> p_hashes = base_p_hashes;
 
-    std::unordered_set<std::string> intra_childless_hashes = get_qualifying_hashes(boost::bind(&Tree::is_intraserver_childless, _1, _2, s_trip)); 
+    std::unordered_set<std::string> intra_childless_hashes = get_qualifying_hashes(boost::bind(&Tree::is_intraserver_childless, _1, _2, s_trip));
+
+    //if the base hashes have an intraserver block, we don't require another one, so the minimum intra sample is 0. Otherwise, it's 1 for server continuity.
+    bool require_intra_block = true;
+
+    for (auto bp_hash : p_hashes) {
+        if (get_chain()[bp_hash].s_trip == s_trip) {
+            require_intra_block = false;
+            break;
+        }
+    }
 
     std::sample(
         intra_childless_hashes.begin(),
         intra_childless_hashes.end(),
         std::inserter(p_hashes, p_hashes.begin()),
-        std::min((int) (p_count - p_hashes.size()), 1),
+        std::max((int) (p_count - p_hashes.size()), (int) require_intra_block), //we want at least one block from the server for continuity, but if we already have one we just need to fill the p_count.
         std::mt19937{std::random_device{}()}
     );
     int p_remainder = p_hashes.size() - p_count;
