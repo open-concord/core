@@ -36,10 +36,6 @@ struct block {
     std::unordered_set<std::string> p_hashes;
     //these properties are for chain analysis and aren't actually saved
     std::unordered_set<std::string> c_hashes;
-
-    std::strong_ordering operator<=>(const block& other) const {
-        return time <=> other.time;
-    }
 };
 
 bool verify_block(block to_verify, int pow);
