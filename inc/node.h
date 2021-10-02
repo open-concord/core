@@ -94,8 +94,9 @@ class Node {
         // start listening
         void start();
 
-        // stop listening
-        void stop();
+        // close acceptor
+        void close();
+        
         // shutdown **THIS CLOSES ALL ASYNC OPERATIONS, ONLY USE IN EMERGENCIES**
         void shutdown();
 
