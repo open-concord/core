@@ -51,9 +51,9 @@ void Node::start() {
 };
 
 // stop listen
-void Node::stop() {
+void Node::close() {
     this->acceptor.close();
-};
+}
 
 // shutdown **THIS CLOSES ALL ASYNC OPERATIONS, ONLY USE IN EMERGENCIES**
 void Node::shutdown() {
