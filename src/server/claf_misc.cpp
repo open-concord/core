@@ -9,6 +9,25 @@
 
 using json = nlohmann::json;
 
+int encode_features(std::array<bool, 6> features) {
+    int output = 0;
+    for (int i = 0; i < features.size(); i++) {
+        output += i;
+        output <<= 1;
+    }
+    return output;
+}
+
+std::array<bool, 6> decode_features(int encoded_features) {
+    std::array<bool, 6> output;
+    int moving_filter = 0;
+    for (int i = 0; i < output.size(); i++) {
+        moving_filter <<= 1;
+        output[i] = (encoded_features & moving_filter);
+    }
+    return output;
+}
+
 std::string content_hash_concat(long long unsigned int time, std::string s_trip, std::unordered_set<std::string> p_hashes) {
     std::string concat_data = b64_encode(raw_time_to_string(time)) + s_trip; //b64 timestr encoding is only for safety
     for (auto ph : order_hashes(p_hashes)) concat_data += ph;
@@ -79,28 +98,37 @@ bool Server::apply_data(branch_context& ctx, json& extra, json claf_data, std::s
     }
     else if (claf_data["st"] == "r") {
         if (claf_data["t"] == "crole") {
-            //TODO: conversion methods in the works
-        }
-        else {
+            if (!ctx.has_feature(author_member, 4)) return false; //4 is role creation
+            std::string target_role = claf_data["d"]["rn"];
+            unsigned int target_primacy = claf_data["d"]["rp"];
+            std::array<bool, 6> target_features = decode_features(claf_data["d"]["pc"]);
+            bool create_role = (ctx.roles.count(target_role) == 0); //we need to create it before we act on this
+            auto& present_role = ctx.roles[target_role];
+            if (ctx.min_primacy(author_member) >= target_primacy) return false;
+            if (create_role) {
+                present_role.primacy_rank = {target_primacy, 0};
+            } else if (present_role.primacy() != target_primacy) {
+                present_role.primacy_rank[0] = target_primacy;
+                present_role.primacy_rank[1]++;
+            }
+            for (int i = 0; i < target_features.size(); i++) {
+                present_role.features[i].orient_dir(target_features[i]);
+            }
+        } else {
             if (!ctx.has_feature(author_member, 3)) return false; //3 is grole/rrole
             auto& altered_member = ctx.members[claf_data["d"]["tu"]];
             std::string target_role = claf_data["d"]["tr"];
-            int type_multiplier;
+            if (ctx.min_primacy(author_member) >= ctx.roles[target_role].primacy()) return false; //need to be more prime
+            bool direction;
             if (claf_data["t"] == "grole") {
-                type_multiplier = 1;
+                direction = true;
             } 
             else if (claf_data["t"] == "rrole") {
-                type_multiplier = -1;
+                direction = false;
             }
             else return false;
 
-            if (altered_member.roles_ranks.count(target_role) == 0) {
-                altered_member.roles_ranks[target_role] = type_multiplier;
-            }
-            else if (type_multiplier * altered_member.roles_ranks[target_role] < 0) {
-                altered_member.roles_ranks[target_role] *= -1;
-                altered_member.roles_ranks[target_role] += type_multiplier;
-            }
+            altered_member.roles_ranks[target_role].orient_dir(direction);
         }
     }
     else if (claf_data["st"] == "s") {

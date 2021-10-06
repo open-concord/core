@@ -43,15 +43,28 @@ struct user {
     user(std::string tripcode, keypair priset) : u_trip(tripcode), pri_keys(priset) {}
 };
 
+//rank that can express positive or negative values needs special properties
+class birank {
+    private:
+        int irank = 0;
+    public:
+        void orient_dir(bool dir);
+        bool get_dir();
+        bool operator== (birank other);
+        bool operator< (birank other);
+        bool operator> (birank other);
+        operator bool();
+};
+
 struct member {
     std::string user_trip;
-    std::map<std::string, int> roles_ranks; //doesn't need to be ordered, is for convenience.
+    std::map<std::string, birank> roles_ranks;
 };
 
 struct role {
-    std::array<int, 6> features;
-    unsigned int primacy;
-
+    std::array<birank, 6> features;
+    std::array<unsigned int, 2> primacy_rank;
+    bool primacy() { return primacy_rank[0]; }
     bool is_mute() { return features[0]; }
     bool can_invite() { return features[1]; }
     bool can_rem() { return features[2]; }
@@ -74,7 +87,7 @@ class branch_context {
     public:
         json settings;
         std::map<std::string, member> members;
-        std::map<std::string, std::pair<role, int>> roles;
+        std::map<std::string, role> roles;
 
         branch_context();
 
