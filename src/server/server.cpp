@@ -18,75 +18,6 @@ using namespace boost::placeholders;
 
 using json = nlohmann::json;
 
-void branch_context::initialize_roles()  {
-    //by default, the creator role exists.
-    role creator_role;
-    creator_role.features[0] = false;
-    for (int i = 1; i < creator_role.features.size(); i++) creator_role.features[i] = 0;
-    creator_role.primacy = 0;
-    (this->roles)["creator"] = std::pair<role, int>(creator_role, 1);
-}
-
-branch_context::branch_context() {
-    initialize_roles();
-}
-
-branch_context::branch_context(std::vector<branch_context> input_contexts) {
-    for (auto input_context : input_contexts) {
-        //rank selections for equal rank are random.
-        //they can also be easily manipulated by repeated definition
-        //this is of no consequence; the point is that action is chosen over inaction
-        //all of these are privileges given to high-ranking users, and all of them can easily be removed if (to trivial and reversible effect) abused
-
-        //make the highest-rank role selections and simultaneously get union of membership
-        for (const auto& [hash, in_member] : input_context.members) {
-            if ((this->members).count(hash) == 1) {
-                for (const auto& [name, rank] : in_member.roles_ranks) {
-                    if (std::abs(rank) > std::abs((this->members)[hash].roles_ranks[name])) {
-                        (this->members)[hash].roles_ranks[name] = rank;
-                    }
-                }
-            } 
-            else {
-                (this->members)[hash] = in_member;
-            }
-        }
-
-        //also select role versions by rank
-        for (const auto& [name, role_pair] : input_context.roles) {
-            if (role_pair.second > (this->roles)[name].second) {
-                (this->roles)[name] = role_pair;
-            }
-        }
-
-        //very hacky, order- (which is random) dependent json merging.
-        (this->settings).merge_patch(input_context.settings);
-
-    }
-}
-
-unsigned int branch_context::min_primacy(member target) {
-    unsigned int min = std::numeric_limits<int>::max();
-    for (auto name_pair : target.roles_ranks) {
-        if (name_pair.second < 0) continue;
-        unsigned int role_primacy = ((this->roles)[name_pair.first]).first.primacy;
-        if (role_primacy < min) {
-            min = role_primacy;
-        }
-    }
-    return min;
-}
-
-bool branch_context::has_feature(member target, int index) {
-    bool result = false;
-    for (auto name_pair : target.roles_ranks) {
-        if (name_pair.second < 0) continue;
-        bool role_feature = ((this->roles)[name_pair.first]).first.features[index];
-        result = (result || role_feature);
-    }
-    return result;
-}
-
 Server::Server(Tree& parent_tree, std::string AES_key, user load_user, std::string prev_AES_key, std::unordered_set<std::string> heads) : tree(parent_tree), luser(load_user), constraint_heads(heads) {
     this->raw_AES_key = b64_decode(AES_key);
     this->s_trip = gen_trip(AES_key, 24);
@@ -126,7 +57,7 @@ member Server::create_member(keypair pub_keys, std::vector<std::string> initial_
     member temp_member;
     temp_member.user_trip = temp_user.u_trip;
     for (auto init_role : initial_roles) {
-        temp_member.roles_ranks[init_role] = 1;
+        temp_member.roles_ranks[init_role].orient_dir(true);
     }
     return temp_member;
 }
