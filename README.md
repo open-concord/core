@@ -8,7 +8,7 @@ Register to become a beta tester; shoot either maintainer an email
 <br>
 
 ## Using
-`Concord/Main` produces either a Shared Object (Unix), or a Dynamic-Link Library (Windows). If you're here because you want a plug and play application, check out [Concord/Desktop](https://github.com/open-concord/desktop/).
+`Concord/Core` produces either a Shared Object (Unix), or a Dynamic-Link Library (Windows). If you're here because you want a plug and play application, check out [Concord/Desktop](https://github.com/open-concord/desktop/).
 
 You can find stable releases of both the SO and DLL under this repository's releases page. You can also build from source.
 
