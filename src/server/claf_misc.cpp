@@ -28,6 +28,32 @@ std::array<bool, 6> decode_features(int encoded_features) {
     return output;
 }
 
+bijson json_to_bij(json input) {
+    bijson result;
+    if (input.is_object()) {
+        for (auto& [key, val] : input.items()) {
+            result.set_key(key, json_to_bij(val));
+        }
+    } else {
+        result.set_base(input);
+    }
+    return result;
+}
+
+json bij_to_json(bijson input) {
+    json result;
+    if (input.type == MAP) {
+        for (auto& [key, val] : input.map_values) {
+            if (val.second.get_dir()) {
+                result[key] = bij_to_json(val.first);
+            }
+        }
+    } else {
+        result = input.base_json;
+    }
+    return result;
+}
+
 std::string content_hash_concat(long long unsigned int time, std::string s_trip, std::unordered_set<std::string> p_hashes) {
     std::string concat_data = b64_encode(raw_time_to_string(time)) + s_trip; //b64 timestr encoding is only for safety
     for (auto ph : order_hashes(p_hashes)) concat_data += ph;
@@ -95,6 +121,7 @@ bool Server::apply_data(branch_context& ctx, json& extra, json claf_data, std::s
             //now we know that everything is valid, so a new server is in order.
             extra["s_key"] = decrypted_key;
         }
+        else return false;
     }
     else if (claf_data["st"] == "r") {
         if (claf_data["t"] == "crole") {
@@ -133,12 +160,35 @@ bool Server::apply_data(branch_context& ctx, json& extra, json claf_data, std::s
     }
     else if (claf_data["st"] == "s") {
         if (!ctx.has_feature(author_member, 5)) return false; //5 is can_edit
-        json* moving_ref;
-        std::vector<std::string> indices = claf_data["d"]["sn"];
-        for (auto index : indices) {
-            moving_ref = &((*moving_ref)[index]);
+        bool is_isset = (claf_data["t"] == "sset");
+        bool is_cset = (claf_data["t"] == "cset");
+        
+        if (!is_isset && !is_cset) return false;
+        std::vector<std::vector<std::string>> key_vects = claf_data["d"]["sn"];
+        std::vector<int> po_bools = claf_data["d"]["po"];
+        std::vector<json> vals = claf_data["d"]["sv"];
+        if (is_isset && key_vects.size() != vals.size()) return false;
+        if (po_bools.size() == 0) po_bools = std::vector<int>(1, key_vects.size());
+        else if (po_bools.size() != key_vects.size()) return false;
+        for (size_t i = 0; i < key_vects.size(); i++) {
+            bijson* moving_ref = &ctx.settings;
+            std::vector<std::string> keys = key_vects[i];
+            std::string last_key = keys.back();
+            keys.pop_back();
+            for (auto key : keys) {
+                auto& val_map = (*moving_ref).map_values;
+                if (val_map.count(key) == 0) return false;
+                if (!val_map[key].second.get_dir()) return false;
+                moving_ref = &val_map[key].first;
+            }
+            if (is_isset) {
+                bijson end_setting = (po_bools[i] == 1) ? json_to_bij(vals[i]) : bijson(vals[i]);
+                (*moving_ref).set_key(last_key, end_setting);
+            } else {
+                (*moving_ref).clear_key(last_key);
+            }
         }
-        *moving_ref = claf_data["d"]["sv"];
+        
     }
     else return false;
 

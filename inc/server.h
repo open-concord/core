@@ -49,12 +49,37 @@ class birank {
         int irank = 0;
     public:
         void orient_dir(bool dir);
+        void increment();
         bool get_dir();
         bool operator== (birank other);
         bool operator< (birank other);
         bool operator> (birank other);
         operator bool();
 };
+
+enum bijson_type {TERMINAL, MAP, VECT};
+
+struct bijson {
+    bijson_type type = TERMINAL;
+    std::map<std::string, std::pair<bijson, birank>> map_values;
+    std::vector<std::pair<bijson, birank>> vect_values;
+    json base_json;
+
+    bijson();
+    bijson(json base);
+
+    void set_key(std::string key, bijson value);
+    void clear_key(std::string key);
+
+    void set_type(bijson_type new_type);
+    void set_base(json base);
+    void set_keys(std::map<std::string, bijson> key_values);
+    void clear_keys(std::vector<std::string> keys);
+    //void set_indices(std::map<size_t, bijson> indice_values);
+    //void clear_indices(std::vector<size_t> indices);
+};
+
+bijson merge(bijson bs1, bijson bs2);
 
 struct member {
     std::string user_trip;
@@ -85,7 +110,7 @@ class branch_context {
     private:
         void initialize_roles();
     public:
-        json settings;
+        bijson settings;
         std::map<std::string, member> members;
         std::map<std::string, role> roles;
 
