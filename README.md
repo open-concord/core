@@ -1,4 +1,4 @@
-# Concord/Main
+# Concord/Core
 Concord is a distributed messaging protocol
 
 This is currently the Pre-Alpha build, Run-At-Your-Own-Risk (or not at all)
