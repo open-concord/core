@@ -83,6 +83,7 @@ std::string AES_decrypt(std::string skey, std::string snonce, std::string cipher
         std::cerr << err.what() << "\n";
         exit(1);
     }
+    return std::string();
 }
 
 std::string AES_keygen() {

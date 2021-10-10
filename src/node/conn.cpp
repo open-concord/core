@@ -19,7 +19,7 @@
 #include "../../inc/node.h"
 
 // Connection instance
-Conn::Conn(std::map<std::string, Tree>* pchains, boost::asio::io_context& io_ctx) : parent_chains(pchains), tsock(io_ctx) {
+Conn::Conn(std::map<std::string, Tree>* pchains, boost::asio::io_context& io_ctx) : tsock(io_ctx), parent_chains(pchains) {
     this->server = true;
     this->local = (this->tsock).remote_endpoint().address().is_loopback();
 }

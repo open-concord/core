@@ -90,7 +90,7 @@ json send_blocks(Conn *conn, json cont) {
         //send the next layers of hashes
         std::vector<std::vector<std::string>> hash_layers;
 
-        for (int i = 0; i < CTX.k; i++) {
+        for (size_t i = 0; i < CTX.k; i++) {
             //last round of hashes should go in seen hashes
             for (const auto& prev_hash : CTX.last_layer) {
                 CTX.seen_hashes.insert(prev_hash);
@@ -138,7 +138,7 @@ json begin_sending_blocks(Conn *conn, json cont) {
 
         std::vector<std::vector<std::string>> hash_layers({v_childless_hashes});
         
-        for (int i = 0; i < CTX.k - 1; i++) {
+        for (size_t i = 0; i < CTX.k - 1; i++) {
             //last round of hashes should go in seen hashes
             for (const auto& prev_hash : CTX.last_layer) {
                 CTX.seen_hashes.insert(prev_hash);

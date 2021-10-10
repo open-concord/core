@@ -7,7 +7,7 @@ CC = g++ -std=c++20
 # compile-time flags
 CFLAGS = -c -g -Wall -fPIC $(IN_DIR)
 # lib flags
-LFLAGS = -lssl -lcryptopp -pthread -lboost_system -lboost_filesystem -pthread
+LFLAGS = -lssl -lcryptopp -pthread -lboost_system -lboost_filesystem
 
 # object file sub-dir of src
 BIN = _bin/
@@ -93,6 +93,7 @@ $(BIN)server.o: server/server.cpp ../inc/server.h
 	$(CC) $(CFLAGS) $< -o $@
 $(BIN)smisc.o: server/claf_misc.cpp ../inc/server.h
 	$(CC) $(CFLAGS) $< -o $@
+
 # nodes
 $(BIN)nlogic.o: node/logic.cpp ../inc/node.h
 	$(CC) $(CFLAGS) $< -o $@

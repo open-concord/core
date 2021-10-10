@@ -11,7 +11,7 @@ using json = nlohmann::json;
 
 int encode_features(std::array<bool, 6> features) {
     int output = 0;
-    for (int i = 0; i < features.size(); i++) {
+    for (size_t i = 0; i < features.size(); i++) {
         output += i;
         output <<= 1;
     }
@@ -21,7 +21,7 @@ int encode_features(std::array<bool, 6> features) {
 std::array<bool, 6> decode_features(int encoded_features) {
     std::array<bool, 6> output;
     int moving_filter = 0;
-    for (int i = 0; i < output.size(); i++) {
+    for (size_t i = 0; i < output.size(); i++) {
         moving_filter <<= 1;
         output[i] = (encoded_features & moving_filter);
     }
@@ -131,21 +131,21 @@ bool Server::apply_data(branch_context& ctx, json& extra, json claf_data, std::s
             std::array<bool, 6> target_features = decode_features(claf_data["d"]["pc"]);
             bool create_role = (ctx.roles.count(target_role) == 0); //we need to create it before we act on this
             auto& present_role = ctx.roles[target_role];
-            if (ctx.min_primacy(author_member) >= target_primacy) return false;
+            if (author_primacy >= target_primacy) return false;
             if (create_role) {
                 present_role.primacy_rank = {target_primacy, 0};
             } else if (present_role.primacy() != target_primacy) {
                 present_role.primacy_rank[0] = target_primacy;
                 present_role.primacy_rank[1]++;
             }
-            for (int i = 0; i < target_features.size(); i++) {
+            for (size_t i = 0; i < target_features.size(); i++) {
                 present_role.features[i].orient_dir(target_features[i]);
             }
         } else {
             if (!ctx.has_feature(author_member, 3)) return false; //3 is grole/rrole
             auto& altered_member = ctx.members[claf_data["d"]["tu"]];
             std::string target_role = claf_data["d"]["tr"];
-            if (ctx.min_primacy(author_member) >= ctx.roles[target_role].primacy()) return false; //need to be more prime
+            if (author_primacy >= ctx.roles[target_role].primacy()) return false; //need to be more prime
             bool direction;
             if (claf_data["t"] == "grole") {
                 direction = true;

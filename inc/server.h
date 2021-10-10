@@ -19,16 +19,16 @@ struct keypair {
 };
 
 struct user {
-    keypair pri_keys;
-    keypair pub_keys;
     std::string u_trip;
+    keypair pub_keys;
+    keypair pri_keys;
     //bool empty = false;
 
     user() {
         std::array<std::string, 2> DSA_keys = DSA_keygen();
         std::array<std::string, 2> RSA_keys = RSA_keygen();
-        pri_keys = keypair(b64_encode(DSA_keys[0]), b64_encode(RSA_keys[0]));
         pub_keys = keypair(b64_encode(DSA_keys[1]), b64_encode(RSA_keys[1]));
+        pri_keys = keypair(b64_encode(DSA_keys[0]), b64_encode(RSA_keys[0]));
         this->u_trip = gen_trip(pub_keys.DSA_key + pub_keys.RSA_key, 24);
     }
 
@@ -133,6 +133,8 @@ struct branch {
 };
 
 std::string content_hash_concat(long long unsigned int time, std::string s_trip, std::unordered_set<std::string> p_hashes);
+int encode_features(std::array<bool, 6>);
+std::array<bool, 6> decode_features(int);
 
 class Server {
     private:
@@ -164,4 +166,6 @@ class Server {
         std::string send_message(user author, json content, char st, std::string t = std::string(), std::unordered_set<std::string> p_hashes = std::unordered_set<std::string>());
 
         void add_block(std::string hash);
+
+        void batch_add_blocks(std::unordered_set<std::string> hashes);
 };

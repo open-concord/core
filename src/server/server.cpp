@@ -21,7 +21,7 @@ using json = nlohmann::json;
 Server::Server(Tree& parent_tree, std::string AES_key, user load_user, std::string prev_AES_key, std::unordered_set<std::string> heads) : tree(parent_tree), luser(load_user), constraint_heads(heads) {
     this->raw_AES_key = b64_decode(AES_key);
     this->s_trip = gen_trip(AES_key, 24);
-    std::unordered_set<std::string> root_hashes = this->tree.get_qualifying_hashes(boost::bind(&Tree::is_intraserver_orphan, _1, _2, this->s_trip));
+    std::unordered_set<std::string> root_hashes = this->tree.get_qualifying_hashes(&Tree::is_intraserver_orphan);
     assert(root_hashes.size() <= 1); //0 means the server doesn't exist, but still, they could create it. 2+ shouldn't be possible, as there are checks at every level for server connection.
     if (root_hashes.size() == 1) {
         this->root_fb = *(root_hashes.begin());
@@ -41,6 +41,8 @@ Server::Server(Tree& parent_tree, std::string AES_key, user load_user, std::stri
         if (!prev_AES_key.empty()) nserv_data["prev_key"] = prev_AES_key;
         this->root_fb = send_message(load_user, nserv_data, 'a', "nserv");
     }
+    tree.add_block_funcs[(this->s_trip)] = boost::bind(&Server::add_block, this, _1);
+    tree.batch_add_funcs[(this->s_trip)] = boost::bind(&Server::batch_add_blocks, this, _1);
 }
 
 branch Server::get_root_branch() {
@@ -170,7 +172,7 @@ void Server::load_branch_forward(std::string fb_hash) {
         }
         branch& seed_branch = (this->branches)[seed_hash];
         //if all the contexts are in, we can load the branch
-        if (seed_branch.p_branch_fbs.size() == (this->tree).intraserver_parent_count((this->tree).get_chain()[seed_hash], this->s_trip)) {
+        if (seed_branch.p_branch_fbs.size() == (size_t) (this->tree).intraserver_parent_count((this->tree).get_chain()[seed_hash])) {
             load_branch_forward(seed_hash);
         }
         target_branch.c_branch_fbs.insert(seed_branch.first_hash);
@@ -179,7 +181,7 @@ void Server::load_branch_forward(std::string fb_hash) {
 }
 
 void Server::add_block(std::string hash) {
-    assert((this->constraint_heads).size() == 0); //if there are constraints, this should be static.
+    if ((this->constraint_heads).size() == 0) return; //if there are constraints, this should be static.
     std::string working_hash = hash;
     while (true) {
         std::unordered_set<std::string> intraserver_p_hashes;
@@ -195,6 +197,21 @@ void Server::add_block(std::string hash) {
             load_branch_forward(working_hash);
             break;
         }
+    }
+}
+
+void Server::batch_add_blocks(std::unordered_set<std::string> hashes) {
+    std::unordered_set<std::string> extern_only_hashes;
+    for (auto h : hashes) {
+        bool only_external = true;
+        for (auto ph : (this->tree).get_chain()[h].p_hashes) {
+            if (hashes.count(ph) != 0) only_external = false;
+        }
+        if (only_external) extern_only_hashes.insert(h);
+    }
+    for (auto eh : extern_only_hashes) {
+        //loading forward from these hashes will get the full set
+        add_block(eh); 
     }
 }
 
@@ -218,7 +235,7 @@ std::string Server::send_message(user author, json content, char st, std::string
 
     std::string target_hash = local_tree.gen_block(encrypted_content, this->s_trip, sending_time, target_p_hashes, author.u_trip);
     
-    add_block(target_hash);
+    //add_block(target_hash);
 
     return target_hash;
 }

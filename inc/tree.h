@@ -58,10 +58,15 @@ class Tree {
         int pow = 0;
         bool dir_linked = false;
 
+        bool has_root = false;
+
         void save(block to_save);
         
         void link_block(block  to_link);
     public:
+        std::map<std::string, boost::function<void(std::string)>> add_block_funcs;
+        std::map<std::string, boost::function<void(std::unordered_set<std::string>)>> batch_add_funcs;
+
         std::unordered_set<std::string> seen_s_trips;
         
         Tree();
@@ -82,13 +87,13 @@ class Tree {
 
         bool is_orphan(block to_check);
 
-        bool is_intraserver_childless(block to_check, std::string server_trip);
+        bool is_intraserver_childless(block to_check);
 
-        bool is_intraserver_orphan(block to_check, std::string server_trip);
+        bool is_intraserver_orphan(block to_check);
 
-        int intraserver_child_count(block to_check, std::string server_trip);
+        int intraserver_child_count(block to_check);
 
-        int intraserver_parent_count(block to_check, std::string server_trip);
+        int intraserver_parent_count(block to_check);
         
         std::unordered_set<std::string> get_qualifying_hashes(boost::function<bool(Tree*, block)> qual_func);
 
