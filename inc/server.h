@@ -44,16 +44,14 @@ struct user {
 };
 
 //rank that can express positive or negative values needs special properties
-class birank {
-    private:
+struct birank {
         int irank = 0;
-    public:
         void orient_dir(bool dir);
         void increment();
         bool get_dir();
-        bool operator== (birank other);
-        bool operator< (birank other);
-        bool operator> (birank other);
+        //bool operator== (birank other);
+        //bool operator< (birank other);
+        //bool operator> (birank other);
         operator bool();
 };
 

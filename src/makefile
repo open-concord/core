@@ -32,6 +32,7 @@ OBJ = $(BIN)lockmsg.o \
 	$(BIN)hexstr.o \
 	$(BIN)strutil.o \
 	$(BIN)smisc.o \
+	$(BIN)sbranch_ctx.o \
 	$(BIN)server.o \
 	$(BIN)nlogic.o \
 	$(BIN)nconn.o \
@@ -81,8 +82,6 @@ $(BIN)tree.o: tree/tree.cpp ../inc/tree.h
 	$(CC) $(CFLAGS) $< -o $@
 
 # chain utils
-#$(BIN)tsearch.o: tree/search.cpp ../inc/tree.h
-#	$(CC) $(CFLAGS) $< -o $@
 $(BIN)ttime.o: tree/time_enc.cpp ../inc/tree.h
 	$(CC) $(CFLAGS) $< -o $@
 $(BIN)tbenc.o: tree/block_enc.cpp ../inc/tree.h
@@ -92,6 +91,8 @@ $(BIN)tbenc.o: tree/block_enc.cpp ../inc/tree.h
 $(BIN)server.o: server/server.cpp ../inc/server.h
 	$(CC) $(CFLAGS) $< -o $@
 $(BIN)smisc.o: server/claf_misc.cpp ../inc/server.h
+	$(CC) $(CFLAGS) $< -o $@
+$(BIN)sbranch_ctx.o: server/branch_ctx.cpp ../inc/server.h
 	$(CC) $(CFLAGS) $< -o $@
 
 # nodes

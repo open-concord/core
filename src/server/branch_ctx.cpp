@@ -34,13 +34,13 @@ birank::operator bool() {
     return get_dir();
 }
 
-bool birank::operator==(birank other) {
-    return (std::abs(other.irank) == (this->irank));
+bool operator==(birank b1, birank b2) {
+    return (b1.irank == b2.irank);
 }
 
-bool birank::operator>(birank other) {
-    int abs_r1 = std::abs(this->irank);
-    int abs_r2 = std::abs(other.irank);
+bool operator>(birank b1, birank b2) {
+    int abs_r1 = std::abs(b1.irank);
+    int abs_r2 = std::abs(b2.irank);
     if (abs_r1 > abs_r2) {
         return true;
     } else if (abs_r1 == abs_r2) {
@@ -52,8 +52,8 @@ bool birank::operator>(birank other) {
     }
 }
 
-bool birank::operator<(birank other) {
-    return (other > *this);
+bool operator<(birank b1, birank b2) {
+    return (b2 > b1);
 }
 
 bijson::bijson() {
@@ -162,14 +162,14 @@ bijson merge(bijson bs1, bijson bs2) {
             }
         }
     }
-    
+    return bsm;
 }
 
 void branch_context::initialize_roles()  {
     //by default, the creator role exists.
     role creator_role;
     creator_role.features[0].orient_dir(false);
-    for (int i = 1; i < creator_role.features.size(); i++) creator_role.features[i].orient_dir(true);
+    for (size_t i = 1; i < creator_role.features.size(); i++) creator_role.features[i].orient_dir(true);
     creator_role.primacy_rank = {0, 0};
     (this->roles)["creator"] = creator_role;
 }
@@ -205,7 +205,7 @@ branch_context::branch_context(std::vector<branch_context> input_contexts) {
                 (this->roles)[name] = in_role;
             } 
             else {
-                for (int i = 0; i < in_role.features.size(); i++) {
+                for (size_t i = 0; i < in_role.features.size(); i++) {
                     (this->roles)[name].features[i] = std::max(in_role.features[i], (this->roles)[name].features[i]);
                 }
             }
