@@ -49,11 +49,12 @@ struct birank {
         void orient_dir(bool dir);
         void increment();
         bool get_dir();
-        //bool operator== (birank other);
-        //bool operator< (birank other);
-        //bool operator> (birank other);
         operator bool();
 };
+
+bool operator== (birank b1, birank b2);
+bool operator> (birank b1, birank b2);
+bool operator< (birank b1, birank b2);
 
 enum bijson_type {TERMINAL, MAP, VECT};
 

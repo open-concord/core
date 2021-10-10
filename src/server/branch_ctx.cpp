@@ -34,11 +34,11 @@ birank::operator bool() {
     return get_dir();
 }
 
-bool operator==(birank b1, birank b2) {
+bool operator== (birank b1, birank b2) {
     return (b1.irank == b2.irank);
 }
 
-bool operator>(birank b1, birank b2) {
+bool operator> (birank b1, birank b2) {
     int abs_r1 = std::abs(b1.irank);
     int abs_r2 = std::abs(b2.irank);
     if (abs_r1 > abs_r2) {
@@ -52,7 +52,7 @@ bool operator>(birank b1, birank b2) {
     }
 }
 
-bool operator<(birank b1, birank b2) {
+bool operator< (birank b1, birank b2) {
     return (b2 > b1);
 }
 
