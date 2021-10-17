@@ -27,7 +27,6 @@ unsigned long long string_to_raw_time(std::string str_time);
 
 struct block {
     unsigned long long time;
-    unsigned long long reception_time;
     std::string nonce;
     std::string s_trip;
     std::string c_trip;
@@ -44,7 +43,7 @@ json block_to_json(block input);
 
 block json_to_block(json input);
 
-block construct_block(std::string cont, std::unordered_set<std::string> p_hashes, int pow, std::string s_trip, unsigned long long set_time = get_raw_time(), std::string c_trip = std::string(24, '='));
+block construct_block(std::string cont, std::unordered_set<std::string> p_hashes, int pow, std::string s_trip, unsigned long long set_time = get_raw_time(), std::string c_trip = "");
 
 std::vector<std::string> order_hashes(std::unordered_set<std::string> input_hashes);
 

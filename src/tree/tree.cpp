@@ -75,7 +75,7 @@ void Tree::set_pow_req(int POW_req) {
 
 std::string Tree::gen_block(std::string cont, std::string s_trip, unsigned long long set_time, std::unordered_set<std::string> p_hashes, std::string c_trip) {
     assert(s_trip.length() == 24);
-    assert(c_trip.length() == 24);
+    assert(c_trip.length() == 24 || c_trip.length() == 0);
     if (p_hashes.size() == 0) p_hashes = find_p_hashes(s_trip);
     block out_block = construct_block(cont, p_hashes, this->pow, s_trip, set_time, c_trip);
     chain_push(out_block);
@@ -272,7 +272,7 @@ std::vector<std::string> order_hashes(std::unordered_set<std::string> input_hash
 }
 
 std::string hash_concat(block input) {
-    std::string concat_data = b64_encode(raw_time_to_string(input.time)) + input.s_trip + input.cont; //b64 timestr encoding is only for safety
+    std::string concat_data = b64_encode(raw_time_to_string(input.time)) + input.s_trip + input.c_trip + input.cont; //b64 timestr encoding is only for safety
     for (auto ph : order_hashes(input.p_hashes)) concat_data += ph;
     return concat_data;
 }

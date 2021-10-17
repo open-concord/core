@@ -227,7 +227,7 @@ json evaluate_blocks(Conn *conn, json cont) {
 
             //if the sets match, we're done
             if (CTX.last_layer == hash_layer) {
-                ret["FLAG"] = "CDONE";
+                ret["FLAG"] = "CEND";
                 break;
             }
 
