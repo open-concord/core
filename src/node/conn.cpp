@@ -1,94 +1,32 @@
-// boost
-#include <boost/beast/core.hpp>
-#include <boost/asio.hpp>
-#include <boost/asio/ssl.hpp>
-#include <boost/asio/placeholders.hpp>
-#include <boost/bind/bind.hpp>
-#include <boost/enable_shared_from_this.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/function.hpp>
-
-// std
-#include <string>
-#include <map>
-#include <unordered_set>
-#include <chrono>
-#include <iostream>
-#include <thread>
-#include <functional>
 #include "../../inc/node.h"
 
-// Connection instance
-Conn::Conn(std::map<std::string, Tree>* pchains, boost::asio::io_context& io_ctx) : tsock(io_ctx), parent_chains(pchains) {
-    this->server = true;
-    this->local = (this->tsock).remote_endpoint().address().is_loopback();
+/** init */
+void Conn::Conn(
+  std::map<std::string, Tree>* pm,
+  std::shared_ptr<Peer> net,
+  std::string(*logic)(*Conn)
+) : parent_chains(pm), net(net), logic(logic) {
+  this->handle(this->logic(&this));
 }
 
-Conn::ptr Conn::create(std::map<std::string, Tree>* pchains, boost::asio::io_context& io_ctx) {
-    return ptr(new Conn(pchains, io_ctx));
-}
-boost::asio::ip::tcp::socket& Conn::socket() {
-    return this->tsock;
-}
-
-// === async util functions ===
-// read from incoming buffer
-void Conn::read() {
-    boost::asio::async_read(this->tsock,
-        boost::asio::buffer(this->incoming_msg),
-        boost::bind(
-            &Conn::handle,
-            this
-        )
-    );
+/** recursive handling */
+void Conn::Handle() {
+  if (this->msg_buffer.empty()) {
+    this->msg_buffer = this->Net.Read();
+  } else {
+    this->Net.Send(this->logic(&this));
+  }
+  this->Handle();
 }
 
-// begin communication
-void Conn::initiate_comms(std::string msg) {
-    this->server = false;
-    this->tsock.async_send(
-        boost::asio::buffer(msg, msg.size()),
-        boost::bind(
-            &Conn::send_done,
-            this,
-            boost::asio::placeholders::error
-            )
-    );
-}
-// check if we're done (logic-wise)in case of
-void Conn::send_done(const boost::system::error_code& err) {
-    if (!err) {
-        if (this->done) {
-            this->tsock.close();
-        } else {
-            this->handle();
-        }
-    } else {
-        std::cout << err << "\n";
-    }
-}
-
-//send a message, async
-void Conn::send(std::string msg) {
-    this->tsock.async_send(
-        boost::asio::buffer(msg, msg.size()),
-        boost::bind(
-            &Conn::send_done,
-            this,
-            boost::asio::placeholders::error
-        )
-    );
-}
-// === end util ===
-
-// recursive handling :pogU:
-void Conn::handle() {
-    if (this->incoming_msg.empty()) {
-        this->read();
-    } else {
-        // to change message-specific-logic, modify logic.cpp
-        std::string msg = message_logic(this);
-        send(msg);
-    }
-
+/** immediately cease contact */
+void Conn::Stop() {
+  json s = {
+    {"FLAG", "ERROR"},
+    /** using 0 for now (eg. no error), please update w/ CLAF legal*/
+    {"CONTENT", 0}
+  };
+  /** send claf compliant stop */
+  this->Net.Send(s.dump());
+  this->Net.Close();
 }

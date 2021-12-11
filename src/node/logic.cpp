@@ -5,9 +5,6 @@
 #include <vector>
 #include <functional>
 
-#include <boost/bind/bind.hpp>
-#include <boost/asio.hpp>
-
 #include "../../inc/node.h"
 #include "../../inc/strenc.h"
 #include "../../inc/crypt++.h"
@@ -15,15 +12,6 @@
 #include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
-using namespace boost::placeholders;
-
-/** this file only holds the message logic
- * which will be sure to grow exponentially
- */
-
-// temp var for cfg path
-//RW rw_handler;
-//json cfg = json::parse(rw_handler.read("../../cfg/main.json"));
 
 void update_chain(Conn *conn) {
     auto CTX = (conn->message_context);
@@ -33,10 +21,10 @@ void update_chain(Conn *conn) {
     for (const auto& new_block : CTX.new_blocks) {
         new_block_hashes.insert(new_block.hash);
     }
-    //TODO: add blocks to servers
+    // TODO: add blocks to servers
 }
 
-void load_new_blocks(conn_context& ctx, std::vector<json> prov_blocks) {
+void load_new_blocks(Conn::context& ctx, std::vector<json> prov_blocks) {
     for (const auto& new_block_json : prov_blocks) {
         ctx.new_blocks.push_back(json_to_block(new_block_json));
     }
@@ -79,27 +67,25 @@ json send_blocks(Conn *conn, json cont) {
             {"FLAG", "HBLOCKS"}
         };
 
-        //send the blocks that the client requested
-
+        /** send the blocks that the client requested */
         load_req_blocks(ret, cont["req_hashes"], TREE);
 
-        //retrieve blocks that the client gave us
-
+        /** retrieve blocks that the client gave us */
         load_new_blocks(CTX, cont["provided_blocks"]);
 
-        //send the next layers of hashes
+        /** send the next layers of hashes */
         std::vector<std::vector<std::string>> hash_layers;
 
         for (size_t i = 0; i < CTX.k; i++) {
-            //last round of hashes should go in seen hashes
+            /** last round of hashes should go in seen hashes */
             for (const auto& prev_hash : CTX.last_layer) {
                 CTX.seen_hashes.insert(prev_hash);
             }
 
-            //get the unseen hashes from the proceeding layer
-            
+            /** get the unseen hashes from the proceeding layer */
+
             CTX.last_layer = iterate_layer(CTX.last_layer, CTX.seen_hashes, TREE); //get unseen hashes from proceeding layer
-            std::vector<std::string> v_unseen_hashes; //now to convert to vector from unordered set for json compatibility
+            std::vector<std::string> v_unseen_hashes; // now to convert to vector from unordered set for json compatibility
             for (const auto& u_hash : CTX.last_layer) {
                 v_unseen_hashes.push_back(u_hash);
             }
@@ -137,7 +123,7 @@ json begin_sending_blocks(Conn *conn, json cont) {
         //send the first layers of hashes
 
         std::vector<std::vector<std::string>> hash_layers({v_childless_hashes});
-        
+
         for (size_t i = 0; i < CTX.k - 1; i++) {
             //last round of hashes should go in seen hashes
             for (const auto& prev_hash : CTX.last_layer) {
@@ -145,7 +131,7 @@ json begin_sending_blocks(Conn *conn, json cont) {
             }
 
             //get the unseen hashes from the current layer
-            
+
             CTX.last_layer = iterate_layer(CTX.last_layer, CTX.seen_hashes, TREE); //get unseen hashes from proceeding layer
             std::vector<std::string> v_unseen_hashes; //now to convert to vector from unordered set for json compatibility
             for (const auto& u_hash : CTX.last_layer) {
@@ -202,7 +188,7 @@ json evaluate_blocks(Conn *conn, json cont) {
         load_new_blocks(CTX, cont["provided_blocks"]);
 
         // below: mimicking host behavior to compare contents at each layer with their respective trees
-        
+
         std::vector<std::string> req_hashes;
         std::vector<json> provided_blocks;
         std::vector<std::vector<std::string>> hash_layers = cont["hash_layers"].get<std::vector<std::vector<std::string>>>();
@@ -212,12 +198,12 @@ json evaluate_blocks(Conn *conn, json cont) {
             for (const auto& h : v_hash_layer) {
                 hash_layer.insert(h);
             }
-            
+
             for (const auto& prev_hash : CTX.last_layer) {
                 CTX.seen_hashes.insert(prev_hash);
             }
 
-            
+
             //initialize CTX.last_layer if this is the first response
             if (CTX.first_layer) {
                 CTX.last_layer = TREE.get_qualifying_hashes(&Tree::is_childless);
@@ -284,7 +270,7 @@ std::map<std::string /*prev flag*/, json (*)(Conn*, json)> next {
 std::string message_logic(Conn *conn) {
     // make sure to;
     // add the socket's info to khosts
-    json parsed = json::parse(conn->incoming_msg);
+    json parsed = json::parse(conn->msg_buffer);
     std::cout << "NEW MSG: " << parsed << "\n";
 
     // message parsing
@@ -296,7 +282,7 @@ std::string message_logic(Conn *conn) {
 
     // client and server roles can both be stored in func map; communication flags ensure proper order of execution
     try {
-        //still don't want to connect over loopback. TODO: add a nicer fix
+        // still don't want to connect over loopback. TODO: add a nicer fix
         if (!conn->local) {
             rmsg = ((*next[cmd])(conn, cont)).dump();
         } //else {rmsg = handle_request(conn, cont).dump();}
@@ -306,8 +292,8 @@ std::string message_logic(Conn *conn) {
 
     // change 'done' to true to end the communication (make sure to return a <close> message)
     // conn_obj->done = true;
-    // clean incoming_message for clean recursion
-    conn->incoming_msg.clear();
+    // clean msg_buffer for clean recursion
+    conn->msg_buffer.clear();
     // return response
     return rmsg;
 }
