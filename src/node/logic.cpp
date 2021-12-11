@@ -33,7 +33,6 @@ void update_chain(Conn *conn) {
     for (const auto& new_block : CTX.new_blocks) {
         new_block_hashes.insert(new_block.hash);
     }
-    //TODO: add blocks to servers
 }
 
 void load_new_blocks(conn_context& ctx, std::vector<json> prov_blocks) {
