@@ -1,4 +1,4 @@
-#include "crypto++/hex.h"
+#include "cryptopp/hex.h"
 #include <string>
 
 #include "../../inc/strenc.h"
@@ -26,7 +26,7 @@ std::string hex_encode(std::string in_string) {
 
 std::string hex_decode(std::string encoded) {
     std::string decoded;
-   
+
     StringSource ss(encoded, true,
         new HexDecoder(
             new StringSink(decoded)

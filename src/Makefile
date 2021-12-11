@@ -1,13 +1,18 @@
 SHELL = /bin/sh
 
-# flag for /include dir
-IN_DIR = -I../inc/ -I/usr/include/boost
-# c/cpp standard
+# includes + libs
+# unix file system
+UUSR = -I/usr/include/ -L/usr/lib/
+# local directory
+LDIR = -I../lib/inc/ -I../inc/ -L../lib/
+
+# cpp standard
 CC = g++ -std=c++20
+
 # compile-time flags
-CFLAGS = -c -g -Wall -fPIC $(IN_DIR)
+CFLAGS = -c -g -Wall -fPIC
 # lib flags
-LFLAGS = -lssl -lcryptopp -pthread -lboost_system -lboost_filesystem
+LFLAGS = -lcryptopp -pthread -luttu
 
 # object file sub-dir of src
 BIN = _bin/
@@ -34,13 +39,11 @@ OBJ = $(BIN)lockmsg.o \
 	$(BIN)smisc.o \
 	$(BIN)sbranch_ctx.o \
 	$(BIN)server.o \
-	$(BIN)nlogic.o \
+  $(BIN)nlogic.o \
 	$(BIN)nconn.o \
 	$(BIN)nnode.o
 
-default: unix
-
-install: install_unix
+default: static_unix
 
 install_unix: unix
 	@echo "INSTALLING FOR UNIX"
@@ -49,17 +52,26 @@ install_unix: unix
 	sudo mkdir -p /usr/include/concord
 	sudo cp ../inc/* /usr/include/concord
 
-# ex. `make unix`
-unix: $(OBJ)
-	@echo "NOW COMPILING | MAIN SHARED LIBRARY"
-	$(CC) $(SOFLAGS) $(OBJ) $(LFLAGS) -o libconcord.so
+# linking rules
+shared_windows: $(OBJ)
+	@echo "NOW BUILDING (WINDOWS) | DLL"
+	$(CC) $(DLLFLAGS) $(OBJ) $(LFLAGS) -o core.dll
 
-# ex. `make win`
-win: $(OBJ)
-	@echo "NOW COMPILING | MAIN DLL"
-	$(CC) $(DLLFLAGS) $(OBJ) $(LFLAGS) -o concord.dll
+shared_unix: $(OBJ)
+	@echo "NOW BUILDING (UNIX) | SHARED OBJECT"
+	$(CC) $(SOFLAGS) $(OBJ) $(LFLAGS) -o libcore.so
 
-# functional stuff
+static_windows: $(OBJ)
+	@echo "NOW LINKING (WINDOWS) | ARCHIVE"
+
+static_unix: $(OBJ)
+	@echo "NOW LINKING (UNIX) | ARCHIVE"
+	ar ru libcore.a $^ #$(UUSR) $(LLIB)
+	ranlib libcore.a
+	mv libcore.a ../exe/
+	cp -r ../inc ../exe/inc
+
+# build rules
 $(BIN)main.o: main.cpp
 	$(CC) $(CFLAGS) $< -o $@
 
@@ -86,8 +98,8 @@ $(BIN)ttime.o: tree/time_enc.cpp ../inc/tree.h
 	$(CC) $(CFLAGS) $< -o $@
 $(BIN)tbenc.o: tree/block_enc.cpp ../inc/tree.h
 	$(CC) $(CFLAGS) $< -o $@
-	
-#server
+
+# server
 $(BIN)server.o: server/server.cpp ../inc/server.h
 	$(CC) $(CFLAGS) $< -o $@
 $(BIN)smisc.o: server/claf_misc.cpp ../inc/server.h
@@ -96,7 +108,7 @@ $(BIN)sbranch_ctx.o: server/branch_ctx.cpp ../inc/server.h
 	$(CC) $(CFLAGS) $< -o $@
 
 # nodes
-$(BIN)nlogic.o: node/logic.cpp ../inc/node.h
+$(BIN)nlogic.o: node/logic.cpp ../inc/node.h ../lib/inc/uttu.hpp
 	$(CC) $(CFLAGS) $< -o $@
 $(BIN)nconn.o: node/conn.cpp ../inc/node.h
 	$(CC) $(CFLAGS) $< -o $@
