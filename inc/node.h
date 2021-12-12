@@ -1,5 +1,5 @@
 #include <nlohmann/json.hpp>
-#include <concord/uttu>
+#include "uttu.hpp"
 
 #include "tree.h"
 
@@ -15,26 +15,28 @@
 
 using json = nlohmann::json;
 
-struct Conn {
-  std::string msg_buffer;
-  std::map<std::string, Tree>* parent_chains;
-  std::shared_ptr<Peer> net;
-  int timeout;
-  std::string(*logic)(Conn*);
-
-  struct context {
+struct context {
     std::vector<block> new_blocks;
     std::string chain_trip;
     std::unordered_set<std::string> seen_hashes;
     std::unordered_set<std::string> last_layer;
     size_t k, pow_min;
     bool first_layer = true;
-  };
+};
+
+struct Conn {
+  std::string msg_buffer;
+  std::map<std::string, Tree>* parent_chains;
+  std::shared_ptr<Peer> net;
+  int timeout;
+  std::function<std::string(Conn*)> logic;
+
+  context conn_context;
 
   Conn(
     std::map<std::string, Tree>* pm,
     std::shared_ptr<Peer> net,
-    std::string(*logic)(Conn*)
+    std::function<std::string(Conn*)>
   );
   void Handle();
   void Stop(); /** order 66 */
@@ -64,7 +66,7 @@ class Node {
       unsigned short int port,
       std::map<std::string, Tree> cm,
       int timeout,
-      bool(*wd)(std::string) /** watchdog on incoming IP */
+      std::function<bool(std::string)> /** watchdog on incoming IP */
     );
 
     /** open acceptor */
@@ -83,3 +85,5 @@ class Node {
     /** active communication (eg traditional client role) */
     std::shared_ptr<Conn> Contact(std::string initial_content, std::string ip, int port);
 };
+
+std::string message_logic(Conn* conn);

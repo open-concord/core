@@ -14,26 +14,16 @@
 using json = nlohmann::json;
 
 void update_chain(Conn *conn) {
-<<<<<<< HEAD
-  auto CTX = (conn->ctx);
-  auto TREE = (*(conn->parent_chains))[CTX.chain_trip];
-  TREE.batch_push(CTX.new_blocks);
-  std::unordered_set<std::string> new_block_hashes;
-  for (const auto& new_block : CTX.new_blocks) {
-    new_block_hashes.insert(new_block.hash);
-  }
-=======
-    auto CTX = (conn->message_context);
+    auto CTX = (conn->conn_context);
     auto TREE = (*(conn->parent_chains))[CTX.chain_trip];
     TREE.batch_push(CTX.new_blocks);
     std::unordered_set<std::string> new_block_hashes;
     for (const auto& new_block : CTX.new_blocks) {
         new_block_hashes.insert(new_block.hash);
     }
->>>>>>> 572802d1481731a8e3624c529b6e6c1b31c24a8d
 }
 
-void load_new_blocks(exchange_context ctx, std::vector<json> prov_blocks) {
+void load_new_blocks(context ctx, std::vector<json> prov_blocks) {
   for (const auto& new_block_json : prov_blocks) {
     ctx.new_blocks.push_back(json_to_block(new_block_json));
   }
@@ -68,7 +58,7 @@ json error(int error_code) {
 // - handle functions -
 json send_blocks(Conn *conn, json cont) {
   try {
-    auto CTX = (conn->ctx);
+    auto CTX = (conn->conn_context);
     auto TREE = (*(conn->parent_chains))[CTX.chain_trip];
 
     json ret = {
@@ -109,7 +99,7 @@ json send_blocks(Conn *conn, json cont) {
 
 json begin_sending_blocks(Conn *conn, json cont) {
   try {
-    auto CTX = (conn->ctx);
+    auto CTX = (conn->conn_context);
     auto TREE = (*(conn->parent_chains))[CTX.chain_trip];
 
     json ret = {
@@ -157,7 +147,7 @@ json begin_sending_blocks(Conn *conn, json cont) {
 
 json end_sending_blocks(Conn *conn, json cont) {
   try {
-    auto CTX = (conn->ctx);
+    auto CTX = (conn->conn_context);
     auto TREE = (*(conn->parent_chains))[CTX.chain_trip];
 
     json ret = {
@@ -182,7 +172,7 @@ json end_sending_blocks(Conn *conn, json cont) {
 
 json evaluate_blocks(Conn *conn, json cont) {
     try {
-        auto CTX = (conn->ctx);
+        auto CTX = (conn->conn_context);
         auto TREE = (*(conn->parent_chains))[CTX.chain_trip];
         // check each subsequent block, see contact.txt
         json ret = {
@@ -245,7 +235,7 @@ json evaluate_blocks(Conn *conn, json cont) {
 
 json end_evaluating_blocks(Conn *conn, json cont) {
     try {
-        auto CTX = (conn->ctx);
+        auto CTX = (conn->conn_context);
         auto TREE = (*(conn->parent_chains))[CTX.chain_trip];
 
         json ret = {

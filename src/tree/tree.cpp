@@ -8,6 +8,7 @@
 #include <experimental/algorithm>
 #include <random>
 #include <iostream>
+#include <filesystem>
 
 #include "../../inc/miner.h"
 #include "../../inc/hash.h"
@@ -194,9 +195,10 @@ int Tree::intraserver_parent_count(block to_check) {
     return result;
 }
 
-std::unordered_set<std::string> Tree::get_qualifying_hashes(std::function<bool(Tree*, block)> qual_func) {
+std::unordered_set<std::string> Tree::get_qualifying_hashes(std::function<bool(Tree*, block)> qual_func, std::string s_trip) {
     std::unordered_set<std::string> qualifying_hashes;
     for (const auto& [hash, block] : get_chain()) {
+        if (s_trip != "" && block.s_trip != s_trip) continue;
         if (qual_func(this, block)) qualifying_hashes.insert(hash);
     }
     return qualifying_hashes;
@@ -216,8 +218,8 @@ void Tree::chain_push(block to_push) {
     (this->chain)[to_push.hash] = to_push;
     link_block(to_push);
     save(to_push);
-    if ((this->add_block_funcs).count(to_push.hash) != 0) {
-        (this->add_block_funcs)[to_push.hash](to_push.hash);
+    if ((this->add_block_funcs).contains(to_push.s_trip)) {
+        (this->add_block_funcs)[to_push.s_trip](to_push.hash);
     }
 }
 
@@ -236,6 +238,7 @@ void Tree::batch_push(std::vector<block> to_push_set, bool save_new) {
         }
     }
     for (const auto& [s_trip, section] : server_hash_sections) {
+        if (!(this->batch_add_funcs).contains(s_trip)) continue;
         (this->batch_add_funcs)[s_trip](section);
     }
 }
@@ -247,7 +250,9 @@ void Tree::link_block(block to_link) {
             to_link.p_hashes.erase(ph);
         }
     }
-    if (is_intraserver_orphan(to_link) && !(this->has_root)) {
+    if ((is_orphan(to_link) && (this->has_root)) || 
+    (is_intraserver_orphan(to_link) && (this->server_has_root).contains(to_link.s_trip))
+    ) {
         (this->chain).erase(to_link.hash);
         for (auto ch : to_link.c_hashes) {
             if (get_chain()[ch].p_hashes.size() == 1) {
@@ -262,6 +267,7 @@ void Tree::link_block(block to_link) {
         (this->chain)[ph].c_hashes.insert(to_link.hash);
     }
     if (to_link.p_hashes.size() == 0 && !(this->has_root)) this->has_root = true;
+    if (is_intraserver_orphan(to_link) && !(this->server_has_root)[to_link.s_trip]) (this->server_has_root)[to_link.s_trip] = true;
 }
 
 void Tree::save(block to_save) {

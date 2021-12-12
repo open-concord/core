@@ -27,7 +27,7 @@ void birank::increment() {
 
 bool birank::get_dir() {
     return std::abs(this->irank) >= 0;
-    //0, the initial value, is considered negative. This gives negatives preference (base negative, -1, has higher rank)
+    //0, the initial value, is considered positive. This gives negatives preference (base negative, -1, has higher rank)
 }
 
 birank::operator bool() {
@@ -231,8 +231,13 @@ bool branch_context::has_feature(member target, int index) {
     bool result = false;
     for (auto name_pair : target.roles_ranks) {
         if (name_pair.second < 0) continue;
-        bool role_feature = ((this->roles)[name_pair.first]).features[index];
-        result = (result || role_feature);
+        role target_role = (this->roles)[name_pair.first];
+        for (auto& feat : target_role.features) {
+            std::cout << name_pair.first << " has " << feat.irank << "\n";
+        }
+        birank role_feature = ((this->roles)[name_pair.first]).features[index];
+        std::cout << "role rank for " << name_pair.first << " is " << role_feature.irank << "\n";
+        result = (result || (bool) role_feature);
     }
     return result;
 }

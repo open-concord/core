@@ -4,7 +4,7 @@ SHELL = /bin/sh
 # unix file system
 UUSR = -I/usr/include/ -L/usr/lib/
 # local directory
-LDIR = -I../lib/inc/ -I../inc/ -L../lib/
+LDIR = -I../lib/inc/ -I../inc/
 
 # cpp standard
 CC = g++ -std=c++20
@@ -12,7 +12,7 @@ CC = g++ -std=c++20
 # compile-time flags
 CFLAGS = -c -g -Wall -fPIC
 # lib flags
-LFLAGS = -lcryptopp -pthread -luttu
+LFLAGS = -lcryptopp -pthread -L../lib -luttu
 
 # object file sub-dir of src
 BIN = _bin/
@@ -45,7 +45,7 @@ OBJ = $(BIN)lockmsg.o \
 
 default: static_unix
 
-install_unix: unix
+install_unix: shared_unix
 	@echo "INSTALLING FOR UNIX"
 	sudo cp libconcord.so /usr/lib/libconcord.so
 	sudo ldconfig
@@ -59,14 +59,14 @@ shared_windows: $(OBJ)
 
 shared_unix: $(OBJ)
 	@echo "NOW BUILDING (UNIX) | SHARED OBJECT"
-	$(CC) $(SOFLAGS) $(OBJ) $(LFLAGS) -o libcore.so
+	$(CC) $(SOFLAGS) $(OBJ) $(LFLAGS) -o libconcord.so
 
 static_windows: $(OBJ)
 	@echo "NOW LINKING (WINDOWS) | ARCHIVE"
 
 static_unix: $(OBJ)
 	@echo "NOW LINKING (UNIX) | ARCHIVE"
-	ar ru libcore.a $^ #$(UUSR) $(LLIB)
+	ar ru libcore.a $^ #$(UUSR) $(LDIR)
 	ranlib libcore.a
 	mv libcore.a ../exe/
 	cp -r ../inc ../exe/inc
@@ -108,12 +108,12 @@ $(BIN)sbranch_ctx.o: server/branch_ctx.cpp ../inc/server.h
 	$(CC) $(CFLAGS) $< -o $@
 
 # nodes
-$(BIN)nlogic.o: node/logic.cpp ../inc/node.h ../lib/inc/uttu.hpp
-	$(CC) $(CFLAGS) $< -o $@
+$(BIN)nlogic.o: node/logic.cpp ../inc/node.h
+	$(CC) $(CFLAGS) $< -o $@ -I../lib/inc
 $(BIN)nconn.o: node/conn.cpp ../inc/node.h
-	$(CC) $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $< -o $@ -I../lib/inc
 $(BIN)nnode.o: node/node.cpp ../inc/node.h
-	$(CC) $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $< -o $@ -I../lib/inc
 
 # crypt
 $(BIN)lockmsg.o: crypt++/lockmsg.cpp ../inc/crypt++.h

@@ -76,12 +76,15 @@ bool Server::apply_data(branch_context& ctx, json& extra, json claf_data, std::s
     //make sure this is properly signed by an actual member
     member author_member = ctx.members[claf_data["a"]];
     user author = (this->known_users)[author_member.user_trip];
-    std::string author_raw_sigkey = author.pub_keys.DSA_key;
+    std::string author_sigkey = author.pub_keys.DSA_key;
     unsigned int author_primacy = ctx.min_primacy(author_member);
-    if (!DSA_verify(author_raw_sigkey, signature, content)) return false;
+    if (!DSA_verify(b64_decode(author_sigkey), signature, content)) return false;
 
     if (claf_data["st"] == "c") {
-        if (ctx.has_feature(author_member, 0)) return false; //0 is is_muted
+        /*if (ctx.has_feature(author_member, 0)) {
+            std::cout << "author muted\n";
+            return false; //0 is is_muted
+        }*/
     } 
     else if (claf_data["st"] == "a") {
         if (claf_data["t"] == "invite") {
