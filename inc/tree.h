@@ -59,9 +59,11 @@ class Tree {
 
         bool has_root = false;
 
+        std::map<std::string, bool> server_has_root;
+
         void save(block to_save);
 
-        void link_block(block  to_link);
+        void link_block(block to_link);
     public:
         std::map<std::string, std::function<void(std::string)>> add_block_funcs;
         std::map<std::string, std::function<void(std::unordered_set<std::string>)>> batch_add_funcs;
@@ -94,7 +96,7 @@ class Tree {
 
         int intraserver_parent_count(block to_check);
 
-        std::unordered_set<std::string> get_qualifying_hashes(std::function<bool(Tree*, block)> qual_func);
+        std::unordered_set<std::string> get_qualifying_hashes(std::function<bool(Tree*, block)> qual_func, std::string s_trip = "");
 
         std::unordered_set<std::string> get_parent_hash_union(std::unordered_set<std::string> c_hashes);
 

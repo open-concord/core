@@ -18,10 +18,15 @@ using namespace std::placeholders;
 using json = nlohmann::json;
 
 Server::Server(Tree& parent_tree, std::string AES_key, user load_user, std::string prev_AES_key, std::unordered_set<std::string> heads) : tree(parent_tree), luser(load_user), constraint_heads(heads) {
+
     this->raw_AES_key = b64_decode(AES_key);
     this->s_trip = gen_trip(AES_key, 24);
-    std::unordered_set<std::string> root_hashes = this->tree.get_qualifying_hashes(&Tree::is_intraserver_orphan);
+    std::unordered_set<std::string> root_hashes = (this->tree).get_qualifying_hashes(&Tree::is_intraserver_orphan, this->s_trip);
     assert(root_hashes.size() <= 1); //0 means the server doesn't exist, but still, they could create it. 2+ shouldn't be possible, as there are checks at every level for server connection.
+
+    tree.add_block_funcs[(this->s_trip)] = std::bind(&Server::add_block, this, _1);
+    tree.batch_add_funcs[(this->s_trip)] = std::bind(&Server::batch_add_blocks, this, _1);
+
     if (root_hashes.size() == 1) {
         this->root_fb = *(root_hashes.begin());
         for (auto constraint_head : (this->constraint_heads)) {
@@ -40,8 +45,6 @@ Server::Server(Tree& parent_tree, std::string AES_key, user load_user, std::stri
         if (!prev_AES_key.empty()) nserv_data["prev_key"] = prev_AES_key;
         this->root_fb = send_message(load_user, nserv_data, 'a', "nserv");
     }
-    tree.add_block_funcs[(this->s_trip)] = std::bind(&Server::add_block, this, _1);
-    tree.batch_add_funcs[(this->s_trip)] = std::bind(&Server::batch_add_blocks, this, _1);
 }
 
 branch Server::get_root_branch() {
@@ -128,12 +131,13 @@ void Server::load_branch_forward(std::string fb_hash) {
                 message result;
                 result.hash = active_block.hash;
                 result.supertype = std::string(claf_data["st"]).at(0);
-                result.type = std::string(claf_data["t"]).at(0);
+                result.type = claf_data.contains("t") ? claf_data["t"] : "";
                 result.data = claf_data["d"];
                 result.extra = extra;
                 target_branch.messages.push_back(result);
             }
             else {
+                std::cout << "failure to apply data\n";
                 throw; //failure to apply data
             }
         }
@@ -180,11 +184,12 @@ void Server::load_branch_forward(std::string fb_hash) {
 }
 
 void Server::add_block(std::string hash) {
-    if ((this->constraint_heads).size() == 0) return; //if there are constraints, this should be static.
+    if ((this->constraint_heads).size() != 0) return; //if there are constraints, this should be static.
     std::string working_hash = hash;
     while (true) {
+        block working_block = (this->tree).get_chain()[working_hash];
         std::unordered_set<std::string> intraserver_p_hashes;
-        for (auto p_hash : (this->tree).get_chain()[working_hash].p_hashes) {
+        for (auto p_hash : working_block.p_hashes) {
             if ((this->tree).get_chain()[p_hash].s_trip == (this->s_trip)) {
                 intraserver_p_hashes.insert(p_hash);
             }
@@ -216,9 +221,9 @@ void Server::batch_add_blocks(std::unordered_set<std::string> hashes) {
 
 std::string Server::send_message(user author, json content, char st, std::string t, std::unordered_set<std::string> p_hashes) {
     assert((this->constraint_heads).size() == 0); //if there are constraints, this should be static.
-    auto& local_tree = this->tree;
     auto sending_time = get_raw_time();
-    std::unordered_set<std::string> target_p_hashes = local_tree.find_p_hashes(this->s_trip, p_hashes);
+    std::unordered_set<std::string> target_p_hashes = (this->tree).find_p_hashes(this->s_trip, p_hashes);
+
     std::string content_hash = b64_encode(calc_hash(false, content_hash_concat(sending_time, this->s_trip, target_p_hashes)));
 
     json full_msg = {
@@ -232,7 +237,7 @@ std::string Server::send_message(user author, json content, char st, std::string
 
     std::string encrypted_content = b64_encode(lock_msg(full_msg.dump(), false, b64_decode(author.pri_keys.DSA_key), (this->raw_AES_key)));
 
-    std::string target_hash = local_tree.gen_block(encrypted_content, this->s_trip, sending_time, target_p_hashes, author.u_trip);
+    std::string target_hash = (this->tree).gen_block(encrypted_content, this->s_trip, sending_time, target_p_hashes, author.u_trip);
 
     //add_block(target_hash);
 

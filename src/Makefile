@@ -111,9 +111,9 @@ $(BIN)sbranch_ctx.o: server/branch_ctx.cpp ../inc/server.h
 $(BIN)nlogic.o: node/logic.cpp ../inc/node.h
 	$(CC) $(CFLAGS) $< -o $@ -I../lib/inc/uttu.hpp
 $(BIN)nconn.o: node/conn.cpp ../inc/node.h
-	$(CC) $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $< -o $@ -I../lib/inc
 $(BIN)nnode.o: node/node.cpp ../inc/node.h
-	$(CC) $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $< -o $@ -I../lib/inc
 
 # crypt
 $(BIN)lockmsg.o: crypt++/lockmsg.cpp ../inc/crypt++.h
