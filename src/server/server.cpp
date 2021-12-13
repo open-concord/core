@@ -10,12 +10,11 @@
 #include <vector>
 #include <array>
 #include <cmath>
+#include <functional>
 
 #include <nlohmann/json.hpp>
-#include <boost/bind/bind.hpp>
 
-using namespace boost::placeholders;
-
+using namespace std::placeholders;
 using json = nlohmann::json;
 
 Server::Server(Tree& parent_tree, std::string AES_key, user load_user, std::string prev_AES_key, std::unordered_set<std::string> heads) : tree(parent_tree), luser(load_user), constraint_heads(heads) {
@@ -41,8 +40,8 @@ Server::Server(Tree& parent_tree, std::string AES_key, user load_user, std::stri
         if (!prev_AES_key.empty()) nserv_data["prev_key"] = prev_AES_key;
         this->root_fb = send_message(load_user, nserv_data, 'a', "nserv");
     }
-    tree.add_block_funcs[(this->s_trip)] = boost::bind(&Server::add_block, this, _1);
-    tree.batch_add_funcs[(this->s_trip)] = boost::bind(&Server::batch_add_blocks, this, _1);
+    tree.add_block_funcs[(this->s_trip)] = std::bind(&Server::add_block, this, _1);
+    tree.batch_add_funcs[(this->s_trip)] = std::bind(&Server::batch_add_blocks, this, _1);
 }
 
 branch Server::get_root_branch() {
@@ -67,7 +66,7 @@ member Server::create_member(keypair pub_keys, std::vector<std::string> initial_
 void Server::backscan_constraint_path(std::string lb_hash) {
     std::string working_hash = lb_hash;
     (this->constraint_path_lbs).insert(lb_hash);
-    
+
     while (true) {
         block active_block = (this->tree).get_chain()[working_hash];
         if (active_block.p_hashes.size() == 1) {
@@ -99,7 +98,7 @@ void Server::load_branch_forward(std::string fb_hash) {
     }
 
     branch& target_branch = (this->branches)[fb_hash];
-    
+
     target_branch.c_branch_fbs = std::unordered_set<std::string>();
     target_branch.messages = std::vector<message>();
 
@@ -114,7 +113,7 @@ void Server::load_branch_forward(std::string fb_hash) {
     branch_context ctx(target_ctxs);
 
     target_branch.messages = std::vector<message>();
-    
+
     //see how far the linear part goes; we'll stop when there are multiple children
     while (true) {
         active_block = (this->tree).get_chain()[working_hash];
@@ -211,7 +210,7 @@ void Server::batch_add_blocks(std::unordered_set<std::string> hashes) {
     }
     for (auto eh : extern_only_hashes) {
         //loading forward from these hashes will get the full set
-        add_block(eh); 
+        add_block(eh);
     }
 }
 
@@ -228,13 +227,13 @@ std::string Server::send_message(user author, json content, char st, std::string
         {"st", std::string(1, st)},
         {"d", content},
     };
-    
+
     if (!t.empty()) full_msg["t"] = t;
-    
+
     std::string encrypted_content = b64_encode(lock_msg(full_msg.dump(), false, b64_decode(author.pri_keys.DSA_key), (this->raw_AES_key)));
 
     std::string target_hash = local_tree.gen_block(encrypted_content, this->s_trip, sending_time, target_p_hashes, author.u_trip);
-    
+
     //add_block(target_hash);
 
     return target_hash;

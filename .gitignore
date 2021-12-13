@@ -1,6 +1,10 @@
 *.block
 /chains/
-src/_bin/*.o
+/exe/*
+*.o
 /.vscode/
 *.so
 *.dll
+*.a
+*.gch
+/exe/

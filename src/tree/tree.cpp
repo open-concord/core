@@ -18,19 +18,12 @@
 #include <sys/stat.h>
 #include <stdexcept>
 #include <fstream>
-#include <boost/function.hpp>
-#include <boost/bind/bind.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/range/iterator_range.hpp>
-
-namespace fs = boost::filesystem;
-
-using namespace boost::placeholders;
 
 struct stat info;
 
 Tree::Tree() {
-    //nothing here, just needs to be defined for non-dir-linked trees
+  // @Overload
+  // nothing here, just needs to be defined for non-dir-linked trees
 }
 
 Tree::Tree(std::string dir) {
@@ -46,18 +39,18 @@ void Tree::load(std::string dir) {
         throw std::invalid_argument("Directory is not accessible.");
     }
 
-    fs::path p(this->target_dir);
+    std::filesystem::path p(this->target_dir);
 
     std::vector<block> loaded_blocks;
 
-    for(auto& entry : boost::make_iterator_range(fs::directory_iterator(p), {})) {
+    for(auto& entry : std::filesystem::directory_iterator(p)) {
         std::string path_str = entry.path().string();
-        if (path_str.substr(path_str.length() - 6) != ".block") continue; //only want .block files
+        if (path_str.substr(path_str.length() - 6) != ".block") continue; // only want .block files
         std::ifstream saved_block(path_str.c_str());
         if (saved_block) {
             std::string block_data;
-            saved_block.seekg(0, std::ios::end); //move to stream end
-            block_data.resize(saved_block.tellg()); //expand string based on stream end position
+            saved_block.seekg(0, std::ios::end); // move to stream end
+            block_data.resize(saved_block.tellg()); // expand string based on stream end position
             saved_block.seekg(0, std::ios::beg);
             saved_block.read(&block_data[0], block_data.size());
             saved_block.close();
@@ -73,7 +66,12 @@ void Tree::set_pow_req(int POW_req) {
     this->pow = POW_req;
 }
 
-std::string Tree::gen_block(std::string cont, std::string s_trip, unsigned long long set_time, std::unordered_set<std::string> p_hashes, std::string c_trip) {
+std::string Tree::gen_block(
+  std::string cont,
+  std::string s_trip,
+  unsigned long long set_time,
+  std::unordered_set<std::string> p_hashes,
+  std::string c_trip) {
     assert(s_trip.length() == 24);
     assert(c_trip.length() == 24 || c_trip.length() == 0);
     if (p_hashes.size() == 0) p_hashes = find_p_hashes(s_trip);
@@ -83,12 +81,19 @@ std::string Tree::gen_block(std::string cont, std::string s_trip, unsigned long 
 }
 
 std::unordered_set<std::string> Tree::find_p_hashes(std::string s_trip, std::unordered_set<std::string> base_p_hashes, int p_count) {
-    //there's no point in using blocks with existing children as hashes; we can get the same reliance by using their children
+    /**
+    * there's no point in using blocks with existing children as hashes;
+    * we can get the same reliance by using their children
+    */
     std::unordered_set<std::string> p_hashes = base_p_hashes;
 
     std::unordered_set<std::string> intra_childless_hashes = get_qualifying_hashes(&Tree::is_intraserver_childless);
 
-    //if the base hashes have an intraserver block, we don't require another one, so the minimum intra sample is 0. Otherwise, it's 1 for server continuity.
+    /**
+    * if the base hashes have an intraserver block,
+    * we don't require another one, so the minimum intra sample is 0.
+    * Otherwise, it's 1 for server continuity.
+    */
     bool require_intra_block = true;
 
     for (auto bp_hash : p_hashes) {
@@ -126,10 +131,13 @@ std::map<std::string, block> Tree::get_chain() {
 bool Tree::verify_chain() {
     std::map<std::string, bool> s_trip_seen;
     for (const auto& [hash, block] : get_chain()) {
-        if (!verify_block(block, this->pow)) return false; //make sure every hash is valid.
-        //If there were multiple server roots, we couldn't tell which was valid.
-        //P2P prevents the propagation of new roots, but this means we have
-        //to fail if there's more than one root
+        // make sure every hash is valid.
+        if (!verify_block(block, this->pow)) return false;
+        /**
+        * If there were multiple server roots, we couldn't tell which was valid.
+        * P2P prevents the propagation of new roots, but this means we have
+        * to fail if there's more than one root
+        */
         bool server_connected = false;
         for (auto ph : block.p_hashes) {
             if (get_chain().find(ph) == get_chain().end()) return false; //parent hashes all need to exist in the chain
@@ -137,8 +145,8 @@ bool Tree::verify_chain() {
         }
         if (!server_connected) {
             s_trip_seen[block.s_trip] = !s_trip_seen[block.s_trip]; //first will make true, second back to false
-            if (!s_trip_seen[block.s_trip]) return false; 
-            //if it's false (was true before, i.e. was flipped, so this is the second sighting) we fail
+            if (!s_trip_seen[block.s_trip]) return false;
+            // if it's false (was true before, i.e. was flipped, so this is the second sighting) we fail
         }
     }
     return true;
@@ -186,7 +194,7 @@ int Tree::intraserver_parent_count(block to_check) {
     return result;
 }
 
-std::unordered_set<std::string> Tree::get_qualifying_hashes(boost::function<bool(Tree*, block)> qual_func) {
+std::unordered_set<std::string> Tree::get_qualifying_hashes(std::function<bool(Tree*, block)> qual_func) {
     std::unordered_set<std::string> qualifying_hashes;
     for (const auto& [hash, block] : get_chain()) {
         if (qual_func(this, block)) qualifying_hashes.insert(hash);
@@ -223,7 +231,7 @@ void Tree::batch_push(std::vector<block> to_push_set, bool save_new) {
         link_block(block);
     }
     if (save_new) {
-        for (const auto& pushed_block : to_push_set) { 
+        for (const auto& pushed_block : to_push_set) {
             save(pushed_block);
         }
     }
@@ -278,7 +286,6 @@ std::string hash_concat(block input) {
 }
 
 bool verify_block(block to_verify, int pow) {
-
     std::string result_hash = hex_encode(calc_hash(false, hash_concat(to_verify) + to_verify.nonce));
     if (result_hash != to_verify.hash) return false;
     for (int i = 0; i < pow; i++) {

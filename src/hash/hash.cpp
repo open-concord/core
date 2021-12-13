@@ -1,4 +1,4 @@
-#include "crypto++/sha.h"
+#include "cryptopp/sha.h"
 
 #include <string>
 #include <fstream>
@@ -7,7 +7,7 @@
 #include "../../inc/strenc.h"
 
 using namespace CryptoPP;
-// read from file or raw      
+// read from file or raw
 std::string calc_hash (bool use_disk, std::string target) {
     // if use_disk is true, target is a file name
     // if use_disk isn't than it's raw text
@@ -32,7 +32,7 @@ std::string calc_hash (bool use_disk, std::string target) {
     byte abDigest[SHA256::DIGESTSIZE];
 
     SHA256().CalculateDigest(abDigest, pbData, nDataLen);
-    
+
     std::string output(reinterpret_cast<const char*>(&abDigest[0]), SHA256::DIGESTSIZE);
     return output;
 }
