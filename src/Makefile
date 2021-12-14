@@ -71,62 +71,63 @@ static_unix: $(OBJ)
 	mv libcore.a ../exe/
 	cp -r ../inc ../exe/inc
 
-# build rules
+
 $(BIN)main.o: main.cpp
 	$(CC) $(CFLAGS) $< -o $@
 
-$(BIN)b64.o: strenc/b64.cpp ../inc/strenc.h
-	$(CC) $(CFLAGS) $< -o $@
+# string manipulation
+$(BIN)b64.o: ../inc/strops.h
+	$(CC) $(CFLAGS) strops/b64.cpp -o $@
 
-$(BIN)hexstr.o: strenc/hexstr.cpp ../inc/strenc.h
-	$(CC) $(CFLAGS) $< -o $@
+$(BIN)hexstr.o: ../inc/strops.h
+	$(CC) $(CFLAGS) strops/hexstr.cpp -o $@
 
-$(BIN)strutil.o: strenc/strutil.cpp ../inc/strenc.h
-	$(CC) $(CFLAGS) $< -o $@
+$(BIN)strutil.o: ../inc/strops.h
+	$(CC) $(CFLAGS) strops/strutil.cpp -o $@
 
-$(BIN)hash.o: hash/hash.cpp ../inc/hash.h
-	$(CC) $(CFLAGS) $< -o $@
+$(BIN)hash.o: ../inc/strops.h
+	$(CC) $(CFLAGS) strops/hash.cpp -o $@
 
-$(BIN)miner.o: miner/miner.cpp ../inc/miner.h
-	$(CC) $(CFLAGS) $< -o $@
+$(BIN)miner.o: ../inc/miner.h
+	$(CC) $(CFLAGS) miner/miner.cpp -o $@
 
-$(BIN)tree.o: tree/tree.cpp ../inc/tree.h
-	$(CC) $(CFLAGS) $< -o $@
+$(BIN)tree.o: ../inc/tree.h
+	$(CC) $(CFLAGS) tree/tree.cpp -o $@
 
 # chain utils
-$(BIN)ttime.o: tree/time_enc.cpp ../inc/tree.h
-	$(CC) $(CFLAGS) $< -o $@
-$(BIN)tbenc.o: tree/block_enc.cpp ../inc/tree.h
-	$(CC) $(CFLAGS) $< -o $@
+$(BIN)ttime.o: ../inc/tree.h
+	$(CC) $(CFLAGS) tree/time_enc.cpp -o $@
+$(BIN)tbenc.o: ../inc/tree.h
+	$(CC) $(CFLAGS) tree/block_enc.cpp -o $@
 
-# server
-$(BIN)server.o: server/server.cpp ../inc/server.h
-	$(CC) $(CFLAGS) $< -o $@
-$(BIN)smisc.o: server/claf_misc.cpp ../inc/server.h
-	$(CC) $(CFLAGS) $< -o $@
-$(BIN)sbranch_ctx.o: server/branch_ctx.cpp ../inc/server.h
-	$(CC) $(CFLAGS) $< -o $@
+# server abstraction
+$(BIN)server.o: ../inc/server.h
+	$(CC) $(CFLAGS) server/server.cpp -o $@
+$(BIN)smisc.o: ../inc/server.h
+	$(CC) $(CFLAGS) server/claf_misc.cpp -o $@
+$(BIN)sbranch_ctx.o: ../inc/server.h
+	$(CC) $(CFLAGS) server/branch_ctx.cpp -o $@
 
 # nodes
-$(BIN)nlogic.o: node/logic.cpp ../inc/node.h
-	$(CC) $(CFLAGS) $< -o $@ -I../lib/inc/uttu.hpp
-$(BIN)nconn.o: node/conn.cpp ../inc/node.h
-	$(CC) $(CFLAGS) $< -o $@ -I../lib/inc
-$(BIN)nnode.o: node/node.cpp ../inc/node.h
-	$(CC) $(CFLAGS) $< -o $@ -I../lib/inc
+$(BIN)nlogic.o: ../inc/node.h ../lib/inc
+	$(CC) $(CFLAGS) node/logic.cpp -o $@
+$(BIN)nconn.o: ../inc/node.h ../lib/inc
+	$(CC) $(CFLAGS) node/conn.cpp -o $@
+$(BIN)nnode.o: ../inc/node.h ../lib/inc
+	$(CC) $(CFLAGS) node/node.cpp -o $@
 
 # crypt
-$(BIN)lockmsg.o: crypt++/lockmsg.cpp ../inc/crypt++.h
-	$(CC) $(CFLAGS) $< -o $@
+$(BIN)lockmsg.o: ../inc/crypt++.h
+	$(CC) $(CFLAGS) crypt++/lockmsg.cpp -o $@
 
-$(BIN)DSA.o: crypt++/DSA.cpp ../inc/crypt++.h
-	$(CC) $(CFLAGS) $< -o $@
+$(BIN)DSA.o: ../inc/crypt++.h
+	$(CC) $(CFLAGS) crypt++/DSA.cpp -o $@
 
-$(BIN)RSA.o: crypt++/RSA.cpp ../inc/crypt++.h
-	$(CC) $(CFLAGS) $< -o $@
+$(BIN)RSA.o: ../inc/crypt++.h
+	$(CC) $(CFLAGS) crypt++/RSA.cpp -o $@
 
-$(BIN)AES.o: crypt++/AES.cpp ../inc/crypt++.h
-	$(CC) $(CFLAGS) $< -o $@
+$(BIN)AES.o: ../inc/crypt++.h
+	$(CC) $(CFLAGS) crypt++/AES.cpp -o $@
 
 clean:
 	cd $(BIN); rm -rf *o main

@@ -1,4 +1,5 @@
 #include <string>
+#include <fstream>
 
 #pragma once
 
@@ -12,3 +13,8 @@ std::string hex_encode(std::string in_string);
 std::string hex_decode(std::string encoded);
 
 std::string gen_string(size_t len);
+
+// HASH
+std::string calc_hash(bool use_disk, std::string target);
+
+std::string gen_trip(std::string data, size_t outlen = 24);

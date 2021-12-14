@@ -1,7 +1,6 @@
+#include "strops.h"
 #include "tree.h"
-#include "hash.h"
 #include "crypt++.h"
-#include "strenc.h"
 
 #include <array>
 #include <map>
@@ -100,7 +99,7 @@ struct role {
 struct message {
     std::string hash;
     char supertype;
-    char type;
+    std::string type;
     json data;
     json extra;
 };
@@ -137,7 +136,6 @@ std::array<bool, 6> decode_features(int);
 
 class Server {
     private:
-        Tree& tree;
         user luser;
         std::unordered_set<std::string> constraint_heads;
         std::unordered_set<std::string> constraint_path_fbs;
@@ -152,8 +150,10 @@ class Server {
 
         void backscan_constraint_path(std::string lb_hash);
     public:
+        Tree& tree;
+
         Server(Tree& parent_tree, std::string AES_key, user load_user = user(), std::string prev_AES_key = std::string(), std::unordered_set<std::string> heads = std::unordered_set<std::string>());
-    
+
         member create_member(keypair pub_keys, std::vector<std::string> init_roles = std::vector<std::string>());
 
         bool apply_data(branch_context& ctx, json& extra, json claf_data, std::string content, std::string signature, std::string content_hash);

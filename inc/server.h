@@ -1,7 +1,6 @@
+#include "strops.h"
 #include "tree.h"
-#include "hash.h"
 #include "crypt++.h"
-#include "strenc.h"
 
 #include <array>
 #include <map>
@@ -152,9 +151,9 @@ class Server {
         void backscan_constraint_path(std::string lb_hash);
     public:
         Tree& tree;
-        
+
         Server(Tree& parent_tree, std::string AES_key, user load_user = user(), std::string prev_AES_key = std::string(), std::unordered_set<std::string> heads = std::unordered_set<std::string>());
-    
+
         member create_member(keypair pub_keys, std::vector<std::string> init_roles = std::vector<std::string>());
 
         bool apply_data(branch_context& ctx, json& extra, json claf_data, std::string content, std::string signature, std::string content_hash);

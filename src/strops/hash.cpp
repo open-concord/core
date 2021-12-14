@@ -3,8 +3,7 @@
 #include <string>
 #include <fstream>
 
-#include "../../inc/hash.h"
-#include "../../inc/strenc.h"
+#include "../../inc/strops.h"
 
 using namespace CryptoPP;
 // read from file or raw

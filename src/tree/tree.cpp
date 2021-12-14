@@ -11,9 +11,8 @@
 #include <filesystem>
 
 #include "../../inc/miner.h"
-#include "../../inc/hash.h"
+#include "../../inc/strops.h"
 #include "../../inc/tree.h"
-#include "../../inc/strenc.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>

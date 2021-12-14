@@ -6,7 +6,7 @@
 #include <functional>
 
 #include "../../inc/node.h"
-#include "../../inc/strenc.h"
+#include "../../inc/strops.h"
 #include "../../inc/crypt++.h"
 #include "../../inc/tree.h"
 #include <nlohmann/json.hpp>

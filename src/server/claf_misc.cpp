@@ -1,8 +1,8 @@
 #include "../../inc/server.h"
 #include "../../inc/tree.h"
 #include "../../inc/crypt++.h"
-#include "../../inc/strenc.h"
-#include "../../inc/hash.h"
+#include "../../inc/strops.h"
+
 #include <string>
 #include <set>
 #include <nlohmann/json.hpp>
@@ -63,7 +63,7 @@ std::string content_hash_concat(long long unsigned int time, std::string s_trip,
 bool Server::apply_data(branch_context& ctx, json& extra, json claf_data, std::string content, std::string signature, std::string content_hash) {
 
     //verify that all of the circumstances agree with those in the block
-    if (content_hash != std::string(claf_data["h"])) return false; 
+    if (content_hash != std::string(claf_data["h"])) return false;
 
     //nserv needs to be checked before membership
     if (ctx.members.empty() && claf_data["st"] == "a" && claf_data["t"] == "nserv") {
@@ -85,7 +85,7 @@ bool Server::apply_data(branch_context& ctx, json& extra, json claf_data, std::s
             std::cout << "author muted\n";
             return false; //0 is is_muted
         }*/
-    } 
+    }
     else if (claf_data["st"] == "a") {
         if (claf_data["t"] == "invite") {
             if (!ctx.has_feature(author_member, 1)) return false; //1 is can_invite
@@ -152,7 +152,7 @@ bool Server::apply_data(branch_context& ctx, json& extra, json claf_data, std::s
             bool direction;
             if (claf_data["t"] == "grole") {
                 direction = true;
-            } 
+            }
             else if (claf_data["t"] == "rrole") {
                 direction = false;
             }
@@ -165,7 +165,7 @@ bool Server::apply_data(branch_context& ctx, json& extra, json claf_data, std::s
         if (!ctx.has_feature(author_member, 5)) return false; //5 is can_edit
         bool is_isset = (claf_data["t"] == "sset");
         bool is_cset = (claf_data["t"] == "cset");
-        
+
         if (!is_isset && !is_cset) return false;
         std::vector<std::vector<std::string>> key_vects = claf_data["d"]["sn"];
         std::vector<int> po_bools = claf_data["d"]["po"];
@@ -191,7 +191,7 @@ bool Server::apply_data(branch_context& ctx, json& extra, json claf_data, std::s
                 (*moving_ref).clear_key(last_key);
             }
         }
-        
+
     }
     else return false;
 

@@ -1,6 +1,5 @@
 #include "../../inc/tree.h"
-#include "../../inc/hash.h"
-#include "../../inc/strenc.h"
+#include "../../inc/strops.h"
 #include "../../inc/crypt++.h"
 #include "../../inc/server.h"
 

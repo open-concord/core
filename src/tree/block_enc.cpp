@@ -5,7 +5,7 @@
 #include <string>
 
 #include "../../inc/tree.h"
-#include "../../inc/strenc.h"
+#include "../../inc/strops.h"
 
 json block_to_json(block input) {
     json output;
