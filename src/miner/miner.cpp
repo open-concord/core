@@ -8,8 +8,7 @@
 #include <iostream>
 
 #include "../../inc/miner.h"
-#include "../../inc/hash.h"
-#include "../../inc/strenc.h"
+#include "../../inc/strops.h"
 
 Miner::Miner(int POW_req) {
     this->pow = POW_req;

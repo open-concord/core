@@ -4,7 +4,7 @@ SHELL = /bin/sh
 # unix file system
 UUSR = -I/usr/include/ -L/usr/lib/
 # local directory
-LDIR = -I../lib/inc/ -I../inc/ -L../lib/
+LDIR = -I../lib/inc/ -I../inc/ -L../lib/ 
 
 # cpp standard
 CC = g++ -std=c++20
@@ -12,7 +12,7 @@ CC = g++ -std=c++20
 # compile-time flags
 CFLAGS = -c -g -Wall -fPIC
 # lib flags
-LFLAGS = -lcryptopp -pthread -luttu
+LFLAGS = -lcryptopp -pthread -L../lib/ -luttu
 
 # object file sub-dir of src
 BIN = _bin/
@@ -45,12 +45,17 @@ OBJ = $(BIN)lockmsg.o \
 
 default: static_unix
 
-install_unix: unix
+install_unix: shared_unix
 	@echo "INSTALLING FOR UNIX"
 	sudo cp libconcord.so /usr/lib/libconcord.so
 	sudo ldconfig
 	sudo mkdir -p /usr/include/concord
 	sudo cp ../inc/* /usr/include/concord
+
+install_clean: clean
+	sudo rm -f /usr/lib/libconcord.so
+	sudo ldconfig
+	sudo rm -rf /usr/include/concord
 
 # linking rules
 shared_windows: $(OBJ)
@@ -59,7 +64,7 @@ shared_windows: $(OBJ)
 
 shared_unix: $(OBJ)
 	@echo "NOW BUILDING (UNIX) | SHARED OBJECT"
-	$(CC) $(SOFLAGS) $(OBJ) $(LFLAGS) -o libcore.so
+	$(CC) $(SOFLAGS) $(OBJ) $(LFLAGS) -o libconcord.so
 
 static_windows: $(OBJ)
 	@echo "NOW LINKING (WINDOWS) | ARCHIVE"
@@ -110,11 +115,11 @@ $(BIN)sbranch_ctx.o: ../inc/server.h
 
 # nodes
 $(BIN)nlogic.o: ../inc/node.h ../lib/inc
-	$(CC) $(CFLAGS) node/logic.cpp -o $@
+	$(CC) $(CFLAGS) node/logic.cpp -o $@ -I../lib/inc
 $(BIN)nconn.o: ../inc/node.h ../lib/inc
-	$(CC) $(CFLAGS) node/conn.cpp -o $@
+	$(CC) $(CFLAGS) node/conn.cpp -o $@ -I../lib/inc
 $(BIN)nnode.o: ../inc/node.h ../lib/inc
-	$(CC) $(CFLAGS) node/node.cpp -o $@
+	$(CC) $(CFLAGS) node/node.cpp -o $@ -I../lib/inc
 
 # crypt
 $(BIN)lockmsg.o: ../inc/crypt++.h

@@ -1,6 +1,5 @@
 #include "concord/tree.h"
-#include "concord/hash.h"
-#include "concord/strenc.h"
+#include "concord/strops.h"
 #include "concord/crypt++.h"
 #include "concord/server.h"
 #include <iostream>
