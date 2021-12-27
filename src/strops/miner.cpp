@@ -4,7 +4,7 @@
 #include <sstream>
 #include <iomanip>
 
-//debugging
+// debugging
 #include <iostream>
 
 #include "../../inc/miner.hpp"
