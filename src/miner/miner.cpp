@@ -7,8 +7,8 @@
 //debugging
 #include <iostream>
 
-#include "../../inc/miner.h"
-#include "../../inc/strops.h"
+#include "../../inc/miner.hpp"
+#include "../../inc/strops.hpp"
 
 Miner::Miner(int POW_req) {
     this->pow = POW_req;

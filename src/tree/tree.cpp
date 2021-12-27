@@ -10,9 +10,9 @@
 #include <iostream>
 #include <filesystem>
 
-#include "../../inc/miner.h"
-#include "../../inc/strops.h"
-#include "../../inc/tree.h"
+#include "../../inc/miner.hpp"
+#include "../../inc/strops.hpp"
+#include "../../inc/tree.hpp"
 
 #include <sys/types.h>
 #include <sys/stat.h>

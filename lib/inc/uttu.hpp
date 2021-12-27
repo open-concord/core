@@ -1,4 +1,4 @@
-// sys api
+/** sys api */
 #ifdef __APPLE__ // OSx
 
 #endif
@@ -16,7 +16,7 @@
   #include <ws2def.h>
 #endif
 
-// standard libs
+/** standard libs */
 #include <vector>
 #include <optional>
 #include <thread>
@@ -24,11 +24,47 @@
 #include <memory>
 #include <iostream>
 #include <cstring>
+#include <sstream>
+#include <string>
+
+/** outside */
 #include <nlohmann/json.hpp>
-// sharding across different sections to reduce bloat
-#include "sec.hpp"
+#include <cryptopp/eccrypto.h>
+#include <cryptopp/secblock.h>
+#include <cryptopp/integer.h>
+#include <cryptopp/osrng.h>  // AutoSeededRandomPool
+#include <cryptopp/oids.h> // secp256r1
+#include <cryptopp/rijndael.h> // AES
+#include <cryptopp/gcm.h>  // GCM
+#include <cryptopp/hex.h> // HexEncoder/Decoder
 
 using json = nlohmann::json;
+using namespace CryptoPP;
+
+struct dhms { // dhm suite
+private:
+  const int tag = 12; // GCM tag size
+  ECDH<ECP>::Domain ecd; // ecdhm domain
+  // keys
+  SecByteBlock pri; // own private
+  SecByteBlock pub; // own public
+  SecByteBlock ppub; // peer public
+  SecByteBlock shared; // both shared
+  // key utility (interfaced via hex)
+  SecByteBlock _Set(std::string k); // used to set keys
+  std::string _Get(SecByteBlock* k); // used to get keys
+public:
+  // generators
+  dhms();
+  void Keys(); // generate key pair
+  void Gen(); // this may take a bit if ur a potato
+  // setters/getters
+  void Peer(std::string p); // set ppub
+  std::string Public(); // pull pub key
+  std::string Shared(); // get shared secret
+  std::string AE(std::string in); // Authenticated Encryption
+  std::string AD(std::string in); // Authenticated Decryption
+};
 
 struct Peer { // connected peer
 private:
@@ -67,10 +103,9 @@ private:
   // flags
   bool close = false;
   // status/connection management
-  // accept criteria function, takes IP
-  std::function<bool(std::string)> _criteria;
+  std::function<bool(std::string)> _criteria; // accept criteria function, takes IP
   // inner thread loop for Lazy()
-  void _Lazy(void (*h)(std::shared_ptr<Peer>));
+  void _Lazy(std::function<void(std::shared_ptr<Peer>)> h);
   std::thread _lt;
 public:
   // Utility

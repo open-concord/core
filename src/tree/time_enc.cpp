@@ -3,7 +3,7 @@
 #include <cstring>
 
 #include <string>
-#include "../../inc/tree.h"
+#include "../../inc/tree.hpp"
 
 using namespace std::chrono;
 

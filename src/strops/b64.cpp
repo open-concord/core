@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "../../inc/strops.h"
+#include "../../inc/strops.hpp"
 
 using namespace CryptoPP;
 

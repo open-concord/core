@@ -4,7 +4,7 @@
 #include <array>
 #include <cryptopp/rsa.h>
 
-#include "../../inc/crypt++.h"
+#include "../../inc/crypt++.hpp"
 using namespace std;
 using namespace CryptoPP;
 
@@ -31,7 +31,7 @@ std::array<std::string, 2> RSA_keygen() {
         StringSink(encodedPublicKey).Ref()
     );
 
-    // return BER encoded keys    
+    // return BER encoded keys
     return {encodedPrivateKey, encodedPublicKey};
 }
 
@@ -47,7 +47,7 @@ std::string RSA_encrypt(std::string encodedPublicKey, std::string msg) {
             encodedPublicKey
         ).Ref()
     );
-    
+
     // encryptor object initialization
     RSAES_OAEP_SHA_Encryptor e(publicKey);
 

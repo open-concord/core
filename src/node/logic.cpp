@@ -5,10 +5,10 @@
 #include <vector>
 #include <functional>
 
-#include "../../inc/node.h"
-#include "../../inc/strops.h"
-#include "../../inc/crypt++.h"
-#include "../../inc/tree.h"
+#include "../../inc/node.hpp"
+#include "../../inc/strops.hpp"
+#include "../../inc/crypt++.hpp"
+#include "../../inc/tree.hpp"
 #include <nlohmann/json.hpp>
 
 using json = nlohmann::json;

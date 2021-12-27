@@ -1,4 +1,4 @@
-#include "../../inc/crypt++.h"
+#include "../../inc/crypt++.hpp"
 #include <cryptopp/dsa.h>
 #include <cryptopp/osrng.h>
 

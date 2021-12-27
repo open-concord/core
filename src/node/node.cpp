@@ -5,8 +5,8 @@
 #include <iostream>
 #include <thread>
 #include <functional>
-#include "../../inc/node.h"
-#include "../../inc/tree.h"
+#include "../../inc/node.hpp"
+#include "../../inc/tree.hpp"
 
 /** fix to use normal fs */
 /**

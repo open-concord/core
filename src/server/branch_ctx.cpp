@@ -1,4 +1,4 @@
-#include "../../inc/server.h"
+#include "../../inc/server.hpp"
 #include <string>
 #include <cassert>
 #include <vector>
@@ -138,7 +138,7 @@ bijson merge(bijson bs1, bijson bs2) {
     bijson_type merge_type = bs1.type;
     bijson bsm;
     bsm.set_type(merge_type);
-    
+
     if (merge_type == MAP) {
         for (auto& [key1, value1] : bs1.map_values) {
             auto& value1_m = bsm.map_values[key1];
@@ -153,8 +153,8 @@ bijson merge(bijson bs1, bijson bs2) {
                 }
                 else if (
                     value2.first.type == MAP &&
-                    value2_m.first.type == MAP && 
-                    value2.second.get_dir() && 
+                    value2_m.first.type == MAP &&
+                    value2.second.get_dir() &&
                     value2.second == value2_m.second
                 ) {
                     value2_m.first = merge(value2_m.first, value2.first);
@@ -191,7 +191,7 @@ branch_context::branch_context(std::vector<branch_context> input_contexts) {
         for (const auto& [hash, in_member] : input_context.members) {
             if ((this->members).count(hash) == 0) {
                 (this->members)[hash] = in_member;
-            } 
+            }
             else {
                 for (const auto& [name, rank] : in_member.roles_ranks) {
                     (this->members)[hash].roles_ranks[name] = std::max(rank, (this->members)[hash].roles_ranks[name]);
@@ -203,14 +203,14 @@ branch_context::branch_context(std::vector<branch_context> input_contexts) {
         for (const auto& [name, in_role] : input_context.roles) {
             if ((this->roles).count(name) == 0) {
                 (this->roles)[name] = in_role;
-            } 
+            }
             else {
                 for (size_t i = 0; i < in_role.features.size(); i++) {
                     (this->roles)[name].features[i] = std::max(in_role.features[i], (this->roles)[name].features[i]);
                 }
             }
         }
-        
+
         this->settings = merge(this->settings, input_context.settings);
     }
 }
