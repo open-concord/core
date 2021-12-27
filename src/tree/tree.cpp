@@ -10,7 +10,6 @@
 #include <iostream>
 #include <filesystem>
 
-#include "../../inc/miner.hpp"
 #include "../../inc/strops.hpp"
 #include "../../inc/tree.hpp"
 

@@ -69,8 +69,8 @@ $(BIN)strutil.o: ../inc/strops.hpp
 	$(CC) $(CFLAGS) strops/strutil.cpp -o $@
 $(BIN)hash.o: ../inc/strops.hpp
 	$(CC) $(CFLAGS) strops/hash.cpp -o $@
-$(BIN)miner.o: ../inc/miner.hpp
-	$(CC) $(CFLAGS) miner/miner.cpp -o $@
+$(BIN)miner.o: ../inc/strops.hpp
+	$(CC) $(CFLAGS) strops/miner.cpp -o $@
 $(BIN)tree.o: ../inc/tree.hpp
 	$(CC) $(CFLAGS) tree/tree.cpp -o $@
 

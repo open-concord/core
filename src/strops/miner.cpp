@@ -7,7 +7,6 @@
 // debugging
 #include <iostream>
 
-#include "../../inc/miner.hpp"
 #include "../../inc/strops.hpp"
 
 Miner::Miner(int POW_req) {
