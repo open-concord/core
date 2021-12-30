@@ -1,4 +1,4 @@
-#include "../../inc/crypt++.h"
+#include "../../inc/crypt++.hpp"
 #include <string>
 
 std::string undo_concat(std::string& target_str, size_t length) {

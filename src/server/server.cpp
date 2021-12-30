@@ -1,7 +1,7 @@
-#include "../../inc/tree.h"
-#include "../../inc/strops.h"
-#include "../../inc/crypt++.h"
-#include "../../inc/server.h"
+#include "../../inc/tree.hpp"
+#include "../../inc/strops.hpp"
+#include "../../inc/crypt++.hpp"
+#include "../../inc/server.hpp"
 
 #include <limits>
 #include <map>

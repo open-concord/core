@@ -1,4 +1,4 @@
-#include "../../inc/node.h"
+#include "../../inc/node.hpp"
 
 /** init */
 Conn::Conn(

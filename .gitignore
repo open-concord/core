@@ -1,10 +1,7 @@
 *.block
-/chains/
-/exe/*
 *.o
-/.vscode/
 *.so
 *.dll
 *.a
-*.gch
-/exe/
+/exe/*
+/lib/*

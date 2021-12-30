@@ -1,27 +1,22 @@
 SHELL = /bin/sh
 
-# includes + libs
-# unix file system
-UUSR = -I/usr/include/ -L/usr/lib/
-# local directory
-LDIR = -I../lib/inc/ -I../inc/ -L../lib/ 
+# local path for the lib folder *Change Based on Env*
+D = ./../lib
 
 # cpp standard
 CC = g++ -std=c++20
 
 # compile-time flags
 CFLAGS = -c -g -Wall -fPIC
+
 # lib flags
-LFLAGS = -lcryptopp -pthread -L../lib/ -luttu
+L = -lcryptopp -pthread -L$(D) -luttu
 
 # object file sub-dir of src
 BIN = _bin/
 
 # .so args
-SOFLAGS = -shared -Wl,-soname,libconcord.so
-
-# .dll args
-DLLFLAGS = -shared
+SOFLAGS = -shared -Wl,-soname,concord/libcore.so
 
 # objects
 OBJ = $(BIN)lockmsg.o \
@@ -45,95 +40,75 @@ OBJ = $(BIN)lockmsg.o \
 
 default: static_unix
 
-install_unix: shared_unix
-	@echo "INSTALLING FOR UNIX"
-	sudo cp libconcord.so /usr/lib/libconcord.so
-	sudo ldconfig
-	sudo mkdir -p /usr/include/concord
-	sudo cp ../inc/* /usr/include/concord
-
 install_clean: clean
 	sudo rm -f /usr/lib/libconcord.so
 	sudo ldconfig
 	sudo rm -rf /usr/include/concord
 
-# linking rules
-shared_windows: $(OBJ)
-	@echo "NOW BUILDING (WINDOWS) | DLL"
-	$(CC) $(DLLFLAGS) $(OBJ) $(LFLAGS) -o core.dll
-
 shared_unix: $(OBJ)
 	@echo "NOW BUILDING (UNIX) | SHARED OBJECT"
-	$(CC) $(SOFLAGS) $(OBJ) $(LFLAGS) -o libconcord.so
-
-static_windows: $(OBJ)
-	@echo "NOW LINKING (WINDOWS) | ARCHIVE"
+	$(CC) $(SOFLAGS) $(OBJ) $(L)libconcord.so
 
 static_unix: $(OBJ)
 	@echo "NOW LINKING (UNIX) | ARCHIVE"
-	ar ru libcore.a $^ #$(UUSR) $(LLIB)
+	ar cr libcore.a $(OBJ) $(D)/libuttu.o
 	ranlib libcore.a
 	mv libcore.a ../exe/
-	cp -r ../inc ../exe/inc
-
+	cp -r ../inc ../exe/
+	cp $(D)/inc/* ../exe/inc
 
 $(BIN)main.o: main.cpp
 	$(CC) $(CFLAGS) $< -o $@
 
 # string manipulation
-$(BIN)b64.o: ../inc/strops.h
+$(BIN)b64.o: ../inc/strops.hpp
 	$(CC) $(CFLAGS) strops/b64.cpp -o $@
-
-$(BIN)hexstr.o: ../inc/strops.h
+$(BIN)hexstr.o: ../inc/strops.hpp
 	$(CC) $(CFLAGS) strops/hexstr.cpp -o $@
-
-$(BIN)strutil.o: ../inc/strops.h
+$(BIN)strutil.o: ../inc/strops.hpp
 	$(CC) $(CFLAGS) strops/strutil.cpp -o $@
-
-$(BIN)hash.o: ../inc/strops.h
+$(BIN)hash.o: ../inc/strops.hpp
 	$(CC) $(CFLAGS) strops/hash.cpp -o $@
-
-$(BIN)miner.o: ../inc/miner.h
-	$(CC) $(CFLAGS) miner/miner.cpp -o $@
-
-$(BIN)tree.o: ../inc/tree.h
+$(BIN)miner.o: ../inc/strops.hpp
+	$(CC) $(CFLAGS) strops/miner.cpp -o $@
+$(BIN)tree.o: ../inc/tree.hpp
 	$(CC) $(CFLAGS) tree/tree.cpp -o $@
 
 # chain utils
-$(BIN)ttime.o: ../inc/tree.h
+$(BIN)ttime.o: ../inc/tree.hpp
 	$(CC) $(CFLAGS) tree/time_enc.cpp -o $@
-$(BIN)tbenc.o: ../inc/tree.h
+$(BIN)tbenc.o: ../inc/tree.hpp
 	$(CC) $(CFLAGS) tree/block_enc.cpp -o $@
 
 # server abstraction
-$(BIN)server.o: ../inc/server.h
+$(BIN)server.o: ../inc/server.hpp
 	$(CC) $(CFLAGS) server/server.cpp -o $@
-$(BIN)smisc.o: ../inc/server.h
+$(BIN)smisc.o: ../inc/server.hpp
 	$(CC) $(CFLAGS) server/claf_misc.cpp -o $@
-$(BIN)sbranch_ctx.o: ../inc/server.h
+$(BIN)sbranch_ctx.o: ../inc/server.hpp
 	$(CC) $(CFLAGS) server/branch_ctx.cpp -o $@
 
 # nodes
-$(BIN)nlogic.o: ../inc/node.h ../lib/inc
-	$(CC) $(CFLAGS) node/logic.cpp -o $@ -I../lib/inc
-$(BIN)nconn.o: ../inc/node.h ../lib/inc
-	$(CC) $(CFLAGS) node/conn.cpp -o $@ -I../lib/inc
-$(BIN)nnode.o: ../inc/node.h ../lib/inc
-	$(CC) $(CFLAGS) node/node.cpp -o $@ -I../lib/inc
+$(BIN)nlogic.o: ../inc/node.hpp
+	$(CC) $(CFLAGS) -I$(D)/inc node/logic.cpp -o $@
+$(BIN)nconn.o: ../inc/node.hpp
+	$(CC) $(CFLAGS) -I$(D)/inc node/conn.cpp -o $@
+$(BIN)nnode.o: ../inc/node.hpp
+	$(CC) $(CFLAGS) -I$(D)/inc node/node.cpp -o $@
 
 # crypt
-$(BIN)lockmsg.o: ../inc/crypt++.h
+$(BIN)lockmsg.o: ../inc/crypt++.hpp
 	$(CC) $(CFLAGS) crypt++/lockmsg.cpp -o $@
-
-$(BIN)DSA.o: ../inc/crypt++.h
+$(BIN)DSA.o: ../inc/crypt++.hpp
 	$(CC) $(CFLAGS) crypt++/DSA.cpp -o $@
-
-$(BIN)RSA.o: ../inc/crypt++.h
+$(BIN)RSA.o: ../inc/crypt++.hpp
 	$(CC) $(CFLAGS) crypt++/RSA.cpp -o $@
-
-$(BIN)AES.o: ../inc/crypt++.h
+$(BIN)AES.o: ../inc/crypt++.hpp
 	$(CC) $(CFLAGS) crypt++/AES.cpp -o $@
 
+# have to force b/c unknown lib type
 clean:
-	cd $(BIN); rm -rf *o main
-	rm -f libconcord.so
+	rm $(BIN)*.o
+	rm ../exe/inc/*.hpp
+	rm -f ../exe/*.a
+	rm -f ../exe/*.so

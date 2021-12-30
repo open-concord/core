@@ -1,7 +1,7 @@
 #include "cryptopp/hex.h"
 #include <string>
 
-#include "../../inc/strops.h"
+#include "../../inc/strops.hpp"
 
 using namespace CryptoPP;
 

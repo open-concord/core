@@ -4,8 +4,8 @@
 #include <unordered_set>
 #include <string>
 
-#include "../../inc/tree.h"
-#include "../../inc/strops.h"
+#include "../../inc/tree.hpp"
+#include "../../inc/strops.hpp"
 
 json block_to_json(block input) {
     json output;

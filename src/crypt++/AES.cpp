@@ -5,11 +5,11 @@
 #include <cryptopp/gcm.h>
 #include <array>
 
-#include "../../inc/crypt++.h"
+#include "../../inc/crypt++.hpp"
 
 using namespace CryptoPP;
 
-// skey = AES::DEFAULT_KEYLENGTH 
+// skey = AES::DEFAULT_KEYLENGTH
 std::array<std::string, 2> AES_encrypt(std::string skey, std::string msg) {
     AutoSeededRandomPool prng;
 
@@ -36,7 +36,7 @@ std::array<std::string, 2> AES_encrypt(std::string skey, std::string msg) {
             )
         );
         // translate nonce to string
-        std::string snonce(reinterpret_cast<const char*>(&nonce[0]), nonce.size());      
+        std::string snonce(reinterpret_cast<const char*>(&nonce[0]), nonce.size());
         // return cipher, nonce
         return {cipher, snonce};
     } catch (const /*crypto*/ Exception& err) {
@@ -48,7 +48,7 @@ std::array<std::string, 2> AES_encrypt(std::string skey, std::string msg) {
 std::string AES_decrypt(std::string skey, std::string snonce, std::string cipher) {
     // tag size
     const int TAG_SIZE = 12;
-    
+
     SecByteBlock key(reinterpret_cast<const byte*>(&skey[0]), skey.size());
     SecByteBlock nonce(reinterpret_cast<const byte*>(&snonce[0]), snonce.size());
 

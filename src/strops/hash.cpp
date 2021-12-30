@@ -3,7 +3,7 @@
 #include <string>
 #include <fstream>
 
-#include "../../inc/strops.h"
+#include "../../inc/strops.hpp"
 
 using namespace CryptoPP;
 // read from file or raw

@@ -1,32 +1,36 @@
-#include "node.h"
-#include "rw.h"
-#include "crypt++.h"
-#include "tree.h"
-#include "chain_utils.h"
-#include "hash.h"
-#include "b64.h"
-#include "timewizard.h"
-
+#include <node.hpp>
+#include <tree.hpp>
 
 #include <string>
 #include <vector>
 #include <iostream>
 #include <exception>
+#include <map>
 
-#include <nlohmann/json.hpp>
+bool watchdog(std::string ip) {
+  return true;
+}
 
 int main() {
     // port numbers etc will be taken over by cfg files
     unsigned short int host = 1338;
     // create new node
+    Tree new_tree;
+    std::map<std::string, Tree> test_ledger = {
+      {"qwerty", new_tree}
+    };
     try {
-        // normal node function
-        Node tnode (20, host, "test/example_chains_dir", std::vector<std::string>({}));
-        // contact with ui 
-        // (if you get connection refused, you have to actually open a port w/ the UI on the specified port lmfao)
-        tnode.make_local(host);
+      // normal node function
+      Node tnode (
+        5,
+        host,
+        test_ledger,
+        3000, /** ms */
+        &watchdog
+      );
+      
     } catch (std::exception& err) {
-        std::cout << "err: " << err.what() << "\n";
+      std::cout << "err: " << err.what() << "\n";
     }
     return 0;
 }

@@ -1,7 +1,7 @@
-#include "../../inc/server.h"
-#include "../../inc/tree.h"
-#include "../../inc/crypt++.h"
-#include "../../inc/strops.h"
+#include "../../inc/server.hpp"
+#include "../../inc/tree.hpp"
+#include "../../inc/crypt++.hpp"
+#include "../../inc/strops.hpp"
 
 #include <string>
 #include <set>
