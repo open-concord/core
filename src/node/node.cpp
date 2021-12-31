@@ -25,10 +25,8 @@ Node::Node(
   std::map<std::string, Tree>& cm,
   int timeout,
   std::function<bool(std::string)> wd
-) : sesh(Create(port, queue)) {
+) : sesh(Create(port, queue)), chains(cm) {
   this->sesh.Criteria(wd);
-  //this->chains_dir = chains_dir;
-  this->chains = cm;
 }
 
 void Node::Open() {

@@ -88,4 +88,4 @@ class Node {
 };
 
 /** here until logic API update */
-std::string message_logic(Conn *conn);
+std::string hclc_logic(Conn *conn);

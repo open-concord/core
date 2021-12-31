@@ -10,7 +10,7 @@ CC = g++ -std=c++20
 CFLAGS = -c -g -Wall -fPIC
 
 # lib flags
-L = -lcryptopp -pthread -L$(D) -luttu
+L = -lcryptopp -pthread
 
 # object file sub-dir of src
 BIN = _bin/
@@ -34,7 +34,7 @@ OBJ = $(BIN)lockmsg.o \
 	$(BIN)smisc.o \
 	$(BIN)sbranch_ctx.o \
 	$(BIN)server.o \
-  $(BIN)nlogic.o \
+  $(BIN)nhclc.o \
 	$(BIN)nconn.o \
 	$(BIN)nnode.o
 
@@ -47,7 +47,7 @@ install_clean: clean
 
 shared_unix: $(OBJ)
 	@echo "NOW BUILDING (UNIX) | SHARED OBJECT"
-	$(CC) $(SOFLAGS) $(OBJ) $(L)libconcord.so
+	$(CC) $(SOFLAGS) $(OBJ) $(D)/libuttu.o $(L) -o libconcord.so
 
 static_unix: $(OBJ)
 	@echo "NOW LINKING (UNIX) | ARCHIVE"
@@ -89,8 +89,8 @@ $(BIN)sbranch_ctx.o: ../inc/server.hpp
 	$(CC) $(CFLAGS) server/branch_ctx.cpp -o $@
 
 # nodes
-$(BIN)nlogic.o: ../inc/node.hpp
-	$(CC) $(CFLAGS) -I$(D)/inc node/logic.cpp -o $@
+$(BIN)nhclc.o: ../inc/node.hpp
+	$(CC) $(CFLAGS) -I$(D)/inc node/hclc.cpp -o $@
 $(BIN)nconn.o: ../inc/node.hpp
 	$(CC) $(CFLAGS) -I$(D)/inc node/conn.cpp -o $@
 $(BIN)nnode.o: ../inc/node.hpp
