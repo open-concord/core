@@ -68,9 +68,18 @@ void Node::Next() {
   this->alive.push_back(nc);
 }
 
-std::shared_ptr<Conn> Node::Contact(std::string msg, std::string ip, int port) {
+std::shared_ptr<Conn> Node::Contact(std::string chain_trip, int k, std::string ip, int port) {
   std::shared_ptr<Peer> np = this->sesh.Connect(ip+':'+std::to_string(port));
   std::shared_ptr<Conn> nc = std::make_shared<Conn>(Conn(&this->chains, np, hclc_logic));
-  this->alive.push_back(nc);
+  json ready_message;
+  ready_message["FLAG"] = "READY";
+  ready_message["CONTENT"] = {
+    {"chain", chain_trip},
+    {"k", k}
+  };
+  nc->Start([this, nc, ready_message](Conn* conn) {
+    this->alive.push_back(nc);
+    nc->Prompt(ready_message);
+  });
   return nc;
 }

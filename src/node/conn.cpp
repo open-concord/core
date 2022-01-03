@@ -32,3 +32,14 @@ void Conn::Stop() {
   (this->net.get())->Write(s, this->timeout);
   (this->net.get())->Close();
 }
+
+void Conn::Start(std::function<void(Conn*)> cb) {
+  (this->net)->Start([this, cb](Peer* p) {
+    cb(this);
+  });
+}
+
+void Conn::Prompt(json data) {
+  std::string s(data.dump());
+  (this->net.get())->Write(s, this->timeout);
+}

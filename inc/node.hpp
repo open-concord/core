@@ -41,6 +41,8 @@ struct Conn {
   );
   void Handle();
   void Stop(); /** order 66 */
+  void Start(std::function<void(Conn*)> cb);
+  void Prompt(json data);
 };
 
 class Node {
@@ -88,7 +90,7 @@ class Node {
     void Next();
 
     /** active communication (eg traditional client role) */
-    std::shared_ptr<Conn> Contact(std::string initial_content, std::string ip, int port);
+    std::shared_ptr<Conn> Contact(std::string chain_trip, int k, std::string ip, int port);
 };
 
 /** here until logic API update */
