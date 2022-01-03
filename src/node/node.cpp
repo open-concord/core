@@ -18,6 +18,18 @@ Node::Node(
   this->sesh.Criteria(wd);
 }
 
+void Node::Is_Lazy(bool state, bool blocking=false) {
+  this->Lazy_Active = state;
+  this->sesh.Lazy(
+    ([this] (std::shared_ptr<Peer> np) {
+      if (this->Lazy_Active) {
+        std::shared_ptr conn_ptr = std::make_shared<Conn>(Conn(&(this->chains), np, hclc_logic));
+        this->alive.push_back(conn_ptr);
+        conn_ptr->Handle();
+      } else {return;}
+    }), blocking);
+}
+
 void Node::Open() {
   this->sesh.Open();
 }

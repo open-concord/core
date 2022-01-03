@@ -9,7 +9,7 @@ C = -g -Wall
 D = ./../exe
 
 tnode:
-	$(CC) $(C) -I$(D)/inc src/tnode.cpp -L$(D) -lcore -lcryptopp -lpthread -o output/$@
+	$(CC) $(C) -I$(D)/inc src/tnode.cpp -L$(D) -lcore -lcryptopp -lpthread -o output/$@.out
 
 tcrypt++:
 	$(CC) $(CFLAGS) src/$@.cpp -o output/$@ -lcore
