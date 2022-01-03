@@ -53,6 +53,7 @@ class Node {
     };
     /** networking */
     Session sesh;
+    bool Lazy_Active;
     /** active Conn */
     std::vector<std::shared_ptr<Conn>> alive;
     /** timeout for last communication in seconds */
@@ -69,6 +70,9 @@ class Node {
       int timeout,
       std::function<bool(std::string)> wd /** watchdog on incoming IP */
     );
+
+    /** toggle lazy accept */
+    void Is_Lazy(bool state, bool blocking);
 
     /** open acceptor */
     void Open();

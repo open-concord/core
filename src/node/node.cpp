@@ -8,27 +8,26 @@
 #include "../../inc/node.hpp"
 #include "../../inc/tree.hpp"
 
-/** fix to use normal fs */
-/**
-std::vector<std::string> get_directories(const std::string& s) {
-    std::vector<std::string> r;
-    for(auto& p : fs::recursive_directory_iterator(s))
-        if (is_directory(p))
-            r.push_back(p.path().string());
-    return r;
-}
-*/
-
 Node::Node(
   int queue,
   unsigned short int port,
   std::map<std::string, Tree> cm,
   int timeout,
   std::function<bool(std::string)> wd
-) : sesh(Create(port, queue)) {
+) : sesh(Create(port, queue)), chains(cm) {
   this->sesh.Criteria(wd);
-  //this->chains_dir = chains_dir;
-  this->chains = cm;
+}
+
+void Node::Is_Lazy(bool state, bool blocking=false) {
+  this->Lazy_Active = state;
+  this->sesh.Lazy(
+    ([this] (std::shared_ptr<Peer> np) {
+      if (this->Lazy_Active) {
+        std::shared_ptr conn_ptr = std::make_shared<Conn>(Conn(&(this->chains), np, hclc_logic));
+        this->alive.push_back(conn_ptr);
+        conn_ptr->Handle();
+      } else {return;}
+    }), blocking);
 }
 
 void Node::Open() {
