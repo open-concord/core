@@ -263,7 +263,7 @@ std::map<std::string /*prev flag*/, json (*)(Conn*, json)> next {
     {"HEND", &end_evaluating_blocks}
 };
 
-std::string message_logic(Conn* conn) {
+std::string hclc_logic(Conn* conn) {
     // make sure to;
     // add the socket's info to khosts
     json parsed = json::parse(conn->msg_buffer);

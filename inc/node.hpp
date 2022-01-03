@@ -61,12 +61,12 @@ class Node {
     /** known hosts */ // (maybe outside the scope of core?)
     std::vector<khost> known_hosts;
   public:
-    std::map<std::string /*trip*/, Tree /*chain model*/> chains;
+    std::map<std::string /*trip*/, Tree /*chain model*/>& chains;
 
     Node(
       int queue,
       unsigned short int port,
-      std::map<std::string, Tree> cm,
+      std::map<std::string, Tree>& cm,
       int timeout,
       std::function<bool(std::string)> wd /** watchdog on incoming IP */
     );
@@ -92,4 +92,4 @@ class Node {
 };
 
 /** here until logic API update */
-std::string message_logic(Conn *conn);
+std::string hclc_logic(Conn *conn);
