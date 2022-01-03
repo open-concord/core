@@ -1,0 +1,27 @@
+#include "concord/tree.hpp"
+#include "concord/strops.hpp"
+#include "concord/crypt++.hpp"
+#include "concord/server.hpp"
+#include "concord/node.hpp"
+#include <iostream>
+#include <string>
+#include <map>
+
+int main() {
+    std::cout << "initializing node...\n";
+    std::map<std::string, Tree> local_forest;
+    std::string tree_trip = gen_trip("seed");
+    local_forest[tree_trip] = Tree("example_chain_dir/"); // we'll set up a new tree in a new directory.
+    Tree& local_tree = local_forest[tree_trip];
+    user local_user;
+    local_tree.set_pow_req(3);
+    std::string aes_key = "Xv/azljSEXepU9ThHnfS6mKxLmiw0b90fMm6EsfXF5s=";
+    Server local_server(local_tree, aes_key, local_user);
+    std::ifstream art_ifs("misc/ascii-art.txt");
+    std::stringstream art_buffer;
+    art_buffer << art_ifs.rdbuf();
+    json test_json;
+    test_json["c"] = art_buffer.str();
+    local_server.send_message(local_user, test_json, 'c');
+    //Node local_node(QUEUE, PORT, local_forest, TIMEOUT, WATCHDOG);
+}

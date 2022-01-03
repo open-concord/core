@@ -16,7 +16,7 @@ L = -lcryptopp -pthread
 BIN = _bin/
 
 # .so args
-SOFLAGS = -shared -Wl,-soname,concord/libcore.so
+SOFLAGS = -shared -Wl,-soname,libconcord.so
 
 # objects
 OBJ = $(BIN)lockmsg.o \
@@ -39,6 +39,13 @@ OBJ = $(BIN)lockmsg.o \
 	$(BIN)nnode.o
 
 default: static_unix
+
+install_unix: shared_unix
+	@echo "INSTALLING FOR UNIX"
+	sudo cp libconcord.so /usr/lib/libconcord.so
+	sudo ldconfig
+	sudo mkdir -p /usr/include/concord
+	sudo cp ../inc/* /usr/include/concord
 
 install_clean: clean
 	sudo rm -f /usr/lib/libconcord.so

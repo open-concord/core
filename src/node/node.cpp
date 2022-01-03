@@ -8,17 +8,6 @@
 #include "../../inc/node.hpp"
 #include "../../inc/tree.hpp"
 
-/** fix to use normal fs */
-/**
-std::vector<std::string> get_directories(const std::string& s) {
-    std::vector<std::string> r;
-    for(auto& p : fs::recursive_directory_iterator(s))
-        if (is_directory(p))
-            r.push_back(p.path().string());
-    return r;
-}
-*/
-
 Node::Node(
   int queue,
   unsigned short int port,

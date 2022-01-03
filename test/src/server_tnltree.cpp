@@ -1,7 +1,7 @@
-#include "concord/tree.h"
-#include "concord/strops.h"
-#include "concord/crypt++.h"
-#include "concord/server.h"
+#include "concord/tree.hpp"
+#include "concord/strops.hpp"
+#include "concord/crypt++.hpp"
+#include "concord/server.hpp"
 #include <iostream>
 #include <string>
 
