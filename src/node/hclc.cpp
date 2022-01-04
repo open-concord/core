@@ -213,9 +213,14 @@ json evaluate_blocks(Conn *conn, json cont) {
                 break;
             }
 
-            // request hashes = host hashes - client hashes
-            std::set_difference(hash_layer.begin(), hash_layer.end(), CTX.last_layer.begin(), CTX.last_layer.end(), std::back_inserter(req_hashes));
-
+            // request hashes = host hashes - (FULL TREE) client hashes
+            auto chain_saved = TREE.get_chain();
+            for (auto host_hash : hash_layer) {
+              if (chain_saved.find(host_hash) == chain_saved.end()) {
+                req_hashes.push_back(host_hash);
+              }
+            }
+            
             // provided hashes = client hashes - host hashes
             std::vector<std::string> provided_hashes;
             std::set_difference(CTX.last_layer.begin(), CTX.last_layer.end(), hash_layer.begin(), hash_layer.end(), std::back_inserter(provided_hashes));
