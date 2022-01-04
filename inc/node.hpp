@@ -26,14 +26,25 @@ struct exchange_context {
 };
 
 struct Conn {
+  /** flags */
+  int timeout;
+  bool stop=false;
+  /** storage */
   std::string msg_buffer;
   std::map<std::string, Tree>* parent_chains;
+  struct exchange_context ctx;
+  /** operators */
   std::shared_ptr<Peer> net;
-  int timeout;
   std::function<std::string(Conn*)> logic;
 
-  struct exchange_context ctx;
-
+  /** custom timeout */
+  Conn(
+    std::map<std::string, Tree>* pm,
+    std::shared_ptr<Peer> net,
+    std::function<std::string(Conn*)> l,
+    unsigned int t
+  );
+  /** default (3 sec) timeout */
   Conn(
     std::map<std::string, Tree>* pm,
     std::shared_ptr<Peer> net,
@@ -41,8 +52,7 @@ struct Conn {
   );
   void Handle();
   void Stop(); /** order 66 */
-  void Start(std::function<void(Conn*)> cb);
-  void Prompt(json data);
+  void Prompt(json fc);
 };
 
 class Node {
