@@ -279,17 +279,15 @@ std::string hclc_logic(Conn* conn) {
     // client and server roles can both be stored in func map; communication flags ensure proper order of execution
     try {
         // still don't want to connect over loopback. TODO: add a nicer fix
-        if (!conn->net->Local()) {
-            rmsg = ((*next[cmd])(conn, cont)).dump();
-        } //else {rmsg = handle_request(conn, cont).dump();}
+        //if (!conn->net->Local()) {
+          rmsg = ((*next[cmd])(conn, cont)).dump();
+        //} //else {rmsg = handle_request(conn, cont).dump();}
     } catch (int err) {
         rmsg = error(err).dump();
     }
 
     // change 'done' to true to end the communication (make sure to return a <close> message)
     // conn_obj->done = true;
-    // clean msg_buffer for clean recursion
-    conn->msg_buffer.clear();
     // return response
     return rmsg;
 }

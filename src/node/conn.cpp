@@ -1,22 +1,40 @@
 #include "../../inc/node.hpp"
 
 /** init */
+/** default timeout init overload */
 Conn::Conn(
   std::map<std::string, Tree>* pm,
   std::shared_ptr<Peer> net,
   std::function<std::string(Conn*)> l
-) : parent_chains(pm), net(net), logic(l) {
-  this->Handle();
+) : parent_chains(pm), net(net), logic(l), timeout(3000) {
+  (this->net.get())->Key_Exchange();
+  if ((this->net.get())->Host()) {
+    this->Handle();
+  }
+}
+/** custom timeout init overload */
+Conn::Conn(
+  std::map<std::string, Tree>* pm,
+  std::shared_ptr<Peer> net,
+  std::function<std::string(Conn*)> l,
+  unsigned int t
+) : parent_chains(pm), net(net), logic(l), timeout(t) {
+  (this->net.get())->Key_Exchange();
+  if ((this->net.get())->Host()) {
+    this->Handle();
+  }
 }
 
 /** recursive handling */
 void Conn::Handle() {
   if (this->msg_buffer.empty()) {
     this->msg_buffer = (this->net.get())->Read(this->timeout);
-  } else {
-    (this->net.get())->Write(this->logic(this), this->timeout);
   }
-  this->Handle();
+  (this->net.get())->Write(this->logic(this), this->timeout);
+  this->msg_buffer.clear();
+  if (!this->stop) {
+    this->Handle();
+  }
 }
 
 /** immediately cease contact */
@@ -33,13 +51,7 @@ void Conn::Stop() {
   (this->net.get())->Close();
 }
 
-void Conn::Start(std::function<void(Conn*)> cb) {
-  (this->net)->Start([this, cb](Peer* p) {
-    cb(this);
-  });
-}
-
-void Conn::Prompt(json data) {
-  std::string s(data.dump());
-  (this->net.get())->Write(s, this->timeout);
+void Conn::Prompt(json fc) {
+  (this->net.get())->Write(fc.dump(), this->timeout);
+  this->Handle();
 }

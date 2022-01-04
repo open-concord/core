@@ -16,3 +16,6 @@ tcrypt++:
 
 test:
 	$(CC) $(CFLAGS) src/$@.cpp -o output/$@ -lcore
+
+watson:
+	$(CC) $(CFLAGS) -I$(D)/inc src/$@.cpp -o output/$(@) -L$(D) -lcore -lcryptopp -lpthread

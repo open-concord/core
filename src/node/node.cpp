@@ -14,7 +14,7 @@ Node::Node(
   std::map<std::string, Tree>& cm,
   int timeout,
   std::function<bool(std::string)> wd
-) : sesh(Create(port, queue)), chains(cm) {
+) : sesh(Create(port, queue, timeout)), chains(cm) {
   this->sesh.Criteria(wd);
 }
 
@@ -25,7 +25,6 @@ void Node::Is_Lazy(bool state, bool blocking=false) {
       if (this->Lazy_Active) {
         std::shared_ptr conn_ptr = std::make_shared<Conn>(Conn(&(this->chains), np, hclc_logic));
         this->alive.push_back(conn_ptr);
-        conn_ptr->Handle();
       } else {return;}
     }), blocking);
 }
@@ -77,9 +76,7 @@ std::shared_ptr<Conn> Node::Contact(std::string chain_trip, int k, std::string i
     {"chain", chain_trip},
     {"k", k}
   };
-  nc->Start([this, nc, ready_message](Conn* conn) {
-    this->alive.push_back(nc);
-    nc->Prompt(ready_message);
-  });
+  nc->Prompt(ready_message);
+  this->alive.push_back(nc);
   return nc;
 }
