@@ -151,7 +151,7 @@ json end_sending_blocks(Conn *conn, json cont) {
     auto TREE = (*(conn->parent_chains))[CTX.chain_trip];
 
     json ret = {
-      {"FLAG", "HBLOCKS"}
+      {"FLAG", "HEND"}
     };
 
     // send the last requested blocks
