@@ -69,7 +69,7 @@ void Node::Next() {
 }
 
 std::shared_ptr<Conn> Node::Contact(std::string chain_trip, int k, std::string ip, int port) {
-  std::shared_ptr<Peer> np = this->sesh.Connect(ip+':'+std::to_string(port));
+  std::shared_ptr<Peer> np = this->sesh.Connect(ip+":"+std::to_string(port));
   std::shared_ptr<Conn> nc = std::make_shared<Conn>(Conn(&this->chains, np, hclc_logic));
   json ready_message;
   ready_message["FLAG"] = "READY";

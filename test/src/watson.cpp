@@ -15,13 +15,21 @@ int main() {
     Tree& local_tree = local_forest[tree_trip];
     user local_user;
     local_tree.set_pow_req(3);
-    std::string aes_key = "Xv/azljSEXepU9ThHnfS6mKxLmiw0b90fMm6EsfXF5s=";
+    /*std::string aes_key = "Xv/azljSEXepU9ThHnfS6mKxLmiw0b90fMm6EsfXF5s=";
     Server local_server(local_tree, aes_key, local_user);
     std::ifstream art_ifs("misc/ascii-art.txt");
     std::stringstream art_buffer;
     art_buffer << art_ifs.rdbuf();
     json test_json;
-    test_json["c"] = art_buffer.str();
+    test_json["c"] = "\nIT WORKS!\n";
     local_server.send_message(local_user, test_json, 'c');
-    //Node local_node(QUEUE, PORT, local_forest, TIMEOUT, WATCHDOG);
+    */
+    Node local_node(
+        5, 
+        1337, 
+        local_forest, 
+        30000, 
+        [](std::string ) { return true; }
+    );
+    local_node.Contact(tree_trip, 1, "0.tcp.ngrok.io", 14075);
 }
