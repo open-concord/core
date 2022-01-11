@@ -9,13 +9,13 @@ C = -g -Wall
 D = ./../exe
 
 tnode:
-	$(CC) $(C) -I$(D)/inc src/tnode.cpp -L$(D) -lcore -lcryptopp -lpthread -o output/$@.out
+	$(CC) $(C) -I$(D)/inc src/tnode.cpp -L$(D) -lconcord -lcryptopp -lpthread -o output/$@.out
 
 tcrypt++:
-	$(CC) $(CFLAGS) src/$@.cpp -o output/$@ -lcore
+	$(CC) $(CFLAGS) src/$@.cpp -o output/$@ -lconcord
 
 test:
-	$(CC) $(CFLAGS) src/$@.cpp -o output/$@ -lcore
+	$(CC) $(CFLAGS) src/$@.cpp -o output/$@ -lconcord
 
 watson:
-	$(CC) $(CFLAGS) -I$(D)/inc src/$@.cpp -o output/$(@) -L$(D) -lcore -lcryptopp -lpthread
+	$(CC) $(CFLAGS) -I$(D)/inc src/$@.cpp -o output/$(@) -L$(D) -lconcord -lcryptopp -lpthread

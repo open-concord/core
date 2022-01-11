@@ -19,10 +19,7 @@ using json = nlohmann::json;
 struct exchange_context {
   std::vector<block> new_blocks;
   std::string chain_trip;
-  std::unordered_set<std::string> seen_hashes;
-  std::unordered_set<std::string> last_layer;
-  size_t k, pow_min;
-  bool first_layer = true;
+  size_t pow_min;
 };
 
 struct Conn {
@@ -53,6 +50,7 @@ struct Conn {
   void Handle();
   void Stop(); /** order 66 */
   void Prompt(json fc);
+  void HCLC_Prompt(std::string chain_trip);
 };
 
 class Node {
@@ -104,4 +102,6 @@ class Node {
 };
 
 /** here until logic API update */
+json client_open(Conn *conn, std::string chain_trip);
+
 std::string hclc_logic(Conn *conn);
