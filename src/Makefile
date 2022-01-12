@@ -64,9 +64,6 @@ static_unix: $(OBJ)
 	cp -r ../inc ../exe/
 	cp $(D)/inc/* ../exe/inc
 
-$(BIN)main.o: main.cpp
-	$(CC) $(CFLAGS) $< -o $@
-
 # string manipulation
 $(BIN)b64.o: ../inc/strops.hpp
 	$(CC) $(CFLAGS) strops/b64.cpp -o $@
