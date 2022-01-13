@@ -70,6 +70,8 @@ class Node {
     std::chrono::seconds timeout;
     /** known hosts */ // (maybe outside the scope of core?)
     std::vector<khost> known_hosts;
+    /** handling logic **/
+    std::function<std::string(Conn*)> logic;
   public:
     std::map<std::string /*trip*/, Tree /*chain model*/>& chains;
 
@@ -78,7 +80,8 @@ class Node {
       unsigned short int port,
       std::map<std::string, Tree>& cm,
       int timeout,
-      std::function<bool(std::string)> wd /** watchdog on incoming IP */
+      std::function<std::string(Conn*)> handling_logic,
+      std::function<bool(std::string)> wd, /** watchdog on incoming IP */
     );
 
     /** toggle lazy accept */
