@@ -15,7 +15,7 @@ Node::Node(
   int timeout,
   std::function<std::string(Conn*)> handling_logic,
   std::function<bool(std::string)> wd
-) : sesh(Create(port, queue, timeout)), chains(cm), logic(handlng_logic) {
+) : sesh(Create(port, queue, timeout)), chains(cm), logic(handling_logic) {
   this->sesh.Criteria(wd);
 }
 
