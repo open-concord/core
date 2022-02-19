@@ -81,7 +81,7 @@ class Node {
       std::map<std::string, Tree>& cm,
       int timeout,
       std::function<std::string(Conn*)> handling_logic,
-      std::function<bool(std::string)> wd, /** watchdog on incoming IP */
+      std::function<bool(std::string)> wd /** watchdog on incoming IP */
     );
 
     /** toggle lazy accept */
