@@ -19,10 +19,7 @@ using json = nlohmann::json;
 struct exchange_context {
   std::vector<block> new_blocks;
   std::string chain_trip;
-  std::unordered_set<std::string> seen_hashes;
-  std::unordered_set<std::string> last_layer;
-  size_t k, pow_min;
-  bool first_layer = true;
+  size_t pow_min;
 };
 
 struct Conn {
@@ -53,6 +50,7 @@ struct Conn {
   void Handle();
   void Stop(); /** order 66 */
   void Prompt(json fc);
+  void HCLC_Prompt(std::string chain_trip);
 };
 
 class Node {
@@ -72,6 +70,8 @@ class Node {
     std::chrono::seconds timeout;
     /** known hosts */ // (maybe outside the scope of core?)
     std::vector<khost> known_hosts;
+    /** handling logic **/
+    std::function<std::string(Conn*)> logic;
   public:
     std::map<std::string /*trip*/, Tree /*chain model*/>& chains;
 
@@ -80,6 +80,7 @@ class Node {
       unsigned short int port,
       std::map<std::string, Tree>& cm,
       int timeout,
+      std::function<std::string(Conn*)> handling_logic,
       std::function<bool(std::string)> wd /** watchdog on incoming IP */
     );
 
@@ -101,4 +102,6 @@ class Node {
 };
 
 /** here until logic API update */
+json client_open(Conn *conn, std::string chain_trip);
+
 std::string hclc_logic(Conn *conn);

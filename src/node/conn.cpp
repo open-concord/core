@@ -52,3 +52,7 @@ void Conn::Prompt(json fc) {
   (this->net.get())->Write(fc.dump(), this->timeout);
   this->Handle();
 }
+
+void Conn::HCLC_Prompt(std::string chain_trip) {
+  Prompt(client_open(this, chain_trip));
+}

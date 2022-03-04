@@ -13,6 +13,7 @@ Node::Node(
   unsigned short int port,
   std::map<std::string, Tree>& cm,
   int timeout,
+  std::function<std::string(Conn*)> handling_logic,
   std::function<bool(std::string)> wd
 ) : bounce(Relay::Relay(/** np, */ port, timeout, queue)), chains(cm) {
   this->bounce.Criteria(wd);
@@ -68,7 +69,7 @@ void Node::Stop() {
 
 std::shared_ptr<Conn> Node::Contact(std::string chain_trip, int k, std::string ip, int port) {
   std::shared_ptr<Peer> np = this->sesh.Connect(ip+":"+std::to_string(port));
-  std::shared_ptr<Conn> nc = std::make_shared<Conn>(Conn(&this->chains, np, hclc_logic));
+  std::shared_ptr<Conn> nc = std::make_shared<Conn>(Conn(&this->chains, np, (this->logic)));
   json ready_message;
   ready_message["FLAG"] = "READY";
   ready_message["CONTENT"] = {
