@@ -13,6 +13,21 @@
 
 using json = nlohmann::json;
 
+void _Key_Exchange(Conn *c) {
+  json _j;
+  _j["FLAG"] = "KE";
+  _j["CONT"] =  (c->net)->sec.Public();
+
+  (c->net)->Raw_Write(_j.dump());
+  json _ij = json::parse((c->net)->Raw_Read(c->timeout));
+
+  if (_ij["FLAG"] == "KE") {
+    (c->net)->sec.Peer(_ij["CONT"]);
+  } else {
+    std::cout << "First FC wasn't Key Exchange\n";
+  }
+}
+
 void update_chain(Conn *conn) {
   auto CTX = (conn->ctx);
   auto TREE = (*(conn->parent_chains))[CTX.chain_trip];
@@ -220,7 +235,7 @@ json evaluate_blocks(Conn *conn, json cont) {
                 req_hashes.push_back(host_hash);
               }
             }
-            
+
             // provided hashes = client hashes - host hashes
             std::vector<std::string> provided_hashes;
             std::set_difference(CTX.last_layer.begin(), CTX.last_layer.end(), hash_layer.begin(), hash_layer.end(), std::back_inserter(provided_hashes));
@@ -269,30 +284,33 @@ std::map<std::string /*prev flag*/, json (*)(Conn*, json)> next {
 };
 
 std::string hclc_logic(Conn* conn) {
-    // make sure to;
-    // add the socket's info to khosts
-    json parsed = json::parse(conn->msg_buffer);
-    std::cout << "NEW MSG: " << parsed << "\n";
+  if (!conn->net.sec.Shared() && (this->net.get())->Host()) {
+    _Key_Exchange(conn);
+  }
+  // make sure to;
+  // add the socket's info to khosts
+  json parsed = json::parse(conn->msg_buffer);
+  std::cout << "NEW MSG: " << parsed << "\n";
 
-    // message parsing
-    std::string cmd = parsed["FLAG"];
-    json cont = parsed["CONTENT"];
+  // message parsing
+  std::string cmd = parsed["FLAG"];
+  json cont = parsed["CONTENT"];
 
-    // temp return var
-    std::string rmsg;
+  // temp return var
+  std::string rmsg;
 
-    // client and server roles can both be stored in func map; communication flags ensure proper order of execution
-    try {
-        // still don't want to connect over loopback. TODO: add a nicer fix
-        //if (!conn->net->Local()) {
-          rmsg = ((*next[cmd])(conn, cont)).dump();
-        //} //else {rmsg = handle_request(conn, cont).dump();}
-    } catch (int err) {
-        rmsg = error(err).dump();
-    }
+  // client and server roles can both be stored in func map; communication flags ensure proper order of execution
+  try {
+    // still don't want to connect over loopback. TODO: add a nicer fix
+    //if (!conn->net->Local()) {
+    rmsg = ((*next[cmd])(conn, cont)).dump();
+    //} //else {rmsg = handle_request(conn, cont).dump();}
+  } catch (int err) {
+    rmsg = error(err).dump();
+  }
 
-    // change 'done' to true to end the communication (make sure to return a <close> message)
-    // conn_obj->done = true;
-    // return response
-    return rmsg;
+  // change 'done' to true to end the communication (make sure to return a <close> message)
+  // conn_obj->done = true;
+  // return response
+  return rmsg;
 }

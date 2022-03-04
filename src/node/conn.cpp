@@ -1,5 +1,4 @@
 #include "../../inc/node.hpp"
-
 /** init */
 /** default timeout init overload */
 Conn::Conn(
@@ -7,7 +6,6 @@ Conn::Conn(
   std::shared_ptr<Peer> net,
   std::function<std::string(Conn*)> l
 ) : parent_chains(pm), net(net), logic(l), timeout(3000) {
-  (this->net.get())->Key_Exchange();
   if ((this->net.get())->Host()) {
     this->Handle();
   }
@@ -19,7 +17,6 @@ Conn::Conn(
   std::function<std::string(Conn*)> l,
   unsigned int t
 ) : parent_chains(pm), net(net), logic(l), timeout(t) {
-  (this->net.get())->Key_Exchange();
   if ((this->net.get())->Host()) {
     this->Handle();
   }

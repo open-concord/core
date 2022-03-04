@@ -64,7 +64,7 @@ class Node {
       std::chrono::high_resolution_clock::time_point last_verified;
     };
     /** networking */
-    Session sesh;
+    Relay bounce;
     bool Lazy_Active;
     /** active Conn */
     std::vector<std::shared_ptr<Conn>> alive;
@@ -84,7 +84,7 @@ class Node {
     );
 
     /** toggle lazy accept */
-    void Is_Lazy(bool state, bool blocking);
+    void Lazy(bool state, bool blocking = false);
 
     /** open acceptor */
     void Open();
@@ -95,9 +95,6 @@ class Node {
     /** cleanly finish handling interactions */
     void _Await_Stop(int t);
     void Stop();
-
-    /** passive communication (eg traditional server role) */
-    void Next();
 
     /** active communication (eg traditional client role) */
     std::shared_ptr<Conn> Contact(std::string chain_trip, int k, std::string ip, int port);

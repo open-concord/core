@@ -14,27 +14,32 @@ Node::Node(
   std::map<std::string, Tree>& cm,
   int timeout,
   std::function<bool(std::string)> wd
-) : sesh(Create(port, queue, timeout)), chains(cm) {
-  this->sesh.Criteria(wd);
+) : bounce(Relay::Relay(/** np, */ port, timeout, queue)), chains(cm) {
+  this->bounce.Criteria(wd);
 }
 
-void Node::Is_Lazy(bool state, bool blocking=false) {
+void Node::Lazy(bool state, bool blocking) {
   this->Lazy_Active = state;
-  this->sesh.Lazy(
-    ([this] (std::shared_ptr<Peer> np) {
-      if (this->Lazy_Active) {
-        std::shared_ptr conn_ptr = std::make_shared<Conn>(Conn(&(this->chains), np, hclc_logic));
-        this->alive.push_back(conn_ptr);
-      } else {return;}
-    }), blocking);
+  this->bounce.Swap(([this] (Peer* np) {
+    if (this->Lazy_Active) {
+      std::shared_ptr c_ptr = std::make_shared<Conn>(
+        Conn(&(this->chains),
+        np,
+        hclc_logic
+        )
+      );
+      this->alive.push_back(c_ptr);
+    } else {return;}
+  }));
+  this->bounce.Lazy(blocking);
 }
 
 void Node::Open() {
-  this->sesh.Open();
+  this->bounce.Open();
 }
 
 void Node::Close() {
-  this->sesh.Close();
+  this->bounce.Close();
 }
 
 void Node::_Await_Stop(int t) {
@@ -59,12 +64,6 @@ void Node::Stop() {
   }
   std::thread st(&Node::_Await_Stop, this, ht);
   st.detach();
-}
-
-void Node::Next() {
-  std::shared_ptr<Peer> np = this->sesh.Accept();
-  std::shared_ptr<Conn> nc = std::make_shared<Conn>(Conn(&(this->chains), np, hclc_logic));
-  this->alive.push_back(nc);
 }
 
 std::shared_ptr<Conn> Node::Contact(std::string chain_trip, int k, std::string ip, int port) {
