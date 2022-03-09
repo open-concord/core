@@ -76,10 +76,10 @@ class Node {
     std::map<std::string /*trip*/, Tree /*chain model*/>& chains;
 
     Node(
-      int queue,
+      unsigned short int queue,
       unsigned short int port,
       std::map<std::string, Tree>& cm,
-      int timeout,
+      unsigned int timeout,
       std::function<std::string(Conn*)> handling_logic,
       std::function<bool(std::string)> wd /** watchdog on incoming IP */
     );

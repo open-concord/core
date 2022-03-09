@@ -9,13 +9,13 @@
 #include "../../inc/tree.hpp"
 
 Node::Node(
-  int queue,
+  unsigned short int queue,
   unsigned short int port,
   std::map<std::string, Tree>& cm,
-  int timeout,
+  unsigned int timeout,
   std::function<std::string(Conn*)> handling_logic,
   std::function<bool(std::string)> wd
-) : bounce(Relay::Relay(/** np, */ port, timeout, queue)), chains(cm) {
+) : chains(cm), bounce(Relay(std::nullopt, port, timeout, queue)) {
   this->bounce.Criteria(wd);
 }
 
@@ -25,7 +25,7 @@ void Node::Lazy(bool state, bool blocking) {
     if (this->Lazy_Active) {
       std::shared_ptr c_ptr = std::make_shared<Conn>(
         Conn(&(this->chains),
-        np,
+        std::make_shared<Peer>(*np),
         hclc_logic
         )
       );
@@ -68,7 +68,10 @@ void Node::Stop() {
 }
 
 std::shared_ptr<Conn> Node::Contact(std::string chain_trip, int k, std::string ip, int port) {
-  std::shared_ptr<Peer> np = this->sesh.Connect(ip+":"+std::to_string(port));
+  /** new peer */
+  Peer _p(std::nullopt);
+  std::shared_ptr<Peer> np = std::make_shared<Peer>(_p);
+  (np.get())->Connect(ip+":"+std::to_string(port));
   std::shared_ptr<Conn> nc = std::make_shared<Conn>(Conn(&this->chains, np, (this->logic)));
   json ready_message;
   ready_message["FLAG"] = "READY";
