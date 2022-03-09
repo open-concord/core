@@ -18,7 +18,7 @@ void _Key_Exchange(Conn *c) {
   _j["FLAG"] = "KE";
   _j["CONT"] =  (c->net)->sec.Public();
 
-  (c->net)->Raw_Write(_j.dump());
+  (c->net)->Raw_Write(_j.dump(), c->timeout);
   json _ij = json::parse((c->net)->Raw_Read(c->timeout));
 
   if (_ij["FLAG"] == "KE") {
@@ -256,7 +256,7 @@ std::map<std::string /*prev flag*/, json (*)(Conn*, json)> next {
 };
 
 std::string hclc_logic(Conn* conn) {
-  if (!conn->net.sec.Shared() && (this->net.get())->Host()) {
+  if ((conn->net.get())->sec.Shared().empty() && (conn->net.get())->Host()) {
     _Key_Exchange(conn);
   }
   // make sure to;
