@@ -1,10 +1,8 @@
+#pragma once
 #include <string>
 #include <iostream>
 #include <array>
 #include <cryptopp/aes.h>
-
-
-#pragma once
 
 #define AES_KEYLEN CryptoPP::AES::MAX_KEYLENGTH
 #define AES_NONCELEN CryptoPP::AES::BLOCKSIZE
