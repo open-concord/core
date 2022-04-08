@@ -15,7 +15,7 @@ struct ConnContext {
   struct {
     /** this should be be POLP, or at the very least a (hopefully) faster concurrent hashmap r/w */
     std::map<std::string, Tree>* ParentMap;
-
+    
   } GraphContext;
   
   std::function<void(ConnContext*)> Logic;
@@ -27,7 +27,8 @@ struct ConnContext {
 class Node {
 private:
   std::vector<ConnContext> Connections;
-  
+  /** it's nessecary to retain a relay, just as a reliable end point for incoming connections */
+  Relay Dispatcher;
   std::function<void(ConnContext*)> DefaultConnectionLogic;
   
 public:
@@ -37,4 +38,6 @@ public:
   void Connect(std::string ip, unsigned int port);
   
   void Close();
+
+  Node();
 };

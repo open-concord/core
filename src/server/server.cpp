@@ -136,7 +136,7 @@ void Server::load_branch_forward(std::string fb_hash) {
                 target_branch.messages.push_back(result);
             }
             else {
-                std::cout << "failure to apply data\n";
+                std::cout << "[Server::load_branch_foward] Failure to apply data\n";
                 throw; //failure to apply data
             }
         }
@@ -218,7 +218,13 @@ void Server::batch_add_blocks(std::unordered_set<std::string> hashes) {
     }
 }
 
-std::string Server::send_message(user author, json content, char st, std::string t, std::unordered_set<std::string> p_hashes) {
+std::string Server::send_message(
+    user author,
+    json content,
+    char st,
+    std::string t,
+    std::unordered_set<std::string> p_hashes
+    ) {
     assert((this->constraint_heads).size() == 0); //if there are constraints, this should be static.
     auto sending_time = get_raw_time();
     std::unordered_set<std::string> target_p_hashes = (this->tree).find_p_hashes(this->s_trip, p_hashes);
