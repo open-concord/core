@@ -5,20 +5,25 @@
 #pragma once
 
 // B64
-std::string b64_encode(std::string in_string, int padded_len = -1);
-// can add a char array => b64 later for images etc
-std::string b64_decode(std::string encoded);
+namespace b64 {
+  std::string encode(std::string in_string, int padded_len = -1);
+  // can add a char array => b64 later for images etc
+  std::string decode(std::string encoded);
+}
 
 // HEX
-std::string hex_encode(std::string in_string);
-std::string hex_decode(std::string encoded);
+namespace hex {
+  std::string encode(std::string in_string);
+  std::string decode(std::string encoded);
+}
 
 // STR UTIL
-std::string gen_string(size_t len);
-
-// HASH
-std::string calc_hash(bool use_disk, std::string target);
-std::string gen_trip(std::string data, size_t outlen = 24);
+namespace gen {
+  std::string string(size_t len);
+  // HASH
+  std::string hash(bool use_disk, std::string target);
+  std::string trip(std::string data, size_t outlen = 24);
+}
 
 // HASH GEN
 class Miner {

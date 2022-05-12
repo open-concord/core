@@ -1,10 +1,10 @@
-#include "../../inc/crypt++.hpp"
+#include "../../inc/crypt.hpp"
 #include <cryptopp/dsa.h>
 #include <cryptopp/osrng.h>
 
 using namespace CryptoPP;
 
-std::array<std::string, 2> DSA_keygen() {
+std::array<std::string, 2> cDSA::keygen() {
     AutoSeededRandomPool rng;
     // Private
     DSA::PrivateKey privateKey;
@@ -27,10 +27,13 @@ std::array<std::string, 2> DSA_keygen() {
     privateKey.Save(StringSink(encodedPrivateKey).Ref());
 
     // Return BER keys
+    /** (maybe the order should be conventionalized?)
+     * server.hpp does pub first, so maybe migrate to that later?
+     */
     return {encodedPrivateKey, encodedPublicKey};
 }
 
-std::string DSA_sign(std::string encodedPrivateKey, std::string msg) {
+std::string cDSA::sign(std::string encodedPrivateKey, std::string msg) {
     AutoSeededRandomPool rng;
     // output
     std::string signature;
@@ -61,7 +64,7 @@ std::string DSA_sign(std::string encodedPrivateKey, std::string msg) {
     return signature;
 }
 
-bool DSA_verify(std::string encodedPublicKey, std::string sig, std::string msg) {
+bool cDSA::verify(std::string encodedPublicKey, std::string sig, std::string msg) {
     // return value
     bool legit; // phrased as a question, not an assertion
 

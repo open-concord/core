@@ -5,7 +5,7 @@
 
 using namespace CryptoPP;
 
-std::string hex_encode(std::string in_string) {
+std::string hex::encode(std::string in_string) {
     // output string
     std::string encoded;
     // copy input string to byte array
@@ -24,7 +24,7 @@ std::string hex_encode(std::string in_string) {
     return enc_string;
 }
 
-std::string hex_decode(std::string encoded) {
+std::string hex::decode(std::string encoded) {
     std::string decoded;
 
     StringSource ss(encoded, true,

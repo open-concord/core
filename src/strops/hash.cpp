@@ -1,13 +1,14 @@
-#include "cryptopp/sha.h"
-
+#include <cryptopp/sha.h>
+#include <cryptopp/osrng.h>
 #include <string>
 #include <fstream>
 
 #include "../../inc/strops.hpp"
 
 using namespace CryptoPP;
+
 // read from file or raw
-std::string calc_hash (bool use_disk, std::string target) {
+std::string gen::hash(bool use_disk, std::string target) {
     // if use_disk is true, target is a file name
     // if use_disk isn't than it's raw text
 
@@ -36,7 +37,15 @@ std::string calc_hash (bool use_disk, std::string target) {
     return output;
 }
 
-std::string gen_trip(std::string data, size_t outlen) {
-    std::string raw_hash = b64_encode(calc_hash(false, data), outlen);
+std::string gen::trip(std::string data, size_t outlen) {
+    std::string raw_hash = b64::encode(gen::hash(false, data), outlen);
     return raw_hash.substr(0, outlen);
+}
+
+std::string gen::string(size_t len) {
+    AutoSeededRandomPool prng;
+    SecByteBlock buf(len);
+    prng.GenerateBlock(buf, buf.size());
+    std::string nstr(reinterpret_cast<const char*>(&buf[0]), buf.size());
+    return nstr;
 }

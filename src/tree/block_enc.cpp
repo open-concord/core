@@ -9,7 +9,7 @@
 
 json block_to_json(block input) {
     json output;
-    std::string enc_time = b64_encode(raw_time_to_string(input.time));
+    std::string enc_time = b64::encode(raw_time_to_string(input.time));
     std::vector<std::string> v_p_hashes;
     for (const auto& ph : input.p_hashes) {
         v_p_hashes.push_back(ph);
@@ -22,7 +22,7 @@ json block_to_json(block input) {
 block json_to_block(json input) {
     block output;
     std::vector<std::string> data = input["d"].get<std::vector<std::string>>();
-    output.time = string_to_raw_time(b64_decode(data[0]));
+    output.time = string_to_raw_time(b64::decode(data[0]));
     output.nonce = data[1];
     output.s_trip = data[2];
     output.c_trip = data[3];

@@ -4,11 +4,11 @@
 #include <array>
 #include <cryptopp/rsa.h>
 
-#include "../../inc/crypt++.hpp"
+#include "../../inc/crypt.hpp"
 using namespace std;
 using namespace CryptoPP;
 
-std::array<std::string, 2> RSA_keygen() {
+std::array<std::string, 2> cRSA::keygen() {
     AutoSeededRandomPool rng;
 
     RSA::PrivateKey privateKey;
@@ -35,7 +35,7 @@ std::array<std::string, 2> RSA_keygen() {
     return {encodedPrivateKey, encodedPublicKey};
 }
 
-std::string RSA_encrypt(std::string encodedPublicKey, std::string msg) {
+std::string cRSA::encrypt(std::string encodedPublicKey, std::string msg) {
     AutoSeededRandomPool rng;
     // return value
     std::string cipher;
@@ -64,7 +64,7 @@ std::string RSA_encrypt(std::string encodedPublicKey, std::string msg) {
     return cipher;
 }
 
-std::string RSA_decrypt(std::string encodedPrivateKey, std::string cipher) {
+std::string cRSA::decrypt(std::string encodedPrivateKey, std::string cipher) {
     AutoSeededRandomPool rng;
     // return value
     std::string recovered;

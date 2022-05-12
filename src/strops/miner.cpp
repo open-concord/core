@@ -25,13 +25,13 @@ bool Miner::check_valid_hash(std::string hash) {
 
 // genning hash and nonce
 std::array<std::string, 2> Miner::generate_valid_nonce(bool debug_info, std::string content) {
-    std::string rhash = hex_encode(calc_hash(false, content)); //hash init
+    std::string rhash = hex::encode(gen::hash(false, content)); //hash init
     std::string nonce;
 
     while (!this->check_valid_hash(rhash)) {
         // TODO: add error handling
-        nonce = b64_encode(gen_string(16), 24);
-        rhash = hex_encode(calc_hash(false, content + nonce));
+        nonce = b64::encode(gen::string(16), 24);
+        rhash = hex::encode(gen::hash(false, content + nonce));
         if (debug_info) std::cout << "Used nonce " << nonce << " to generate hash " << rhash << std::endl;
     }
 

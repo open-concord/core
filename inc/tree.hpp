@@ -100,10 +100,11 @@ class Tree {
 
         std::unordered_set<std::string> get_parent_hash_union(std::unordered_set<std::string> c_hashes);
 
+        std::vector<block> search_user(std::string trip = "");
         //std::vector<json> search(char message_type, std::string target_trip, std::string key, boost::function<bool(json)> filter = no_filter, int start_b = -1, int end_b = -1);
 
         bool verify_chain();
-
+        
         void chain_push(block to_push);
 
         void batch_push(std::vector<block> to_push_set, bool save_new = true);

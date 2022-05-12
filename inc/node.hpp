@@ -1,107 +1,68 @@
+#pragma once
 #include <nlohmann/json.hpp>
 #include <uttu.hpp>
 
 #include "tree.hpp"
+#include "proto.hpp"
 
-#include <iostream>
-#include <thread>
-#include <pthread.h>
-#include <memory>
-#include <functional>
-#include <string>
-#include <map>
-#include <unordered_set>
-#include <chrono>
-#include <vector>
+struct ConnCtx {  
+  Peer Networking;
+  
+  struct {
+    bool close = false;
+    std::vector<block> NewBlocks;
+    std::string ChainTrip;
+    /** @deprecated */
+    std::vector<std::string> MessageCtx; 
+    // ^ yikes pt.2 (this should be taken care of by any ConnContext logic)
+  } ExchangeCtx;
 
-using json = nlohmann::json;
+  struct {
+    /** this should be be POLP, or at the very least a (hopefully) faster concurrent hashmap r/w */
+    std::map<std::string, Tree>* ParentMap;
+    /** filter ~ essentially blacklist some trees or all non-whitelisted trees */
+    bool filter, blacklist = false;
+    std::vector<std::string> filtered_trees; // only used if filter is true
+  } GraphCtx;
+  
+  /** foward declare support */
+  ConnCtx(); 
+  void UpdateParentMap(std::map<std::string, Tree>*);
+  void UpdateTimeout(unsigned int);
 
-struct exchange_context {
-  std::vector<block> new_blocks;
-  std::string chain_trip;
-  size_t pow_min;
-};
-
-struct Conn {
-  /** flags */
-  int timeout;
-  bool stop=false;
-  /** storage */
-  std::string msg_buffer;
-  std::map<std::string, Tree>* parent_chains;
-  struct exchange_context ctx;
-  /** operators */
-  std::shared_ptr<Peer> net;
-  std::function<std::string(Conn*)> logic;
-
-  /** custom timeout */
-  Conn(
-    std::map<std::string, Tree>* pm,
-    std::shared_ptr<Peer> net,
-    std::function<std::string(Conn*)> l,
-    unsigned int t
+  /** perferable */
+  ConnCtx( 
+      std::map<std::string, Tree>*,
+      Peer p = Peer(std::nullopt)
   );
-  /** default (3 sec) timeout */
-  Conn(
-    std::map<std::string, Tree>* pm,
-    std::shared_ptr<Peer> net,
-    std::function<std::string(Conn*)> l
-  );
-  void Handle();
-  void Stop(); /** order 66 */
-  void Prompt(json fc);
-  void HCLC_Prompt(std::string chain_trip);
 };
 
 class Node {
-  private:
-    // past connection retention
-    struct khost {
-      std::string address;
-      unsigned short int port;
-      std::chrono::high_resolution_clock::time_point last_verified;
-    };
-    /** networking */
-    Relay bounce;
-    bool Lazy_Active;
-    /** active Conn */
-    std::vector<std::shared_ptr<Conn>> alive;
-    /** timeout for last communication in seconds */
-    std::chrono::seconds timeout;
-    /** known hosts */ // (maybe outside the scope of core?)
-    std::vector<khost> known_hosts;
-    /** handling logic **/
-    std::function<std::string(Conn*)> logic;
-  public:
-    std::map<std::string /*trip*/, Tree /*chain model*/>& chains;
+private:
+  std::map<std::string, Tree> Chains;
+  std::vector<ConnCtx> Connections;
+  /** it's nessecary to retain a relay, just as a reliable end point for incoming connections */
+  Relay Dispatcher; 
+    
+  bool Lazy_Active = false;
+  void _Await_Stop(unsigned int t);
+public:
+  /** a node can still function without opening itself completely */
+  void Open();
+  
+  void Lazy(bool state, bool blocking);
 
-    Node(
-      unsigned short int queue,
-      unsigned short int port,
-      std::map<std::string, Tree>& cm,
-      unsigned int timeout,
-      std::function<std::string(Conn*)> handling_logic,
-      std::function<bool(std::string)> wd /** watchdog on incoming IP */
-    );
+  void Contact(std::string ip, unsigned int port);
+ 
+  void Stop(); // ... self & connections
 
-    /** toggle lazy accept */
-    void Lazy(bool state, bool blocking = false);
+  void Close(); // ... acceptor
 
-    /** open acceptor */
-    void Open();
-
-    /** close acceptor */
-    void Close();
-
-    /** cleanly finish handling interactions */
-    void _Await_Stop(int t);
-    void Stop();
-
-    /** active communication (eg traditional client role) */
-    std::shared_ptr<Conn> Contact(std::string chain_trip, int k, std::string ip, int port);
+  Node(
+      unsigned short int,
+      std::map<std::string, Tree>&,
+      std::function<bool(std::string)>,
+      unsigned short int,
+      unsigned int
+  );
 };
-
-/** here until logic API update */
-json client_open(Conn *conn, std::string chain_trip);
-
-std::string hclc_logic(Conn *conn);

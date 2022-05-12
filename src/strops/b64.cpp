@@ -6,7 +6,7 @@
 
 using namespace CryptoPP;
 
-std::string b64_encode(std::string in_string, int padded_len) {
+std::string b64::encode(std::string in_string, int padded_len) {
     // output string
     std::string encoded;
     // copy input string to byte array
@@ -28,7 +28,7 @@ std::string b64_encode(std::string in_string, int padded_len) {
     return enc_string;
 }
 
-std::string b64_decode(std::string encoded) {
+std::string b64::decode(std::string encoded) {
     std::string decoded;
 
     StringSource ss(encoded, true,

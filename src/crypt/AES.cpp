@@ -5,12 +5,12 @@
 #include <cryptopp/gcm.h>
 #include <array>
 
-#include "../../inc/crypt++.hpp"
+#include "../../inc/crypt.hpp"
 
 using namespace CryptoPP;
 
 // skey = AES::DEFAULT_KEYLENGTH
-std::array<std::string, 2> AES_encrypt(std::string skey, std::string msg) {
+std::array<std::string, 2> cAES::encrypt(std::string skey, std::string msg) {
     AutoSeededRandomPool prng;
 
     // convert binary key to SecByteBlock
@@ -45,7 +45,7 @@ std::array<std::string, 2> AES_encrypt(std::string skey, std::string msg) {
     }
 }
 
-std::string AES_decrypt(std::string skey, std::string snonce, std::string cipher) {
+std::string cAES::decrypt(std::string skey, std::string snonce, std::string cipher) {
     // tag size
     const int TAG_SIZE = 12;
 
@@ -86,7 +86,7 @@ std::string AES_decrypt(std::string skey, std::string snonce, std::string cipher
     return std::string();
 }
 
-std::string AES_keygen() {
+std::string cAES::keygen() {
     AutoSeededRandomPool prng;
     SecByteBlock key(AES_KEYLEN);
     prng.GenerateBlock(key, key.size());

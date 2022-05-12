@@ -9,45 +9,51 @@
 #include "../../inc/tree.hpp"
 
 Node::Node(
-  unsigned short int queue,
   unsigned short int port,
   std::map<std::string, Tree>& cm,
-  unsigned int timeout,
-  std::function<std::string(Conn*)> handling_logic,
-  std::function<bool(std::string)> wd
-) : chains(cm), bounce(Relay(std::nullopt, port, timeout, queue)) {
-  this->bounce.Criteria(wd);
+  std::function<bool(std::string)> wd,
+  unsigned short int queue = 10,
+  unsigned int tout = 3000
+) : Chains(cm), 
+  Dispatcher(
+    Relay(
+      std::nullopt, 
+      port, 
+      tout, 
+      queue
+    )
+  ) 
+{ 
+  this->Dispatcher.Criteria(wd);
 }
 
 void Node::Lazy(bool state, bool blocking) {
   this->Lazy_Active = state;
-  this->bounce.Swap(([this] (Peer* np) {
+  this->Dispatcher.Swap(([this] (Peer* np) {
     if (this->Lazy_Active) {
-      std::shared_ptr c_ptr = std::make_shared<Conn>(
-        Conn(&(this->chains),
-        std::make_shared<Peer>(*np),
-        hclc_logic
-        )
+      ConnCtx c(
+        &(this->Chains),
+        *np
       );
-      this->alive.push_back(c_ptr);
+      this->Connections.push_back(c);
     } else {return;}
   }));
-  this->bounce.Lazy(blocking);
+  this->Dispatcher.Lazy(blocking);
 }
 
 void Node::Open() {
-  this->bounce.Open();
+  this->Dispatcher.Open();
 }
 
 void Node::Close() {
-  this->bounce.Close();
+  this->Dispatcher.Close();
 }
 
-void Node::_Await_Stop(int t) {
+void Node::_Await_Stop(unsigned int t) {
   try {
-    while (!this->alive.empty()) {
+    while (!this->Connections.empty()) {
       // t => ms
-      std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+      std::this_thread::sleep_for(std::chrono::milliseconds(t));
     }
   } catch (...) {
     /** the Node was killed :( */
@@ -58,28 +64,25 @@ void Node::_Await_Stop(int t) {
 
 void Node::Stop() {
   this->Close();
-  int ht; // highest timeout
-  for (auto& c: this->alive) {
-    ht = (ht < c.get()->timeout) ? c.get()->timeout : ht;
-    c.get()->Stop();
+  unsigned int ht; // highest timeout
+  for (auto& c: this->Connections) {
+    ht = (ht < c.Networking.tout) ? c.Networking.tout : ht;
+    c.ExchangeCtx.close = true;
   }
-  std::thread st(&Node::_Await_Stop, this, ht);
+  std::jthread st(&Node::_Await_Stop, this, ht);
   st.detach();
 }
 
-std::shared_ptr<Conn> Node::Contact(std::string chain_trip, int k, std::string ip, int port) {
+void Node::Contact( 
+    std::string ip, 
+    unsigned int port
+  ) {
   /** new peer */
-  Peer _p(std::nullopt);
-  std::shared_ptr<Peer> np = std::make_shared<Peer>(_p);
-  (np.get())->Connect(ip+":"+std::to_string(port));
-  std::shared_ptr<Conn> nc = std::make_shared<Conn>(Conn(&this->chains, np, (this->logic)));
-  json ready_message;
-  ready_message["FLAG"] = "READY";
-  ready_message["CONTENT"] = {
-    {"chain", chain_trip},
-    {"k", k}
-  };
-  nc->Prompt(ready_message);
-  this->alive.push_back(nc);
-  return nc;
+  Peer p(std::nullopt);
+  p.Connect(ip+":"+std::to_string(port));
+  ConnCtx nc(
+      &this->Chains,
+      p
+  );   
+  this->Connections.push_back(nc); 
 }

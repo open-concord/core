@@ -1,30 +1,20 @@
-#include "../../inc/tree.hpp"
-#include "../../inc/strops.hpp"
-#include "../../inc/crypt++.hpp"
-#include "../../inc/server.hpp"
+#include "../../inc/claf.hpp"
+#include "apply.hpp"
 
-#include <limits>
-#include <map>
-#include <unordered_set>
-#include <vector>
-#include <array>
-#include <cmath>
-#include <functional>
-
-#include <nlohmann/json.hpp>
-
-using namespace std::placeholders;
-using json = nlohmann::json;
-
-Server::Server(Tree& parent_tree, std::string AES_key, user load_user, std::string prev_AES_key, std::unordered_set<std::string> heads) : tree(parent_tree), luser(load_user), constraint_heads(heads) {
-
-    this->raw_AES_key = b64_decode(AES_key);
-    this->s_trip = gen_trip(AES_key, 24);
+Server::Server(
+    Tree& parent_tree, 
+    std::string AES_key, 
+    user load_user, 
+    std::string prev_AES_key, 
+    std::unordered_set<std::string> heads
+  ) : tree(parent_tree), luser(load_user), constraint_heads(heads) {
+    this->raw_AES_key = b64::decode(AES_key);
+    this->s_trip = gen::trip(AES_key, 24);
     std::unordered_set<std::string> root_hashes = (this->tree).get_qualifying_hashes(&Tree::is_intraserver_orphan, this->s_trip);
     assert(root_hashes.size() <= 1); //0 means the server doesn't exist, but still, they could create it. 2+ shouldn't be possible, as there are checks at every level for server connection.
 
-    tree.add_block_funcs[(this->s_trip)] = std::bind(&Server::add_block, this, _1);
-    tree.batch_add_funcs[(this->s_trip)] = std::bind(&Server::batch_add_blocks, this, _1);
+    tree.add_block_funcs[(this->s_trip)] = std::bind(&Server::add_block, this, std::placeholders::_1);
+    tree.batch_add_funcs[(this->s_trip)] = std::bind(&Server::add_batch, this, std::placeholders::_1);
 
     if (root_hashes.size() == 1) {
         this->root_fb = *(root_hashes.begin());
@@ -37,8 +27,8 @@ Server::Server(Tree& parent_tree, std::string AES_key, user load_user, std::stri
     } else if (root_hashes.size() == 0) {
         json nserv_data = {
             {"cms", {
-                {"enc_pubk", load_user.pub_keys.RSA_key},
-                {"sig_pubk", load_user.pub_keys.DSA_key}
+                {"enc_pubk", load_user.pubkeys.RSA},
+                {"sig_pubk", load_user.pubkeys.DSA}
             }}
         };
         if (!prev_AES_key.empty()) nserv_data["prev_key"] = prev_AES_key;
@@ -56,9 +46,9 @@ branch Server::get_branch(std::string fb) {
 
 member Server::create_member(keypair pub_keys, std::vector<std::string> initial_roles) {
     user temp_user(pub_keys);
-    (this->known_users)[temp_user.u_trip] = temp_user;
+    (this->known_users)[temp_user.trip] = temp_user;
     member temp_member;
-    temp_member.user_trip = temp_user.u_trip;
+    temp_member.user_trip = temp_user.trip;
     for (auto init_role : initial_roles) {
         temp_member.roles_ranks[init_role].orient_dir(true);
     }
@@ -121,8 +111,8 @@ void Server::load_branch_forward(std::string fb_hash) {
         active_block = (this->tree).get_chain()[working_hash];
         //message digestion logic
         try {
-            std::array<std::string, 2> raw_unlocked = unlock_msg(b64_decode(active_block.cont), false, this->raw_AES_key);
-            std::string content_hash = b64_encode(calc_hash(false, content_hash_concat(active_block.time, active_block.s_trip, active_block.p_hashes)));
+            std::array<std::string, 2> raw_unlocked = cMSG::unlock(b64::decode(active_block.cont), false, this->raw_AES_key);
+            std::string content_hash = b64::encode(gen::hash(false, content_hash_concat(active_block.time, active_block.s_trip, active_block.p_hashes)));
             json claf_data = json::parse(raw_unlocked[0]);
             json extra;
             if (apply_data(ctx, extra, claf_data, raw_unlocked[0], raw_unlocked[1], content_hash)) {
@@ -203,7 +193,7 @@ void Server::add_block(std::string hash) {
     }
 }
 
-void Server::batch_add_blocks(std::unordered_set<std::string> hashes) {
+void Server::add_batch(std::unordered_set<std::string> hashes) {
     std::unordered_set<std::string> extern_only_hashes;
     for (auto h : hashes) {
         bool only_external = true;
@@ -229,10 +219,10 @@ std::string Server::send_message(
     auto sending_time = get_raw_time();
     std::unordered_set<std::string> target_p_hashes = (this->tree).find_p_hashes(this->s_trip, p_hashes);
 
-    std::string content_hash = b64_encode(calc_hash(false, content_hash_concat(sending_time, this->s_trip, target_p_hashes)));
+    std::string content_hash = b64::encode(gen::hash(false, content_hash_concat(sending_time, this->s_trip, target_p_hashes)));
 
     json full_msg = {
-        {"a", author.u_trip},
+        {"a", author.trip},
         {"h", content_hash},
         {"st", std::string(1, st)},
         {"d", content},
@@ -240,9 +230,10 @@ std::string Server::send_message(
 
     if (!t.empty()) full_msg["t"] = t;
 
-    std::string encrypted_content = b64_encode(lock_msg(full_msg.dump(), false, b64_decode(author.pri_keys.DSA_key), (this->raw_AES_key)));
+    std::string encrypted_content = b64::encode(cMSG::lock(full_msg.dump(), false, b64::decode(author.prikeys.DSA), (this->raw_AES_key)));
 
-    std::string target_hash = (this->tree).gen_block(encrypted_content, this->s_trip, sending_time, target_p_hashes, author.u_trip);
+
+    std::string target_hash = (this->tree).gen_block(encrypted_content, this->s_trip, sending_time, target_p_hashes, author.trip);
 
     //add_block(target_hash);
 

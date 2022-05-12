@@ -127,24 +127,38 @@ std::map<std::string, block> Tree::get_chain() {
     return (this->chain);
 }
 
+std::vector<block> Tree::search_user(std::string trip) {
+  std::vector<block> matches; 
+  for (const auto& [_hash, _block] : this->get_chain()) {
+    try {
+      json j = json::parse(_block.cont);
+      if (!j["d"] || !(verify_block(_block, this->pow))) {throw;}
+      if (j["d"] == trip || trip.empty()) {
+        matches.push_back(_block);
+      }
+    } catch (...) {continue;} 
+  }
+  return matches;
+}
+
 bool Tree::verify_chain() {
     std::map<std::string, bool> s_trip_seen;
-    for (const auto& [hash, block] : get_chain()) {
+    for (const auto& [_hash, _block] : this->get_chain()) {
         // make sure every hash is valid.
-        if (!verify_block(block, this->pow)) return false;
+        if (!verify_block(_block, this->pow)) return false;
         /**
         * If there were multiple server roots, we couldn't tell which was valid.
         * P2P prevents the propagation of new roots, but this means we have
         * to fail if there's more than one root
         */
         bool server_connected = false;
-        for (auto ph : block.p_hashes) {
+        for (auto ph : _block.p_hashes) {
             if (get_chain().find(ph) == get_chain().end()) return false; //parent hashes all need to exist in the chain
-            if (get_chain()[ph].s_trip == block.s_trip) server_connected = true;
+            if (get_chain()[ph].s_trip == _block.s_trip) server_connected = true;
         }
         if (!server_connected) {
-            s_trip_seen[block.s_trip] = !s_trip_seen[block.s_trip]; //first will make true, second back to false
-            if (!s_trip_seen[block.s_trip]) return false;
+            s_trip_seen[_block.s_trip] = !s_trip_seen[_block.s_trip]; //first will make true, second back to false
+            if (!s_trip_seen[_block.s_trip]) return false;
             // if it's false (was true before, i.e. was flipped, so this is the second sighting) we fail
         }
     }
@@ -284,13 +298,13 @@ std::vector<std::string> order_hashes(std::unordered_set<std::string> input_hash
 }
 
 std::string hash_concat(block input) {
-    std::string concat_data = b64_encode(raw_time_to_string(input.time)) + input.s_trip + input.c_trip + input.cont; //b64 timestr encoding is only for safety
+    std::string concat_data = b64::encode(raw_time_to_string(input.time)) + input.s_trip + input.c_trip + input.cont; //b64 timestr encoding is only for safety
     for (auto ph : order_hashes(input.p_hashes)) concat_data += ph;
     return concat_data;
 }
 
 bool verify_block(block to_verify, int pow) {
-    std::string result_hash = hex_encode(calc_hash(false, hash_concat(to_verify) + to_verify.nonce));
+    std::string result_hash = hex::encode(gen::hash(false, hash_concat(to_verify) + to_verify.nonce));
     if (result_hash != to_verify.hash) return false;
     for (int i = 0; i < pow; i++) {
         if (result_hash.at(i) != '0') return false;
