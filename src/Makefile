@@ -98,8 +98,7 @@ PDIR = ../proto
 POBJ = ''
 protocols:
 	for p in $(PDIR)/*; do \
-		cd $$p; $(MAKE); cd ..\
-		#@echo $(POBJ); \
+		cd $$p; $(MAKE); cd ..;	\
 	done
 
 # have to force b/c unknown lib type

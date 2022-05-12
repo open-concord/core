@@ -222,7 +222,7 @@ void hclc::ConnH(
   std::string rmsg;
 
   try { 
-    rmsg = ((this->next[cmd])(/**this, */cont)).dump();
+    rmsg = ((this->next[cmd])(this, cont)).dump();
   } catch (int err) {
     rmsg = error(err).dump();
   }
