@@ -95,7 +95,6 @@ $(BIN)AES.o: ../inc/crypt.hpp
 
 # build protocols
 PDIR = ../proto
-POBJ = ''
 protocols:
 	for p in $(PDIR)/*; do \
 		cd $$p; $(MAKE); cd ..;	\
@@ -107,3 +106,6 @@ clean:
 	rm -f ../exe/inc/*.hpp
 	rm -f ../exe/*.a
 	rm -f ../exe/*.so
+	for p in $(PDIR)/*; do \
+		cd $$p; rm -f bin/*.o; cd ..; \
+	done
