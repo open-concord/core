@@ -169,6 +169,8 @@ void hclc::Key_Exchange() {
   }
 }
 
+/** maybe just pass at protocol derived initialization????? */
+
 // apply communication roadmap in a function that gets exported
 void hclc::ConnH(
     ConnCtx* _c,

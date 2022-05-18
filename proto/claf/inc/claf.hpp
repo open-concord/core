@@ -19,7 +19,6 @@
 #include "strman.hpp"
 #include "content.hpp"
 #include "branch.hpp"
-#include "user.hpp"
 
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
