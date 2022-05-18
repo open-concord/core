@@ -6,4 +6,5 @@
 /exe/*
 /lib/*
 .vscode/*
+.vs/*
 test/output/

@@ -10,7 +10,6 @@
 #include <iostream>
 #include <filesystem>
 
-#include "../../inc/strops.hpp"
 #include "../../inc/tree.hpp"
 
 #include <sys/types.h>
@@ -139,6 +138,24 @@ std::vector<block> Tree::search_user(std::string trip) {
     } catch (...) {continue;} 
   }
   return matches;
+}
+
+void Tree::declare_user(user user_, std::string nick = "") {
+    json j; 
+    j["d"] = user_.trip;
+    j["keys"]["sig_pubk"] = user_.pubkeys.DSA;
+    j["keys"]["enc_pubk"] = user_.pubkeys.RSA;
+
+    if (!nick.empty()) {
+        j["n"] = nick;
+    }
+    std::string sig = cDSA::sign(user_.prikeys.DSA, json::to_string(j));
+    
+    json f;
+    f["cont"] = j;
+    f["sig"] = sig;
+
+    this->gen_block(json::to_string(f), j["d"]);
 }
 
 bool Tree::verify_chain() {
