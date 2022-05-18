@@ -137,7 +137,7 @@ class Tree {
         std::unordered_set<std::string> get_parent_hash_union(std::unordered_set<std::string> c_hashes);
 
         std::vector<block> search_user(std::string trip = "");
-        bool declare_user(user user_, std::string nick = "");
+        void declare_user(user user_, std::string nick = "");
 
 
         //std::vector<json> search(char message_type, std::string target_trip, std::string key, boost::function<bool(json)> filter = no_filter, int start_b = -1, int end_b = -1);

@@ -140,7 +140,7 @@ std::vector<block> Tree::search_user(std::string trip) {
   return matches;
 }
 
-bool Tree::declare_user(user user_, std::string nick = "") {
+void Tree::declare_user(user user_, std::string nick = "") {
     json j; 
     j["d"] = user_.trip;
     j["keys"]["sig_pubk"] = user_.pubkeys.DSA;
@@ -155,9 +155,7 @@ bool Tree::declare_user(user user_, std::string nick = "") {
     f["cont"] = j;
     f["sig"] = sig;
 
-    //translate to block
-
-
+    this->gen_block(json::to_string(f), j["d"]);
 }
 
 bool Tree::verify_chain() {
