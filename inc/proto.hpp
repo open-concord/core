@@ -12,8 +12,8 @@ struct Protocol {
     /** 
      * anything beyond the node and conn pointers is the developer's repsonibility; don't fuck up
      */
-    virtual void ConnH(ConnCtx*, ...) = 0;
-    virtual void NodeH(Node*, ...) = 0;
+    virtual void ConnH(ConnCtx*) = 0;
+    virtual void NodeH(Node*) = 0;
     virtual ~Protocol() = default;
 };
 

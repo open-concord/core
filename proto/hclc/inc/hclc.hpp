@@ -27,7 +27,8 @@ json error(int error_code) {
 struct hclc : public Protocol {
   private:
   ConnCtx* c = nullptr;   
-  
+  std::string chain_trip = "";
+  int k = -1;
   public:
   json update_chain(json cont); 
   json client_open(std::string);
@@ -43,7 +44,8 @@ struct hclc : public Protocol {
     {"HOPEN", &hclc::transfer_blocks},
     {"BLOCKS", &hclc::transfer_blocks},
     {"END", &hclc::update_chain}
-  };;
+  };
   void Key_Exchange();  
-  void ConnH(ConnCtx*, ...) override;  
+  void ConnH(ConnCtx*) override;
+  hclc(std::string ct, int k_) : chain_trip(ct), k(k_) {}
 };

@@ -169,18 +169,26 @@ void hclc::Key_Exchange() {
   }
 }
 
-/** maybe just pass at protocol derived initialization????? */
 
-// apply communication roadmap in a function that gets exported
-void hclc::ConnH(
-    ConnCtx* _c,
-    ...
-  ) {
-  // unpack parameter pack
-  // (possible args)
-  std::string chain_trip = "";
-  int k = -1;
+// apply communication roadmap
+void hclc::ConnH(ConnCtx* _c) { 
+  /** why even take this?  
+    protocol template is in a weird place right now;
+    it's ownership implementation is split between
+    - having one instance of itself controlling multiple connections
+    - having 1:1 pairing and ownership
 
+    while the preformance considerations of the second is scary;
+    it's most in line with our current goals and capabilities (time, mostly)
+    
+    eventually, protocols should be built in a psuedo schema that any connection can follow
+    but that would require writing a verbos-equse system and then writing a compiler 
+    from a more human readable language standard
+
+    a project for another day, i guess
+
+    ~u2on
+  */
   if (this->c == nullptr) {_c = c;}
   auto NET = (c->Networking);
   if (NET.sec.Shared().empty()) {
