@@ -140,7 +140,7 @@ std::vector<block> Tree::search_user(std::string trip) {
   return matches;
 }
 
-void Tree::declare_user(user user_, std::string nick = "") {
+void Tree::declare_user(user user_, std::string nick) {
     json j; 
     j["d"] = user_.trip;
     j["keys"]["sig_pubk"] = user_.pubkeys.DSA;
@@ -149,13 +149,13 @@ void Tree::declare_user(user user_, std::string nick = "") {
     if (!nick.empty()) {
         j["n"] = nick;
     }
-    std::string sig = cDSA::sign(user_.prikeys.DSA, json::to_string(j));
+    std::string sig = cDSA::sign(user_.prikeys.DSA, j.dump());
     
     json f;
     f["cont"] = j;
     f["sig"] = sig;
 
-    this->gen_block(json::to_string(f), j["d"]);
+    this->gen_block(f.dump(), j["d"]);
 }
 
 bool Tree::verify_chain() {

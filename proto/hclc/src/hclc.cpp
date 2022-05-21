@@ -176,14 +176,11 @@ void hclc::ConnH(
     ConnCtx* _c,
     ...
   ) {
+  // unpack parameter pack
   // (possible args)
   std::string chain_trip = "";
   int k = -1;
-/**
-    std::string chain_trip = "",
-    int k = -1
-  ) {
-*/
+
   if (this->c == nullptr) {_c = c;}
   auto NET = (c->Networking);
   if (NET.sec.Shared().empty()) {
