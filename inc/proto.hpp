@@ -3,27 +3,33 @@
 #include <vector>
 #include <memory>
 
+
+/** In order of authority (rn), (Node/ConnCtx) | Controller | Whatever */
+
 /* lowkey anti pattern */
 class Node;
 struct ConnCtx;
 
-struct Protocol {
+struct Protocol{
   public:
-    /** 
-     * anything beyond the node and conn pointers is the developer's repsonibility; don't fuck up
-     */
-    virtual void ConnH(ConnCtx*, ...) = 0;
-    virtual void NodeH(Node*, ...) = 0;
+    virtual void NodeHandle(Node*) = 0;
+    virtual void ConnHandle(ConnCtx*) = 0;
     virtual ~Protocol() = default;
 };
 
-struct Controller {
-  std::vector<std::shared_ptr<Node>> NodeVec;
-  std::vector<std::shared_ptr<ConnCtx>> ConnVec;
+/** essentially a temp solution to an eventually (hopefully) obsolete system. */
 
-  std::vector<Protocol> Protos;
-  public:
-    // there needs to be some type of ledger so the index of both the nodes and vectors are set
-    void LoadProto(Protocol&);
-    void SetLogic(int, int, bool);
+struct Controller {
+  /** ffs */
+  /** actually vomit inducing, but at this point i couldn't care less
+   * if anything, it's motivation to get the other one done
+   * ~u2on
+   */
+
+  std::map<Protocol*, std::tuple<Node*, ConnCtx*>> ControlM;
+
+  public: 
+    void Load(Protocol* p, Node* n = nullptr, ConnCtx* c = nullptr) { 
+      ControlM[p] = std::make_tuple(n, c);
+    }
 };
