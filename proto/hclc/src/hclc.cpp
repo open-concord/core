@@ -169,10 +169,9 @@ void hclc::Key_Exchange() {
   }
 }
 
-
 // apply communication roadmap
-void hclc::ConnHandle(ConnCtx* _c) { 
-  /** why even take this?  
+void hclc::ConnH(ConnCtx* _c) { 
+  /**  
     protocol template is in a weird place right now;
     it's ownership implementation is split between
     - having one instance of itself controlling multiple connections
