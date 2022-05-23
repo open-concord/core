@@ -170,7 +170,7 @@ void hclc::Key_Exchange() {
 }
 
 // apply communication roadmap
-void hclc::ConnH(ConnCtx* _c) { 
+void hclc::ConnHandle(ConnCtx* _c) { 
   /**  
     protocol template is in a weird place right now;
     it's ownership implementation is split between

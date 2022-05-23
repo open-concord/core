@@ -83,11 +83,5 @@ struct CLAF : public Protocol {
 private:
 
 public:
-<<<<<<< HEAD
   void ConnHandle(ConnCtx* c) override;
-||||||| d1bc760
-  void ConnH(ConnCtx* c, ...) override;
-=======
-  void ConnH(ConnCtx* c) override;
->>>>>>> 26d62ebbefd9871606367f562385e5ac8ef314f6
 };

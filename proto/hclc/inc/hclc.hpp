@@ -46,14 +46,7 @@ struct hclc : public Protocol {
     {"END", &hclc::update_chain}
   };
   void Key_Exchange();  
-<<<<<<< HEAD
   
   void ConnHandle(ConnCtx*) override;
   hclc(std::string ct, int k_) : chain_trip(ct), k(k_) {}
-||||||| d1bc760
-  void ConnH(ConnCtx*, ...) override;  
-=======
-  void ConnH(ConnCtx*) override;
-  hclc(std::string ct, int k_) : chain_trip(ct), k(k_) {}
->>>>>>> 26d62ebbefd9871606367f562385e5ac8ef314f6
 };
