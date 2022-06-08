@@ -38,7 +38,6 @@ struct ConnCtx {
 };
 
 class Node {
-private:
   std::map<std::string, Tree> Chains;
   std::vector<ConnCtx> Connections;
   /** it's nessecary to retain a relay, just as a reliable end point for incoming connections */
@@ -46,7 +45,6 @@ private:
     
   bool Lazy_Active = false;
   void _Await_Stop(unsigned int t);
-public:
   /** a node can still function without opening itself completely */
   void Open();
   

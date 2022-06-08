@@ -14,6 +14,6 @@ struct Protocol{
   public:
     virtual void NodeHandle(Node*) = 0;
     virtual void ConnHandle(ConnCtx*) = 0;
-    virtual ~Protocol() = default;
+    virtual ~Protocol() = default; 
 };
 
