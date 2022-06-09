@@ -27,6 +27,10 @@ Node::Node(
   this->Dispatcher.Criteria(wd);
 }
 
+void Node::Hook(std::function<void(ConnCtx*)> h) {
+  this->HookCall = h;
+}
+
 void Node::Lazy(bool state, bool blocking) {
   this->Lazy_Active = state;
   this->Dispatcher.Swap(([this] (Peer* np) {
@@ -36,6 +40,7 @@ void Node::Lazy(bool state, bool blocking) {
         *np
       );
       this->Connections.push_back(c);
+      this->HookCall(&c);
     } else {return;}
   }));
   this->Dispatcher.Lazy(blocking);
@@ -84,5 +89,6 @@ void Node::Contact(
       &this->Chains,
       p
   );   
-  this->Connections.push_back(nc); 
+  this->Connections.push_back(nc);
+  this->HookCall(&nc);
 }

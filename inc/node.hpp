@@ -45,9 +45,12 @@ class Node {
     
   bool Lazy_Active = false;
   void _Await_Stop(unsigned int t);
+  std::function<void(ConnCtx*)> HookCall;
   /** a node can still function without opening itself completely */
   void Open();
   
+  void Hook(std::function<void(ConnCtx*)>); // QoL, called on new Connection spawn
+
   void Lazy(bool state, bool blocking);
 
   void Contact(std::string ip, unsigned int port);
