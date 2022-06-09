@@ -1,30 +1,34 @@
 #pragma once
-#include <nlohmann/json.hpp>
 #include <uttu.hpp>
-
 #include "tree.hpp"
 #include "proto.hpp"
 
-struct ConnCtx {  
-  Peer Networking;
-  
-  struct {
+namespace Ctx {
+  struct Exchange {
     bool close = false;
     std::vector<block> NewBlocks;
     std::string ChainTrip;
     /** @deprecated */
     std::vector<std::string> MessageCtx; 
     // ^ yikes pt.2 (this should be taken care of by any ConnContext logic)
-  } ExchangeCtx;
+  };
 
-  struct {
+  struct Graph {
     /** this should be be POLP, or at the very least a (hopefully) faster concurrent hashmap r/w */
     std::map<std::string, Tree>* ParentMap;
     /** filter ~ essentially blacklist some trees or all non-whitelisted trees */
     bool filter, blacklist = false;
     std::vector<std::string> filtered_trees; // only used if filter is true
-  } GraphCtx;
+  };
+};
+
+
+struct ConnCtx {  
+  Peer Networking;
   
+  Ctx::Exchange* ExchangeCtx;
+  Ctx::Graph* GraphCtx;
+ 
   /** foward declare support */
   ConnCtx(); 
   void UpdateParentMap(std::map<std::string, Tree>*);
@@ -39,17 +43,14 @@ struct ConnCtx {
 
 class Node {
   std::map<std::string, Tree> Chains;
-  std::vector<ConnCtx> Connections;
+  std::map<ConnCtx*, bool> Connections;
   /** it's nessecary to retain a relay, just as a reliable end point for incoming connections */
   Relay Dispatcher; 
     
   bool Lazy_Active = false;
   void _Await_Stop(unsigned int t);
-  std::function<void(ConnCtx*)> HookCall;
   /** a node can still function without opening itself completely */
-  void Open();
-  
-  void Hook(std::function<void(ConnCtx*)>); // QoL, called on new Connection spawn
+  void Open(); 
 
   void Lazy(bool state, bool blocking);
 

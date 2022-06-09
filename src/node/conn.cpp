@@ -2,7 +2,7 @@
 
 /** updates */
 void ConnCtx::UpdateParentMap(std::map<std::string, Tree>* m) {
-  this->GraphCtx.ParentMap = m;
+  this->GraphCtx->ParentMap = m;
 }
 void ConnCtx::UpdateTimeout(unsigned int t) {
   this->Networking.tout = t;

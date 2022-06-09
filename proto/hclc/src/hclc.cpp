@@ -3,8 +3,8 @@
 // add blocks in context to chain
 json hclc::update_chain(json cont = {}) {
   /** aliasing */
-  auto eCTX = (c->ExchangeCtx);
-  auto gCTX = (c->GraphCtx);
+  auto eCTX = *(c->ExchangeCtx);
+  auto gCTX = *(c->GraphCtx);
   auto TREE = (*(gCTX.ParentMap))[eCTX.ChainTrip];
 
   TREE.batch_push(eCTX.NewBlocks);
@@ -21,8 +21,8 @@ json hclc::update_chain(json cont = {}) {
 json hclc::client_open(std::string chain_trip) {
     try {
       /** aliasing */  
-      auto eCTX = (c->ExchangeCtx);
-      auto gCTX = (c->GraphCtx);      
+      auto eCTX = *(c->ExchangeCtx);
+      auto gCTX = *(c->GraphCtx);      
       auto TREE = (*(gCTX.ParentMap))[eCTX.ChainTrip];
 
       eCTX.ChainTrip = chain_trip;
@@ -53,8 +53,8 @@ json hclc::client_open(std::string chain_trip) {
 json hclc::host_open(json cont) {
   try {
     /** aliasing */
-    auto eCTX = ((this->c)->ExchangeCtx);
-    auto gCTX = ((this->c)->GraphCtx);
+    auto eCTX = *((this->c)->ExchangeCtx);
+    auto gCTX = *((this->c)->GraphCtx);
 
     eCTX.ChainTrip = cont["chain"];
     auto TREE = (*(gCTX.ParentMap))[eCTX.ChainTrip];
@@ -93,8 +93,8 @@ json hclc::host_open(json cont) {
 //send requests for parents of the latest layer of blcoks and fulfill the latest layer of such requests - BLOCKS
 json hclc::transfer_blocks(json cont) {
     try {
-        auto eCTX = ((this->c)->ExchangeCtx);
-        auto gCTX = ((this->c)->GraphCtx);
+        auto eCTX = *((this->c)->ExchangeCtx);
+        auto gCTX = *((this->c)->GraphCtx);
         auto TREE = (*(gCTX.ParentMap))[eCTX.ChainTrip];
 
         auto chain_saved = TREE.get_chain();
@@ -196,7 +196,7 @@ void hclc::ConnHandle(ConnCtx* _c) {
 
   /** prompt */
   if (
-      c->ExchangeCtx.MessageCtx.empty() 
+      c->ExchangeCtx->MessageCtx.empty() 
       && !(NET.host)
       && !chain_trip.empty()
       && k > -1
@@ -233,7 +233,7 @@ void hclc::ConnHandle(ConnCtx* _c) {
     rmsg = error(err).dump();
   }
   NET.Write(rmsg);
-  if (!(c->ExchangeCtx).close) {
+  if (!(c->ExchangeCtx)->close) {
     this->ConnHandle(c);
   } else {
     /** immediately cease contact */

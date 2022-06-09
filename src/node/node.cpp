@@ -5,6 +5,9 @@
 #include <iostream>
 #include <thread>
 #include <functional>
+#include <map>
+
+
 #include "../../inc/node.hpp"
 #include "../../inc/tree.hpp"
 
@@ -27,10 +30,6 @@ Node::Node(
   this->Dispatcher.Criteria(wd);
 }
 
-void Node::Hook(std::function<void(ConnCtx*)> h) {
-  this->HookCall = h;
-}
-
 void Node::Lazy(bool state, bool blocking) {
   this->Lazy_Active = state;
   this->Dispatcher.Swap(([this] (Peer* np) {
@@ -39,8 +38,7 @@ void Node::Lazy(bool state, bool blocking) {
         &(this->Chains),
         *np
       );
-      this->Connections.push_back(c);
-      this->HookCall(&c);
+      this->Connections.insert({&c, false});
     } else {return;}
   }));
   this->Dispatcher.Lazy(blocking);
@@ -70,9 +68,9 @@ void Node::_Await_Stop(unsigned int t) {
 void Node::Stop() {
   this->Close();
   unsigned int ht; // highest timeout
-  for (auto& c: this->Connections) {
-    ht = (ht < c.Networking.tout) ? c.Networking.tout : ht;
-    c.ExchangeCtx.close = true;
+  for (const auto& [c, s]: this->Connections) {
+    ht = (ht < c->Networking.tout) ? c->Networking.tout : ht;
+    c->ExchangeCtx->close = true; 
   }
   std::jthread st(&Node::_Await_Stop, this, ht);
   st.detach();
@@ -88,7 +86,6 @@ void Node::Contact(
   ConnCtx nc(
       &this->Chains,
       p
-  );   
-  this->Connections.push_back(nc);
-  this->HookCall(&nc);
+  );
+  this->Connections.insert({&nc, false}); 
 }
