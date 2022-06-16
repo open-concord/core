@@ -3,6 +3,16 @@
 #include "tree.hpp"
 #include "proto.hpp"
 
+struct FlagManager {
+/** flags */
+protected:
+  std::vector<bool> flags;
+public:
+  void SetFlag(unsigned int, bool);
+  bool GetFlag(unsigned int); 
+  FlagManager(unsigned int);
+};
+
 namespace Ctx {
   struct Exchange {
     bool close = false;
@@ -23,12 +33,18 @@ namespace Ctx {
 };
 
 
-struct ConnCtx {  
+struct ConnCtx : public FlagManager {  
+  enum _FLAG_ENUM {
+    ACTIVE,
+    HALTED,
+    COMPLETE,
+    CLOSE
+  } FLAGS;
+
   Peer Networking;
   
   Ctx::Exchange* ExchangeCtx;
   Ctx::Graph* GraphCtx;
- 
   /** foward declare support */
   ConnCtx(); 
   void UpdateParentMap(std::map<std::string, Tree>*);
@@ -41,9 +57,17 @@ struct ConnCtx {
   );
 };
 
-class Node {
+class Node : public FlagManager {
+public:
+  enum _FLAG_ENUM {
+    ACTIVE,
+    HALTED,
+    COMPLETE,
+    CLOSE
+  } FLAGS;
+  
   std::map<std::string, Tree> Chains;
-  std::map<ConnCtx*, bool> Connections;
+  std::vector<ConnCtx> Connections;
   /** it's nessecary to retain a relay, just as a reliable end point for incoming connections */
   Relay Dispatcher; 
     

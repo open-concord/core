@@ -31,7 +31,8 @@ OBJ = $(BIN)lockmsg.o \
 	$(BIN)b64.o \
 	$(BIN)hexstr.o \
 	$(BIN)conn.o \
-	$(BIN)node.o
+	$(BIN)node.o \
+	$(BIN)fmgr.o
 
 default: static_unix
 
@@ -82,6 +83,8 @@ $(BIN)conn.o: ../inc/node.hpp
 	$(CC) $(CFLAGS) -I$(D)/inc node/conn.cpp -o $@
 $(BIN)node.o: ../inc/node.hpp
 	$(CC) $(CFLAGS) -I$(D)/inc node/node.cpp -o $@
+$(BIN)fmgr.o: ../inc/node.hpp
+	$(CC) $(CFLAGS) -I$(D)/inc node/fmgr.cpp -o $@
 
 # crypt
 $(BIN)lockmsg.o: ../inc/crypt.hpp

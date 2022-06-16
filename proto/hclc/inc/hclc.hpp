@@ -1,3 +1,4 @@
+#pragma once
 #include <string>
 #include <iostream>
 #include <map>
@@ -5,11 +6,11 @@
 #include <vector>
 #include <functional>
 
-#include "../../../inc/node.hpp"
-#include "../../../inc/proto.hpp"
-#include "../../../inc/strops.hpp"
-#include "../../../inc/crypt.hpp"
-#include "../../../inc/tree.hpp"
+#include <node.hpp>
+#include <proto.hpp>
+#include <strops.hpp>
+#include <crypt.hpp>
+#include <tree.hpp>
 #include <nlohmann/json.hpp>
 
 using json = nlohmann::json;

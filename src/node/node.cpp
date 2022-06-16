@@ -17,7 +17,7 @@ Node::Node(
   std::function<bool(std::string)> wd,
   unsigned short int queue = 10,
   unsigned int tout = 3000
-) : Chains(cm), 
+) : Chains(cm), FlagManager(3), 
   Dispatcher(
     Relay(
       std::nullopt, 
@@ -25,7 +25,7 @@ Node::Node(
       tout, 
       queue
     )
-  ) 
+  )
 { 
   this->Dispatcher.Criteria(wd);
 }
@@ -38,7 +38,7 @@ void Node::Lazy(bool state, bool blocking) {
         &(this->Chains),
         *np
       );
-      this->Connections.insert({&c, false});
+      this->Connections.push_back(c);
     } else {return;}
   }));
   this->Dispatcher.Lazy(blocking);
@@ -68,9 +68,9 @@ void Node::_Await_Stop(unsigned int t) {
 void Node::Stop() {
   this->Close();
   unsigned int ht; // highest timeout
-  for (const auto& [c, s]: this->Connections) {
-    ht = (ht < c->Networking.tout) ? c->Networking.tout : ht;
-    c->ExchangeCtx->close = true; 
+  for (auto& c: this->Connections) {
+    ht = (ht < c.Networking.tout) ? c.Networking.tout : ht;
+    c.SetFlag(ConnCtx::_FLAG_ENUM::CLOSE, true); 
   }
   std::jthread st(&Node::_Await_Stop, this, ht);
   st.detach();
@@ -87,5 +87,5 @@ void Node::Contact(
       &this->Chains,
       p
   );
-  this->Connections.insert({&nc, false}); 
+  this->Connections.push_back(nc); 
 }
