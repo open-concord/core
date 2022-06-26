@@ -3,16 +3,6 @@
 #include "tree.hpp"
 #include "proto.hpp"
 
-struct FlagManager {
-/** flags */
-protected:
-  std::vector<bool> flags;
-public:
-  void SetFlag(unsigned int, bool);
-  bool GetFlag(unsigned int); 
-  FlagManager(unsigned int);
-};
-
 namespace Ctx {
   struct Exchange {
     bool close = false;
@@ -33,14 +23,15 @@ namespace Ctx {
 };
 
 
-struct ConnCtx : public FlagManager {  
-  enum _FLAG_ENUM {
+struct ConnCtx {  
+  enum {
     ACTIVE,
     HALTED,
     COMPLETE,
     CLOSE
   } FLAGS;
-
+  FlagManager Flags;
+  
   Peer Networking;
   
   Ctx::Exchange* ExchangeCtx;
@@ -57,14 +48,15 @@ struct ConnCtx : public FlagManager {
   );
 };
 
-class Node : public FlagManager {
+class Node {
 public:
-  enum _FLAG_ENUM {
+  enum {
     ACTIVE,
     HALTED,
     COMPLETE,
     CLOSE
   } FLAGS;
+  FlagManager Flags; 
   
   std::map<std::string, Tree> Chains;
   std::vector<ConnCtx> Connections;
@@ -88,7 +80,7 @@ public:
       unsigned short int,
       std::map<std::string, Tree>&,
       std::function<bool(std::string)>,
-      unsigned short int,
-      unsigned int
+      unsigned short int = 10,
+      unsigned int = 3000
   );
 };

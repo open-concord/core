@@ -32,8 +32,14 @@ void Tree::load(std::string dir) {
     this->dir_linked = true;
     this->target_dir = dir;
     if ((this->target_dir).back() != '/') this->target_dir += "/";
-
-    if ((stat( (this->target_dir).c_str(), &info ) != 0) || !(info.st_mode & S_IFDIR) ) {
+    
+    struct stat info;
+    /** right now, this is hardcoded file dir.
+     * TODO: Allow FIFO, socket, etc.
+     */ 
+    if ((stat( (this->target_dir).c_str(), &info ) != 0) || (info.st_mode & S_IFMT) != S_IFDIR) {
+        int err = errno;
+        if (err) {std::cout << "[!] errno: " << err << '\n';}
         throw std::invalid_argument("Directory is not accessible.");
     }
 

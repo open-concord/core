@@ -10,10 +10,10 @@ CC = g++ -std=c++20
 CFLAGS = -c -g -Wall -fPIC
 
 # lib flags
-L = -lcryptopp -pthread
+L = -lcryptopp -pthread 
 
-# object file sub-dir of src
-BIN = _bin/
+# object file dump
+BIN = ../build/bin/
 
 # .so args
 SOFLAGS = -shared -Wl,-soname,libconcord.so
@@ -31,8 +31,7 @@ OBJ = $(BIN)lockmsg.o \
 	$(BIN)b64.o \
 	$(BIN)hexstr.o \
 	$(BIN)conn.o \
-	$(BIN)node.o \
-	$(BIN)fmgr.o
+	$(BIN)node.o	
 
 default: static_unix
 
@@ -56,9 +55,9 @@ static_unix: $(OBJ) protocols
 	@echo "NOW LINKING (UNIX) | ARCHIVE"
 	ar cr libcore.a $(OBJ) $(D)/libuttu.o
 	ranlib libcore.a
-	mv libcore.a ../exe/
-	cp -r ../inc ../exe/
-	cp $(D)/inc/* ../exe/inc
+	mv libcore.a ../build/exe/
+	cp -r ../inc ../build/exe/
+	cp $(D)/inc/* ../build/exe/inc
 
 # string manipulation
 $(BIN)b64.o: ../inc/strops.hpp
@@ -83,8 +82,6 @@ $(BIN)conn.o: ../inc/node.hpp
 	$(CC) $(CFLAGS) -I$(D)/inc node/conn.cpp -o $@
 $(BIN)node.o: ../inc/node.hpp
 	$(CC) $(CFLAGS) -I$(D)/inc node/node.cpp -o $@
-$(BIN)fmgr.o: ../inc/node.hpp
-	$(CC) $(CFLAGS) -I$(D)/inc node/fmgr.cpp -o $@
 
 # crypt
 $(BIN)lockmsg.o: ../inc/crypt.hpp
@@ -100,7 +97,7 @@ $(BIN)AES.o: ../inc/crypt.hpp
 PDIR = ../proto
 protocols:
 	for p in $(PDIR)/*; do \
-		cd $$p; $(MAKE); cd ..;	\
+		cd $$p; $(MAKE) clean; $(MAKE); cd ..;	\
 	done
 
 # have to force b/c unknown lib type

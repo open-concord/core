@@ -250,3 +250,9 @@ void hclc::ConnHandle(ConnCtx* _c) {
     return;
   }
 }
+
+// TODO: Add a flag in protocol template to show what is handled?
+void hclc::NodeHandle(Node*) {
+  std::cout << "[!] HCLC has no NodeHandle\n";
+  return;
+}

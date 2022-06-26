@@ -3,7 +3,7 @@
 *.so
 *.dll
 *.a
-/exe/*
+/build/*
 /lib/*
 .vscode/*
 .vs/*

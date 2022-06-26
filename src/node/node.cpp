@@ -15,9 +15,9 @@ Node::Node(
   unsigned short int port,
   std::map<std::string, Tree>& cm,
   std::function<bool(std::string)> wd,
-  unsigned short int queue = 10,
-  unsigned int tout = 3000
-) : Chains(cm), FlagManager(4), 
+  unsigned short int queue,
+  unsigned int tout
+) : Chains(cm), Flags(4), 
   Dispatcher(
     Relay(
       std::nullopt, 
@@ -70,7 +70,7 @@ void Node::Stop() {
   unsigned int ht; // highest timeout
   for (auto& c: this->Connections) {
     ht = (ht < c.Networking.tout) ? c.Networking.tout : ht;
-    c.SetFlag(ConnCtx::_FLAG_ENUM::CLOSE, true); 
+    c.Flags.SetFlag(ConnCtx::CLOSE, true); 
   }
   std::jthread st(&Node::_Await_Stop, this, ht);
   st.detach();

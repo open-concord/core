@@ -6,6 +6,7 @@
 #include <compare>
 #include <filesystem>
 #include <nlohmann/json.hpp>
+#include <errno.h>
 #include "crypt.hpp"
 #include "strops.hpp"
 

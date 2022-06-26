@@ -23,3 +23,6 @@ $(B)strman.o: $(H)
 	$(G) src/strman.cpp -o $@
 $(B)server.o: $(H) src/server/apply.hpp
 	$(G) src/server/server.cpp -o $@
+
+clean:
+	rm bin/*

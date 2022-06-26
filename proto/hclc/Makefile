@@ -2,4 +2,9 @@
 G=g++ -std=c++20 -c -I../../lib/inc/ -I../../inc/
 H=inc/hclc.hpp ../../lib/inc/uttu.hpp
 default: $(H)
-	$(G) src/hclc.cpp -o bin/hclc.o	
+	$(G) src/hclc.cpp -o bin/hclc.o
+	ar cr bin/libhclc.a bin/hclc.o
+	ranlib bin/libhclc.a
+
+clean:
+	rm bin/*

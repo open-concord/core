@@ -15,22 +15,20 @@
 
 using json = nlohmann::json;
 
-// error handler
-json error(int error_code) {
-  json ret = {
+struct hclc : public Protocol {
+private:
+  // error handler
+  json error(int error_code) {
+    json ret = {
       {"FLAG", "ERROR"},
       {"CONTENT", error_code}
-  };
-  return ret;
-}
-
-
-struct hclc : public Protocol {
-  private:
-  ConnCtx* c = nullptr;   
-  std::string chain_trip = "";
-  int k = -1;
-  public:
+    };
+    return ret;
+  }  
+    ConnCtx* c = nullptr;   
+  std::string chain_trip;
+  int k;
+public:
   json update_chain(json cont); 
   json client_open(std::string);
   json host_open(json);
@@ -49,5 +47,6 @@ struct hclc : public Protocol {
   void Key_Exchange();  
   
   void ConnHandle(ConnCtx*) override;
+  void NodeHandle(Node*) override;
   hclc(std::string ct, int k_) : chain_trip(ct), k(k_) {}
 };
