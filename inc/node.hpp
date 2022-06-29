@@ -3,10 +3,13 @@
 #include "tree.hpp"
 #include "proto.hpp"
 
+#ifndef FTEMPH
+#define FTEMPH
 namespace FTEMP {
-  FlagManager::PRETAPE ConnCtx{4, true};
+  FlagManager::PRETAPE ConnCtx{5, false};
   FlagManager::PRETAPE Node{3, false};
 };
+#endif
 
 namespace Ctx {
   struct Exchange {
