@@ -197,7 +197,7 @@ void hclc::ConnHandle(ConnCtx* _c) {
   /** prompt */
   if (
       c->ExchangeCtx->MessageCtx.empty() 
-      && !(NET.host)
+      && !(NET.Flags.GetFlag(ConnCtx::HOST))
       && !chain_trip.empty()
       && k > -1
   ) {

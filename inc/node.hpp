@@ -28,10 +28,11 @@ struct ConnCtx {
     ACTIVE,
     HALTED,
     COMPLETE,
-    CLOSE
+    CLOSE,
+    HOST
   } FLAGS;
   FlagManager Flags;
-  
+  FlagManager::PRETAPE FLAGT {4, false};
   Peer Networking;
   
   Ctx::Exchange* ExchangeCtx;
@@ -51,19 +52,18 @@ struct ConnCtx {
 class Node {
 public:
   enum {
-    ACTIVE,
-    HALTED,
-    COMPLETE,
-    CLOSE
+    OPEN, 
+    CLOSE,
+    LAZY_ACTIVE
   } FLAGS;
   FlagManager Flags; 
-  
+  FlagManager::PRETAPE FLAGT {3, false};
+
   std::map<std::string, Tree> Chains;
   std::vector<ConnCtx> Connections;
   /** it's nessecary to retain a relay, just as a reliable end point for incoming connections */
   Relay Dispatcher; 
-    
-  bool Lazy_Active = false;
+  
   void _Await_Stop(unsigned int t);
   /** a node can still function without opening itself completely */
   void Open(); 

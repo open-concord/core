@@ -17,7 +17,7 @@ Node::Node(
   std::function<bool(std::string)> wd,
   unsigned short int queue,
   unsigned int tout
-) : Chains(cm), Flags(4), 
+) : Flags(Node::FLAGT), Chains(cm), 
   Dispatcher(
     Relay(
       std::nullopt, 
@@ -28,12 +28,13 @@ Node::Node(
   )
 { 
   this->Dispatcher.Criteria(wd);
+  Flags.SetFlag(Node::LAZY_ACTIVE, false);
 }
 
 void Node::Lazy(bool state, bool blocking) {
-  this->Lazy_Active = state;
+  Flags.SetFlag(Node::LAZY_ACTIVE, state);
   this->Dispatcher.Swap(([this] (Peer* np) {
-    if (this->Lazy_Active) {
+    if (this->Flags.GetFlag(Node::LAZY_ACTIVE)) {
       ConnCtx c(
         &(this->Chains),
         *np
@@ -85,7 +86,7 @@ void Node::Contact(
   p.Connect(ip+":"+std::to_string(port));
   ConnCtx nc(
       &this->Chains,
-      p
+      std::move(p)
   );
   this->Connections.push_back(nc); 
 }

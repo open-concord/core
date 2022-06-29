@@ -25,4 +25,4 @@ $(B)server.o: $(H) src/server/apply.hpp
 	$(G) src/server/server.cpp -o $@
 
 clean:
-	rm bin/*
+	rm -f bin/*

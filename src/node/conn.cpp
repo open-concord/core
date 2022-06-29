@@ -12,6 +12,6 @@ void ConnCtx::UpdateTimeout(unsigned int t) {
 ConnCtx::ConnCtx(
   std::map<std::string, Tree>* pm,
   Peer p
-) : Networking(p), Flags(4) { 
+) : Flags(ConnCtx::FLAGT), Networking(p) { 
   this->UpdateParentMap(pm);
 }

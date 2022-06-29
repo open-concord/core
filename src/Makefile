@@ -51,13 +51,16 @@ shared_unix: $(OBJ) protocols
 	@echo "NOW BUILDING (UNIX) | SHARED OBJECT"
 	$(CC) $(SOFLAGS) $(OBJ) $(D)/libuttu.o $(L) -o libconcord.so
 
-static_unix: $(OBJ) protocols
-	@echo "NOW LINKING (UNIX) | ARCHIVE"
-	ar cr libcore.a $(OBJ) $(D)/libuttu.o
-	ranlib libcore.a
+static_unix: $(OBJ) proto
+	@echo "EXTRACTING FROM UTTU"
+	ar xv $(D)/libuttu.a --output $(BIN)
+	@echo "NOW COMPILING (UNIX) | ARCHIVE"
+	ar cr libcore.a $(wildcard $(BIN)*.o)
+	ranlib libcore.a	 
 	mv libcore.a ../build/exe/
 	cp -r ../inc ../build/exe/
 	cp $(D)/inc/* ../build/exe/inc
+	@echo "LIBCORE CREATION COMPLETE"
 
 # string manipulation
 $(BIN)b64.o: ../inc/strops.hpp
@@ -95,17 +98,26 @@ $(BIN)AES.o: ../inc/crypt.hpp
 
 # build protocols
 PDIR = ../proto
-protocols:
+proto:
 	for p in $(PDIR)/*; do \
-		cd $$p; $(MAKE) clean; $(MAKE); cd ..;	\
+		cd $$p; $(MAKE); cd ..;	\
 	done
+# clean protocols
+pclean:
+	for p in $(PDIR)/*; do \
+		cd $$p; $(MAKE) clean; cd ..; \
+		done
 
 # have to force b/c unknown lib type
 clean:
 	rm -f $(BIN)*.o
-	rm -f ../exe/inc/*.hpp
-	rm -f ../exe/*.a
-	rm -f ../exe/*.so
+	rm -f ../build/exe/inc/*.hpp
+	rm -f ../build/exe/*.a
+	rm -f ../build/exe/*.so
 	for p in $(PDIR)/*; do \
 		cd $$p; rm -f bin/*.o; cd ..; \
 	done
+
+reset: clean
+	rm -rf ../lib/*
+	touch ../lib/"PLACEHOLDER"
