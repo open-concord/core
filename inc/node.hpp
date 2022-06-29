@@ -6,8 +6,8 @@
 #ifndef FTEMPH
 #define FTEMPH
 namespace FTEMP {
-  FlagManager::PRETAPE ConnCtx{5, false};
-  FlagManager::PRETAPE Node{3, false};
+  inline FlagManager::PRETAPE ConnCtx{5, false};
+  inline FlagManager::PRETAPE Node{3, false};
 };
 #endif
 
