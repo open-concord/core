@@ -39,7 +39,7 @@ void Node::Lazy(bool state, bool blocking) {
         &(this->Chains),
         *np
       );
-      this->Connections.push_back(c);
+      this->Connections.push_back(std::move(c));
     } else {return;}
   }));
   this->Dispatcher.Lazy(blocking);

@@ -23,5 +23,8 @@ tcrypt++:
 test:
 	$(CC) $(CFLAGS) src/$@.cpp -o output/$@ -lconcord
 
+watson:
+	$(CC) $(CFLAG) -I$(D)/inc -I$(P)/hclc/inc -I$(P)/claf/inc  -L$(P)/hclc/bin/ -L$(P)/claf/bin src/bw/$(@).cpp -o output/$(@).out -L$(D) -L$(L) -lclaf -lhclc -lcore -lcryptopp -lpthread -luttu
+
 bell:
-	$(CC) $(CFLAG) -I$(D)/inc -I$(P)/hclc/inc -I$(P)/claf/inc  -L$(P)/hclc/bin/ -L$(P)/claf/bin src/$(@).cpp -o output/$(@).out -L$(D) -L$(L) -lclaf -lhclc -lcore -lcryptopp -lpthread -luttu
+	$(CC) $(CFLAG) -I$(D)/inc -I$(P)/hclc/inc -I$(P)/claf/inc  -L$(P)/hclc/bin/ -L$(P)/claf/bin src/bw/$(@).cpp -o output/$(@).out -L$(D) -L$(L) -lclaf -lhclc -lcore -lcryptopp -lpthread -luttu
