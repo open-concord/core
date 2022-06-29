@@ -6,7 +6,13 @@ CC = g++ -std=c++20
 C = -g -Wall
 
 # project dir
-D = ./../exe
+D = ./../build/exe
+
+# protocol dir
+P = ./../proto
+
+# lib dir
+L = ./../lib
 
 tnode:
 	$(CC) $(C) -I$(D)/inc src/tnode.cpp -L$(D) -lconcord -lcryptopp -lpthread -o output/$@.out
@@ -17,5 +23,5 @@ tcrypt++:
 test:
 	$(CC) $(CFLAGS) src/$@.cpp -o output/$@ -lconcord
 
-watson:
-	$(CC) $(CFLAGS) -I$(D)/inc src/$@.cpp -o output/$(@) -L$(D) -lconcord -lcryptopp -lpthread
+bell:
+	$(CC) $(CFLAG) -I$(D)/inc -I$(P)/hclc/inc -I$(P)/claf/inc  -L$(P)/hclc/bin/ -L$(P)/claf/bin src/$(@).cpp -o output/$(@).out -L$(D) -L$(L) -lclaf -lhclc -lcore -lcryptopp -lpthread -luttu

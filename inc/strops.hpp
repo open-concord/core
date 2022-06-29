@@ -1,8 +1,7 @@
+#pragma once
 #include <string>
 #include <array>
 #include <fstream>
-
-#pragma once
 
 // B64
 namespace b64 {

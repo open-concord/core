@@ -1,3 +1,4 @@
+#pragma once
 #include "../../inc/claf.hpp"
 
 bool apply_error(std::string tag, std::string context) {

@@ -9,10 +9,10 @@
 #include <unordered_set>
 #include <vector>
 
-#include "../../../inc/proto.hpp"
-#include "../../../inc/crypt.hpp"
-#include "../../../inc/strops.hpp"
-#include "../../../inc/tree.hpp"
+#include <proto.hpp>
+#include <crypt.hpp>
+#include <strops.hpp>
+#include <tree.hpp>
 
 #include "birank.hpp"
 #include "bijson.hpp"
@@ -22,8 +22,6 @@
 
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
-
-bijson t;
 
 class Server {
   private:
