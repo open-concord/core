@@ -3,8 +3,8 @@
 *.so
 *.dll
 *.a
-/build/**
 /lib/**
+/build/**
 .vscode/*
 .vs/*
 test/output/
