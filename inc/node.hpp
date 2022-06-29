@@ -3,6 +3,11 @@
 #include "tree.hpp"
 #include "proto.hpp"
 
+namespace FTEMP {
+  FlagManager::PRETAPE ConnCtx{4, true};
+  FlagManager::PRETAPE Node{3, false};
+};
+
 namespace Ctx {
   struct Exchange {
     bool close = false;
@@ -31,8 +36,7 @@ struct ConnCtx {
     CLOSE,
     HOST
   } FLAGS;
-  FlagManager Flags;
-  FlagManager::PRETAPE FLAGT {4, false};
+  FlagManager Flags; 
   Peer Networking;
   
   Ctx::Exchange* ExchangeCtx;
@@ -56,8 +60,7 @@ public:
     CLOSE,
     LAZY_ACTIVE
   } FLAGS;
-  FlagManager Flags; 
-  FlagManager::PRETAPE FLAGT {3, false};
+  FlagManager Flags;  
 
   std::map<std::string, Tree> Chains;
   std::vector<ConnCtx> Connections;

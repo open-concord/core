@@ -17,7 +17,7 @@ Node::Node(
   std::function<bool(std::string)> wd,
   unsigned short int queue,
   unsigned int tout
-) : Flags(Node::FLAGT), Chains(cm), 
+) : Flags(FTEMP::Node), Chains(cm), 
   Dispatcher(
     Relay(
       std::nullopt, 
