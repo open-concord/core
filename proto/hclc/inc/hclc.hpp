@@ -6,7 +6,7 @@
 #include <vector>
 #include <functional>
 
-#include <node.hpp>
+#include <ctx.hpp>
 #include <proto.hpp>
 #include <strops.hpp>
 #include <crypt.hpp>
@@ -25,8 +25,8 @@ private:
     };
     return ret;
   }  
-    ConnCtx* c = nullptr;   
-  std::string chain_trip;
+  Conn* c = nullptr;   
+  std::string chain_trip, msgCtx;
   int k;
 public:
   json update_chain(json cont); 
@@ -46,7 +46,7 @@ public:
   };
   void Key_Exchange();  
   
-  void ConnHandle(ConnCtx*) override;
+  void ConnHandle(Conn*) override;
   void NodeHandle(Node*) override;
   hclc(std::string ct, int k_) : chain_trip(ct), k(k_) {}
 };

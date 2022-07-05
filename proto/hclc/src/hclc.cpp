@@ -3,9 +3,9 @@
 // add blocks in context to chain
 json hclc::update_chain(json cont = {}) {
   /** aliasing */
-  auto eCTX = *(c->ExchangeCtx);
-  auto gCTX = *(c->GraphCtx);
-  auto TREE = (*(gCTX.ParentMap))[eCTX.ChainTrip];
+  auto eCTX = (c->ExchangeCtx);
+  auto gCTX = (c->GraphCtx);
+  auto TREE = (*(gCTX.Forest))[eCTX.ChainTrip];
 
   TREE.batch_push(eCTX.NewBlocks);
   std::unordered_set<std::string> new_block_hashes;
@@ -21,9 +21,9 @@ json hclc::update_chain(json cont = {}) {
 json hclc::client_open(std::string chain_trip) {
     try {
       /** aliasing */  
-      auto eCTX = *(c->ExchangeCtx);
-      auto gCTX = *(c->GraphCtx);      
-      auto TREE = (*(gCTX.ParentMap))[eCTX.ChainTrip];
+      auto eCTX = (c->ExchangeCtx);
+      auto gCTX = (c->GraphCtx);      
+      auto TREE = (*(gCTX.Forest))[eCTX.ChainTrip];
 
       eCTX.ChainTrip = chain_trip;
 
@@ -53,11 +53,11 @@ json hclc::client_open(std::string chain_trip) {
 json hclc::host_open(json cont) {
   try {
     /** aliasing */
-    auto eCTX = *((this->c)->ExchangeCtx);
-    auto gCTX = *((this->c)->GraphCtx);
+    auto eCTX = ((this->c)->ExchangeCtx);
+    auto gCTX = ((this->c)->GraphCtx);
 
     eCTX.ChainTrip = cont["chain"];
-    auto TREE = (*(gCTX.ParentMap))[eCTX.ChainTrip];
+    auto TREE = (*(gCTX.Forest))[eCTX.ChainTrip];
 
     std::unordered_set<std::string> valence_hashes = TREE.get_qualifying_hashes(&Tree::is_childless);
 
@@ -93,9 +93,9 @@ json hclc::host_open(json cont) {
 //send requests for parents of the latest layer of blcoks and fulfill the latest layer of such requests - BLOCKS
 json hclc::transfer_blocks(json cont) {
     try {
-        auto eCTX = *((this->c)->ExchangeCtx);
-        auto gCTX = *((this->c)->GraphCtx);
-        auto TREE = (*(gCTX.ParentMap))[eCTX.ChainTrip];
+        auto eCTX = ((this->c)->ExchangeCtx);
+        auto gCTX = ((this->c)->GraphCtx);
+        auto TREE = (*(gCTX.Forest))[eCTX.ChainTrip];
 
         auto chain_saved = TREE.get_chain();
 
@@ -150,54 +150,33 @@ json hclc::transfer_blocks(json cont) {
 // the actual HCLC process ends here
 
 // Keyex
-void hclc::Key_Exchange() {
-  
-  auto NET = ((this->c)->Networking);
-  
+void hclc::Key_Exchange() { 
   json _j;
   _j["FLAG"] = "KE";
-  _j["CONT"] = NET.sec.Public();
+  _j["CONT"] = c->sec.Public();
 
 
-  NET.Raw_Write(_j.dump());
-  json _ij = json::parse(NET.Raw_Read());
+  c->RawWrite(_j.dump());
+  json _ij = json::parse(c->RawRead());
 
   if (_ij["FLAG"] == "KE") {
-    NET.sec.Peer(_ij["CONT"]);
+    c->sec.Peer(_ij["CONT"]);
   } else {
     std::cout << "First FC wasn't Key Exchange\n";
   }
 }
 
 // apply communication roadmap
-void hclc::ConnHandle(ConnCtx* _c) { 
-  /**  
-    protocol template is in a weird place right now;
-    it's ownership implementation is split between
-    - having one instance of itself controlling multiple connections
-    - having 1:1 pairing and ownership
-
-    while the preformance considerations of the second is scary;
-    it's most in line with our current goals and capabilities (time, mostly)
-    
-    eventually, protocols should be built in a psuedo schema that any connection can follow
-    but that would require writing a verbos-equse system and then writing a compiler 
-    from a more human readable language standard
-
-    a project for another day, i guess
-
-    ~u2on
-  */
-  if (this->c == nullptr) {_c = c;}
-  auto NET = (c->Networking);
-  if (NET.sec.Shared().empty()) {
+void hclc::ConnHandle(Conn* _c) { 
+  if (this->c == nullptr) {_c = c;} 
+  if (c->sec.Shared().empty()) {
     this->Key_Exchange();
   }
-
+  
   /** prompt */
   if (
-      c->ExchangeCtx->MessageCtx.empty() 
-      && !(NET.Flags.GetFlag(ConnCtx::HOST))
+      this->msgCtx.empty()
+      && !(c->Flags.GetFlag(Conn::HOST, 1))
       && !chain_trip.empty()
       && k > -1
   ) {
@@ -208,15 +187,9 @@ void hclc::ConnHandle(ConnCtx* _c) {
       {"k", k}
     };
     
-    NET.Write(ready_message);
+    c->Write(ready_message);
   }
-
-  std::string mb = NET.Read();
-  while (mb.empty()) {
-    /** wait ig (this is a placeholder until lazy read on peer) */
-    std::this_thread::sleep_for(std::chrono::seconds(2));
-    mb = NET.Read();
-  }
+  std::string mb = c->AwaitRead();
   json parsed = json::parse(mb);
   std::cout << "NEW MSG: " << parsed << "\n";
   
@@ -232,8 +205,8 @@ void hclc::ConnHandle(ConnCtx* _c) {
   } catch (int err) {
     rmsg = error(err).dump();
   }
-  NET.Write(rmsg);
-  if (!(c->ExchangeCtx)->close) {
+  c->Write(rmsg);
+  if (!(c->Flags.GetFlag(Conn::CLOSE, 1))) {
     this->ConnHandle(c);
   } else {
     /** immediately cease contact */
@@ -245,8 +218,8 @@ void hclc::ConnHandle(ConnCtx* _c) {
     std::string s(j.dump());
 
     /** send claf compliant stop */
-    NET.Write(s);
-    NET.Close();
+    c->Write(s);
+    c->Close();
     return;
   }
 }
