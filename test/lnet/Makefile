@@ -19,7 +19,7 @@ LNK = -L$(P)/hclc/bin/ -L$(L) -L$(C)
 
 rebuild: clean build
 
-build:
+build:	
 	$(CC) $(CFLAG) $(INC) main.cpp -o ln.out $(LNK) -lhclc -lcore -lcryptopp -lpthread -luttu
 
 clean:

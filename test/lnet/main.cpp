@@ -7,7 +7,7 @@
 using Forest = std::map<std::string, Tree>;
 
 struct Agent : public Node {
-  std::map<std::string, Tree> f;
+  std::map<std::string, Tree> f; 
   Agent(
       unsigned int port, 
       std::map<std::string, Tree> f
@@ -27,30 +27,32 @@ int main(void) {
   Agent Alice(1337, std::move(af));
   Agent Bob(1338, std::move(bf));
   
-  std::cout << "Completed intialisation\n";
-  Alice.Lazy(true, false);  
-  Alice.Open();
-  
+  std::cout << "== Completed intialisation ==\n";
+
+  Alice.R()->Open();
+  Alice.Lazy(true, false);   
   std::cout << "Alice now waiting\n";
   
 
   std::cout << "Bob Contacting\n";
   Bob.Contact("127.0.0.1", 1337);
 
-
   std::cout << "Waiting to Ensure Connection\n";
   std::this_thread::sleep_for(std::chrono::milliseconds(20));
   
-  std::cout << "Beginning HCLC Exchange\n";
+  std::cout << "== Beginning HCLC Exchange ==\n";
+  
+  std::cout << "Alice Connection Count: " << Alice.Connections.size() << '\n';
+  std::cout << "Bob Connection Count: " << Bob.Connections.size() << '\n';
 
-  std::jthread at(&hclc::ConnHandle, ha, &Alice.Connections.at(0));
-  std::jthread bt(&hclc::ConnHandle, ha, &Bob.Connections.at(0));
+  std::jthread at(&hclc::ConnHandle, ha, Alice.Connections.at(0).get());
+  std::jthread bt(&hclc::ConnHandle, ha, Bob.Connections.at(0).get());
   
   at.detach();
   bt.detach();
 
-  std::cout << "Waiting for HCLC to complete\n";
-  while(!Alice.Connections.at(0).Flags.GetFlag(Conn::CLOSE)) {
+  std::cout << "== Waiting for HCLC to complete ==\n";
+  while(!Alice.Connections.at(0).get()->Flags.Get(Conn::CLOSE)) {
     std::this_thread::sleep_for(std::chrono::milliseconds(20));
   }
 

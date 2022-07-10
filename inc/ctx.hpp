@@ -21,7 +21,7 @@ namespace Ctx {
   };
 }
 
-struct Conn : public Peer {
+struct Conn {
   enum {
     ACTIVE,
     HALTED,
@@ -29,37 +29,35 @@ struct Conn : public Peer {
     CLOSE,
     HOST
   } FLAGS;
-
+  FlagManager Flags;
+  std::unique_ptr<Peer> p;
+  
   Ctx::Exchange ExchangeCtx;
   Ctx::Graph GraphCtx;
-
-  Conn(
-      unsigned int p,
-      Ctx::Graph g,
-      std::optional<np*> pr = std::nullopt
-      ) : Peer(pr, p), GraphCtx(g) {
-    /** reserve tape */
-    this->Flags.Reserve(1, 5);
-  }
+  Peer* P() {return this->p.get();} 
   Conn (
       Ctx::Graph g,
-      Peer p
-      ) : Peer(p), GraphCtx(g) {
+      std::unique_ptr<Peer> p
+      ) : p(std::move(p)), GraphCtx(g) {
     /** reserve tape */
-    this->Flags.Reserve(1, 5);
+    this->Flags.Reserve(0, 5);
+    this->Flags.Fill(false);
   }
 };
 
-struct Node : public Relay {
+struct Node {
+  std::unique_ptr<Relay> r;
+
   enum {
     OPEN, 
     CLOSE
   } FLAGS;
-
-  std::vector<Conn> Connections;  
+  FlagManager Flags; 
+  std::vector<std::unique_ptr<Conn>> Connections;  
   
   Ctx::Graph Graph;
-  
+ 
+  Relay* R() {return this->r.get();}
   void Lazy(bool state, bool blocking);
   void Contact(std::string ip, unsigned int port);
   void Stop();
@@ -68,15 +66,20 @@ struct Node : public Relay {
       unsigned short queueLimit = 15,
       unsigned int timeout = 3000,
       std::optional<np*> n = std::nullopt
-      ) : Relay(n, port, timeout, queueLimit) {
+      ) : 
+    r(
+        std::make_unique<Relay>( 
+            n, port, timeout, queueLimit
+        )
+    ) {
     /** reserve tape */
-    this->Flags.Reserve(2, 2); 
-    this->Relay::Embed([this](Peer p) -> void {
-        Conn c(
+    this->Flags.Reserve(0, 2);
+    this->Flags.Fill(false);
+    (this->r.get())->Embed([this](std::unique_ptr<Peer> p) -> void {
+        this->Connections.push_back(std::make_unique<Conn>(
           this->Graph,
-          std::move(p) 
-        );
-        this->Connections.push_back(std::move(c));
+          std::move(p)
+        ));
       });
   }
 };

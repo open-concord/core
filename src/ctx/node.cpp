@@ -1,28 +1,31 @@
 #include "../../inc/ctx.hpp"
 
 void Node::Lazy(bool state, bool blocking) {
-  this->Flags.SetFlag(Relay::LAZY, state, 1);
+  (this->r.get())->Flags.Set(Relay::LAZY, state, 1);
   if (state) {
-    this->Relay::Lazy(blocking);
+    (this->r.get())->Lazy(blocking);
   }
 }
 
 void Node::Contact(std::string ip, unsigned int port) {
-  Peer p(std::nullopt);
-  p.Connect(ip, port);
-  Conn c(
-      this->Graph, 
-      std::move(p) 
-  );
-  this->Connections.push_back(std::move(c)); 
+  this->Connections.push_back(
+    std::make_unique<Conn>(     
+      this->Graph,
+      std::make_unique<Peer>(
+        std::nullopt
+      ) 
+    )
+  ); 
+  this->Connections.back()->P()->Connect(ip, port);
 }
 
 void Node::Stop() {
-  this->Close();
+  (this->r.get())->Close();
   unsigned int ht; // highest timeout
   for (auto& c: this->Connections) {
-    ht = (ht < c.tout) ? c.tout : ht;
-    c.Flags.SetFlag(Conn::CLOSE, true, 1); // second tape
+    auto cv = c.get();
+    ht = (ht < (cv->p.get())->tout) ? (cv->p.get())->tout : ht;
+    cv->Flags.Set(Conn::CLOSE, true); 
   }
   std::jthread st([] (Node* n, unsigned int t) -> void {
     try {
