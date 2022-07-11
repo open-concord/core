@@ -161,8 +161,7 @@ void hclc::Key_Exchange() {
 
   if (_ij["FLAG"] == "KE") {
     NET->sec.Peer(_ij["CONT"]);
-    NET->sec.Gen();
-    std::cout << NET->sec.Shared();
+    NET->sec.Gen(); 
   } else {
     std::cout << "First FC wasn't Key Exchange\n";
   }
@@ -183,16 +182,8 @@ void hclc::ConnHandle(Conn* _c) {
       this->msgCtx.empty()
       && !(c->Flags.Get(Conn::HOST))
       && !chain_trip.empty()
-      && k > -1
   ) {
-    json ready_message;
-    ready_message["FLAG"] = "READY";
-    ready_message["CONTENT"] = {
-      {"chain", chain_trip},
-      {"k", k}
-    };
-    
-    NET->Write(ready_message.dump());
+    NET->Write(client_open(chain_trip).dump()); 
   }
 
   json parsed = json::parse(NET->AwaitRead());

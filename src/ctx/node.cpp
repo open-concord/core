@@ -8,15 +8,14 @@ void Node::Lazy(bool state, bool blocking) {
 }
 
 void Node::Contact(std::string ip, unsigned int port) {
+  Peer p(std::nullopt);
+  p.Connect(ip, port); 
   this->Connections.push_back(
     std::make_unique<Conn>(     
       this->Graph,
-      std::make_unique<Peer>(
-        std::nullopt
-      ) 
+      std::make_unique<Peer>(p) 
     )
-  ); 
-  this->Connections.back()->P()->Connect(ip, port);
+  );  
 }
 
 void Node::Stop() {
