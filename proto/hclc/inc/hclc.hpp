@@ -26,8 +26,7 @@ private:
     return ret;
   }  
   Conn* c = nullptr;   
-  std::string chain_trip, msgCtx;
-  int k;
+  std::string chain_trip;
 public:
   json update_chain(json cont); 
   json client_open(std::string);

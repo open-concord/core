@@ -29,8 +29,8 @@ int main(void) {
   
   std::cout << "== Completed intialisation ==\n";
 
-  Alice.R()->Open();
   Alice.Lazy(true, false);   
+  Alice.R()->Open();
   std::cout << "Alice now waiting\n";
   
 

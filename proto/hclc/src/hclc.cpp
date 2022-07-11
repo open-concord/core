@@ -150,18 +150,17 @@ json hclc::transfer_blocks(json cont) {
 // the actual HCLC process ends here
 
 // Keyex
-void hclc::Key_Exchange() { 
-  auto NET = c->P();
+void hclc::Key_Exchange() {  
   json _j;
   _j["FLAG"] = "KE";
-  _j["CONT"] = NET->sec.Public();
+  _j["CONT"] = c->P()->sec.Public();
  
-  NET->RawWrite(_j.dump());
-  json _ij = json::parse(NET->AwaitRawRead());
+  c->P()->RawWrite(_j.dump());
+  json _ij = json::parse(c->P()->AwaitRawRead());
 
   if (_ij["FLAG"] == "KE") {
-    NET->sec.Peer(_ij["CONT"]);
-    NET->sec.Gen(); 
+    c->P()->sec.Peer(_ij["CONT"]);
+    c->P()->sec.Gen(); 
   } else {
     std::cout << "First FC wasn't Key Exchange\n";
   }
@@ -170,24 +169,22 @@ void hclc::Key_Exchange() {
 // apply communication roadmap
 void hclc::ConnHandle(Conn* _c) { 
   if (this->c == nullptr) {this->c = _c;}
-  auto NET = c->p.get();
 
-  if (NET->sec.Zero(NET->sec.Shared())) { 
+  if (c->P()->sec.Zero(c->P()->sec.Shared())) { 
     this->Key_Exchange();
   }
-  std::cout << "SHARED: " << NET->sec.Shared() << '\n'; // DEBUG
+  std::cout << "SHARED: " << c->P()->sec.Shared() << '\n'; // DEBUG
   
   /** prompt */
   if (
-      this->msgCtx.empty()
-      && !(c->Flags.Get(Conn::HOST))
+      !(c->Flags.Get(Conn::HOST))
       && !chain_trip.empty()
   ) {
-    NET->Write(client_open(chain_trip).dump()); 
+    c->P()->Write(client_open(chain_trip).dump()); 
   }
 
-  json parsed = json::parse(NET->AwaitRead());
-  std::cout << "NEW MSG: " << parsed << "\n";
+  json parsed = json::parse(c->P()->AwaitRead());
+  std::cout << "NEW MSG: " << parsed << "\n"; // DEBUG
   
   // message parsing
   std::string cmd = parsed["FLAG"];
@@ -201,7 +198,7 @@ void hclc::ConnHandle(Conn* _c) {
   } catch (int err) {
     rmsg = error(err).dump();
   }
-  NET->Write(rmsg);
+  c->P()->Write(rmsg);
   if (!(c->Flags.Get(Conn::CLOSE))) {
     this->ConnHandle(c);
   } else {
@@ -214,8 +211,8 @@ void hclc::ConnHandle(Conn* _c) {
     std::string s(j.dump());
 
     /** send claf compliant stop */
-    NET->Write(s);
-    NET->Close();
+    c->P()->Write(s);
+    c->P()->Close();
     return;
   }
 }
