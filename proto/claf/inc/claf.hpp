@@ -81,5 +81,6 @@ struct CLAF : public Protocol {
 private:
 
 public:
-  void ConnHandle(ConnCtx* c) override;
+  void ConnHandle(Conn* c) override;
+  void NodeHandle(Node* n) override; // same as hclc
 };
