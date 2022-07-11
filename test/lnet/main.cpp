@@ -23,7 +23,7 @@ int main(void) {
   bf[ttrip] = Tree("./bchains");
 
 
-  hclc ha(ttrip, 1), hb(ttrip, 1);
+  hclc ha(ttrip), hb(ttrip);
   Agent Alice(1337, std::move(af));
   Agent Bob(1338, std::move(bf));
   
