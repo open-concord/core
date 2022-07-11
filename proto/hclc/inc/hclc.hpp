@@ -48,5 +48,5 @@ public:
   
   void ConnHandle(Conn*) override;
   void NodeHandle(Node*) override;
-  hclc(std::string ct, int k_) : chain_trip(ct), k(k_) {}
+  hclc(std::string ct) : chain_trip(ct) {}
 };
