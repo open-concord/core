@@ -26,8 +26,7 @@ struct Conn {
     ACTIVE,
     HALTED,
     COMPLETE,
-    CLOSE,
-    HOST
+    CLOSE
   } FLAGS;
   FlagManager Flags;
   std::unique_ptr<Peer> p;

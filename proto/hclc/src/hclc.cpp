@@ -177,9 +177,10 @@ void hclc::ConnHandle(Conn* _c) {
   
   /** prompt */
   if (
-      !(c->Flags.Get(Conn::HOST))
+      !(c->P()->Flags.Get(Peer::HOST))
       && !chain_trip.empty()
   ) {
+    std::cout << "NOT THE HOST\n"; // DEBUG
     c->P()->Write(client_open(chain_trip).dump()); 
   }
 
