@@ -87,13 +87,13 @@ json hclc::transfer_blocks(json cont) {
 
         //fetch blocks requested
         for (auto prompt_req : prompt_req_hashes) {
-          blocks_packet.push_back(block_to_json(chain_saved[prompt_req]));
+          blocks_packet.push_back(chain_saved[prompt_req].jdump());
         }
 
         //add blocks received and request missing parents
         std::unordered_set<std::string> provided_p_hashes;
         for (auto prompt_block : prompt_blocks_packet) {
-            block new_block = json_to_block(prompt_block);
+            block new_block(prompt_block);
             ECTX->NewBlocks.push_back(new_block);
             for (auto p_hash : new_block.p_hashes) {
                 provided_p_hashes.insert(p_hash);

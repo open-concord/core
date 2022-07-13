@@ -43,7 +43,7 @@ struct block {
     /** state */
     std::string hash_concat() const;
     bool verify(int pow) const;
-    json djson() const;
+    json jdump() const;
     std::string dump() const;
     /** construct */
     block(json origin);

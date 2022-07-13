@@ -22,7 +22,7 @@ bool block::verify(int pow) const {
     return true;
 }
 
-json block::djson() const {
+json block::jdump() const {
     json output;
     std::string enc_time = b64::encode(raw_time_to_string(this->time));
     std::vector<std::string> v_p_hashes;
@@ -35,7 +35,7 @@ json block::djson() const {
 }
 
 std::string block::dump() const {
-  return this->djson().dump();
+  return this->jdump().dump();
 }
 
 block::block(
