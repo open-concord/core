@@ -137,7 +137,7 @@ std::vector<block> Tree::search_user(std::string trip) {
   for (const auto& [_hash, _block] : this->get_chain()) {
     try {
       json j = json::parse(_block.cont);
-      if (!j["d"] || !(_block.verify(const_cast<int&>(this->pow)))) {throw;}
+      if (!j["d"] || !(_block.verify(this->pow))) {throw;}
       if (j["d"] == trip || trip.empty()) {
         matches.push_back(_block);
       }
@@ -168,7 +168,7 @@ bool Tree::verify_chain() {
     std::map<std::string, bool> s_trip_seen;
     for (const auto& [_hash, _block] : this->get_chain()) {
         // make sure every hash is valid.
-        if (!_block.verify(const_cast<int&>(this->pow))) return false;
+        if (!_block.verify(this->pow)) return false;
         /**
         * If there were multiple server roots, we couldn't tell which was valid.
         * P2P prevents the propagation of new roots, but this means we have
