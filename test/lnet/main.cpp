@@ -39,7 +39,10 @@ int main(void) {
 
   std::cout << "Waiting to Ensure Connection\n";
   std::this_thread::sleep_for(std::chrono::milliseconds(20));
-  
+ 
+  std::cout << "Adding new block to Alice\n";
+  // TODO 
+
   std::cout << "== Beginning HCLC Exchange ==\n";
   
   std::cout << "Alice Connection Count: " << Alice.Connections.size() << '\n';

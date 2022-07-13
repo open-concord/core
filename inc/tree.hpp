@@ -40,15 +40,23 @@ struct block {
     std::unordered_set<std::string> p_hashes;
     //these properties are for chain analysis and aren't actually saved
     std::unordered_set<std::string> c_hashes;
+    /** state */
+    std::string hash_concat() const;
+    bool verify(int pow) const;
+    json djson() const;
+    std::string dump() const;
+    /** construct */
+    block(json origin);
+    block();
+    block(
+        std::string cont, 
+        std::unordered_set<std::string> p_hashes, 
+        int pow, 
+        std::string s_trip, 
+        unsigned long long set_time = get_raw_time(), 
+        std::string c_trip = ""
+        );
 };
-
-bool verify_block(block to_verify, int pow);
-
-json block_to_json(block input);
-
-block json_to_block(json input);
-
-block construct_block(std::string cont, std::unordered_set<std::string> p_hashes, int pow, std::string s_trip, unsigned long long set_time = get_raw_time(), std::string c_trip = "");
 
 std::vector<std::string> order_hashes(std::unordered_set<std::string> input_hashes);
 

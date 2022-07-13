@@ -27,7 +27,7 @@ OBJ = $(BIN)lockmsg.o \
 	$(BIN)miner.o \
 	$(BIN)time.o \
 	$(BIN)tree.o \
-	$(BIN)benc.o \
+	$(BIN)block.o \
 	$(BIN)b64.o \
 	$(BIN)hexstr.o \
 	$(BIN)ctx.o	
@@ -76,8 +76,8 @@ $(BIN)tree.o: ./inc/tree.hpp
 	$(CC) $(CFLAGS) ./src/tree/tree.cpp -o $@
 $(BIN)time.o: ./inc/tree.hpp
 	$(CC) $(CFLAGS) ./src/tree/time_enc.cpp -o $@
-$(BIN)benc.o: ./inc/tree.hpp
-	$(CC) $(CFLAGS) ./src/tree/block_enc.cpp -o $@
+$(BIN)block.o: ./inc/tree.hpp
+	$(CC) $(CFLAGS) ./src/tree/block.cpp -o $@
 
 # nodes
 $(BIN)ctx.o: ./inc/ctx.hpp

@@ -58,7 +58,7 @@ void Tree::load(std::string dir) {
             saved_block.seekg(0, std::ios::beg);
             saved_block.read(&block_data[0], block_data.size());
             saved_block.close();
-            block parsed_block = json_to_block(json::parse(block_data));
+            block parsed_block(json::parse(block_data));
             loaded_blocks.push_back(parsed_block);
         }
         else continue;
@@ -79,7 +79,7 @@ std::string Tree::gen_block(
     assert(s_trip.length() == 24);
     assert(c_trip.length() == 24 || c_trip.length() == 0);
     if (p_hashes.size() == 0) p_hashes = find_p_hashes(s_trip);
-    block out_block = construct_block(cont, p_hashes, this->pow, s_trip, set_time, c_trip);
+    block out_block(cont, p_hashes, this->pow, s_trip, set_time, c_trip);
     chain_push(out_block);
     return out_block.hash;
 }
@@ -137,7 +137,7 @@ std::vector<block> Tree::search_user(std::string trip) {
   for (const auto& [_hash, _block] : this->get_chain()) {
     try {
       json j = json::parse(_block.cont);
-      if (!j["d"] || !(verify_block(_block, this->pow))) {throw;}
+      if (!j["d"] || !(_block.verify(const_cast<int&>(this->pow)))) {throw;}
       if (j["d"] == trip || trip.empty()) {
         matches.push_back(_block);
       }
@@ -168,7 +168,7 @@ bool Tree::verify_chain() {
     std::map<std::string, bool> s_trip_seen;
     for (const auto& [_hash, _block] : this->get_chain()) {
         // make sure every hash is valid.
-        if (!verify_block(_block, this->pow)) return false;
+        if (!_block.verify(const_cast<int&>(this->pow))) return false;
         /**
         * If there were multiple server roots, we couldn't tell which was valid.
         * P2P prevents the propagation of new roots, but this means we have
@@ -307,7 +307,7 @@ void Tree::link_block(block to_link) {
 
 void Tree::save(block to_save) {
     if (!dir_linked) return;
-    std::string block_string = block_to_json(to_save).dump();
+    std::string block_string = to_save.dump();
     std::ofstream block_file(((this->target_dir) + to_save.hash + ".block").c_str());
     block_file << block_string;
     block_file.close();
@@ -320,32 +320,3 @@ std::vector<std::string> order_hashes(std::unordered_set<std::string> input_hash
     return hashes_vector;
 }
 
-std::string hash_concat(block input) {
-    std::string concat_data = b64::encode(raw_time_to_string(input.time)) + input.s_trip + input.c_trip + input.cont; //b64 timestr encoding is only for safety
-    for (auto ph : order_hashes(input.p_hashes)) concat_data += ph;
-    return concat_data;
-}
-
-bool verify_block(block to_verify, int pow) {
-    std::string result_hash = hex::encode(gen::hash(false, hash_concat(to_verify) + to_verify.nonce));
-    if (result_hash != to_verify.hash) return false;
-    for (int i = 0; i < pow; i++) {
-        if (result_hash.at(i) != '0') return false;
-    }
-    return true;
-}
-
-block construct_block(std::string cont, std::unordered_set<std::string> p_hashes, int pow, std::string s_trip, unsigned long long set_time, std::string c_trip) {
-    Miner local_miner(pow);
-
-    block output;
-    output.time = set_time;
-    output.s_trip = s_trip;
-    output.c_trip = c_trip;
-    output.cont = cont;
-    output.p_hashes = p_hashes;
-    std::array<std::string, 2> nonce_result = local_miner.generate_valid_nonce(false, hash_concat(output));
-    output.nonce = nonce_result[0];
-    output.hash = nonce_result[1];
-    return output;
-}
