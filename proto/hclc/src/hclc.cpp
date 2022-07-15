@@ -2,9 +2,11 @@
 
 // add blocks in context to chain
 json hclc::update_chain(json cont = {}) {
-  TREE->batch_push(ECTX->NewBlocks);
+  (this->c)->GraphCtx.Forest[
+    (this->c)->ExchangeCtx.ChainTrip
+    ]->batch_push((this->c)->ExchangeCtx.NewBlocks);
   std::unordered_set<std::string> new_block_hashes;
-  for (const auto& block : ECTX->NewBlocks) {
+  for (const auto& block : (this->c)->ExchangeCtx.NewBlocks) {
     new_block_hashes.insert(block.hash);
   }
   return {{"FLAG", "DONE"}};
@@ -13,11 +15,14 @@ json hclc::update_chain(json cont = {}) {
 /** the actual HCLC process starts here */
 
 // open contact - COPEN
-json hclc::client_open(std::string chain_trip) {
+json hclc::client_open() {
     try {
-      ECTX->ChainTrip = chain_trip;
+      (this->c)->ExchangeCtx.ChainTrip = this->chain_trip;
 
-      std::unordered_set<std::string> valence_hashes = TREE->get_qualifying_hashes(&Tree::is_childless);
+      std::unordered_set<std::string> valence_hashes = 
+        (this->c)->GraphCtx.Forest[
+          (this->c)->ExchangeCtx.ChainTrip
+          ]->get_qualifying_hashes(&Tree::is_childless);
 
       std::vector<std::string> c_valence_hashes;
 
@@ -28,11 +33,10 @@ json hclc::client_open(std::string chain_trip) {
       json ret = {
           {"FLAG", "COPEN"},
           {"CONTENT", {
-            {"chain", chain_trip},
+            {"chain", this->chain_trip},
             {"val", c_valence_hashes}
           }}
       };
-
       return ret;
     } catch (int err) {
       return error(err);
@@ -42,9 +46,12 @@ json hclc::client_open(std::string chain_trip) {
 // receive COPEN and send host valence - HOPEN
 json hclc::host_open(json cont) {
   try { 
-    ECTX->ChainTrip = cont["chain"]; 
+    (this->c)->ExchangeCtx.ChainTrip = cont["chain"]; 
 
-    std::unordered_set<std::string> valence_hashes = TREE->get_qualifying_hashes(&Tree::is_childless);
+    std::unordered_set<std::string> valence_hashes = 
+      (this->c)->GraphCtx.Forest[
+        (this->c)->ExchangeCtx.ChainTrip
+        ]->get_qualifying_hashes(&Tree::is_childless);
 
     std::vector<std::string> h_valence_hashes;
     std::vector<std::string> c_valence_hashes = cont["val"];
@@ -54,7 +61,9 @@ json hclc::host_open(json cont) {
       h_valence_hashes.push_back(valence_hash);
     }
 
-    auto chain_saved = TREE->get_chain();
+    auto chain_saved = (this->c)->GraphCtx.Forest[
+      (this->c)->ExchangeCtx.ChainTrip
+      ]->get_chain();
     for (auto c_val_hash : c_valence_hashes) {
       if (chain_saved.find(c_val_hash) == chain_saved.end()) {
         req_hashes.push_back(c_val_hash);
@@ -78,7 +87,9 @@ json hclc::host_open(json cont) {
 //send requests for parents of the latest layer of blcoks and fulfill the latest layer of such requests - BLOCKS
 json hclc::transfer_blocks(json cont) {
     try {
-        auto chain_saved = TREE->get_chain();
+        auto chain_saved = (this->c)->GraphCtx.Forest[
+          (this->c)->ExchangeCtx.ChainTrip
+        ]->get_chain();
 
         std::vector<std::string> prompt_req_hashes = cont["req"];
         std::vector<json> prompt_blocks_packet = cont["packet"];
@@ -94,7 +105,7 @@ json hclc::transfer_blocks(json cont) {
         std::unordered_set<std::string> provided_p_hashes;
         for (auto prompt_block : prompt_blocks_packet) {
             block new_block(prompt_block);
-            ECTX->NewBlocks.push_back(new_block);
+            (this->c)->ExchangeCtx.NewBlocks.push_back(new_block);
             for (auto p_hash : new_block.p_hashes) {
                 provided_p_hashes.insert(p_hash);
             }
@@ -159,10 +170,10 @@ void hclc::ConnHandle(Conn* _c) {
   /** prompt */
   if (
       !(c->P()->Flags.Get(Peer::HOST))
-      && !chain_trip.empty()
+      && !this->chain_trip.empty()
   ) {
     std::cout << "NOT THE HOST\n"; // DEBUG
-    c->P()->Write(client_open(chain_trip).dump()); 
+    c->P()->Write(client_open().dump()); 
   }
 
   json parsed = json::parse(c->P()->AwaitRead());

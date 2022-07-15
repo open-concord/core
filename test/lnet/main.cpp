@@ -4,25 +4,24 @@
 
 /** local network test (e.g. local nodes w/ tree + hclc) */
 
-using Forest = std::map<std::string, Tree>;
+using Forest = std::map<std::string, Tree*>;
 
 struct Agent : public Node {
-  std::map<std::string, Tree> f; 
   Agent(
       unsigned int port, 
-      std::map<std::string, Tree> f
-    ) : Node(port), f(f){
-    this->Graph.Forest = &(this->f);
+      std::map<std::string, Tree*> f
+    ) : Node(port) {
+      this->Graph.Forest = f;
   }
 };
 
 int main(void) {
   Forest af, bf;
-  std::string ttrip = gen::trip("seed");
-  af[ttrip] = Tree("./achains");
-  bf[ttrip] = Tree("./bchains");
-
-
+  std::string ttrip{gen::trip("seed")};
+ 
+  af[ttrip] = new Tree("./achains");
+  bf[ttrip] = new Tree("./bchains");
+  
   hclc ha(ttrip), hb(ttrip);
   Agent Alice(1337, std::move(af));
   Agent Bob(1338, std::move(bf));
@@ -42,7 +41,13 @@ int main(void) {
  
   std::cout << "Adding new block to Alice\n";
   // TODO 
-
+  block origin(
+      "hello",
+      {},
+      3,
+      gen::trip("lain")
+  );
+  Alice.Graph.Forest[ttrip]->chain_push(origin);
   std::cout << "== Beginning HCLC Exchange ==\n";
   
   std::cout << "Alice Connection Count: " << Alice.Connections.size() << '\n';

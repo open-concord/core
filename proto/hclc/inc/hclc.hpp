@@ -26,15 +26,10 @@ private:
     return ret;
   }  
   Conn* c = nullptr;   
-  std::string chain_trip;
-  /** aliasing */
-  Ctx::Exchange* ECTX = &((this->c)->ExchangeCtx);
-  Ctx::Graph* GCTX = &((this->c)->GraphCtx);
-  Tree* TREE = &(*(GCTX->Forest))[ECTX->ChainTrip];
-    
+  std::string chain_trip; 
 public:
   json update_chain(json cont); 
-  json client_open(std::string);
+  json client_open();
   json host_open(json);
   json transfer_blocks(json);
 

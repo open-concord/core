@@ -38,6 +38,8 @@ std::string block::dump() const {
   return this->jdump().dump();
 }
 
+block::block() {}
+
 block::block(
     std::string cont, 
     std::unordered_set<std::string> p_hashes, 

@@ -15,7 +15,7 @@ namespace Ctx {
     std::string ChainTrip;
   };
   struct Graph {
-    std::map<std::string, Tree>* Forest;
+    std::map<std::string, Tree*> Forest;
     bool filter, blacklist = false;
     std::vector<std::string> filtered_trees;
   };
