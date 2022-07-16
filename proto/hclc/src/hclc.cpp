@@ -9,7 +9,9 @@ json hclc::update_chain(json cont = {}) {
   for (const auto& block : (this->c)->ExchangeCtx.NewBlocks) {
     new_block_hashes.insert(block.hash);
   }
-  return {{"FLAG", "DONE"}};
+  return {
+    {"FLAG", "END"}
+  };
 }
 
 /** the actual HCLC process starts here */
@@ -84,74 +86,93 @@ json hclc::host_open(json cont) {
   }
 }
 
-//send requests for parents of the latest layer of blcoks and fulfill the latest layer of such requests - BLOCKS
+/** 
+ * send requests for parents of the latest layer of blocks
+ * and fulfill the latest layer of such requests - BLOCKS 
+ */
 json hclc::transfer_blocks(json cont) {
     try {
         auto chain_saved = (this->c)->GraphCtx.Forest[
           (this->c)->ExchangeCtx.ChainTrip
         ]->get_chain();
-
+        /** pulling from inc content */
         std::vector<std::string> prompt_req_hashes = cont["req"];
-        std::vector<json> prompt_blocks_packet = cont["packet"];
+        /** frameworking */
         std::vector<std::string> req_hashes;
-        std::vector<json> blocks_packet;
-
-        //fetch blocks requested
+        std::vector<json> packet;
+       
+        /** fetch blocks requested */
         for (auto prompt_req : prompt_req_hashes) {
-          blocks_packet.push_back(chain_saved[prompt_req].jdump());
+          packet.push_back(chain_saved[prompt_req].jdump());
         }
+        
+        /** determine if this is a clean pull */
+        if (!cont.contains(std::string{"pack"})) {
+          std::cout << "clean pull\n";
+          /** check the valance layer of peer */
+          if (cont["val"].empty()) {
+            /** dump the tree */
+            for (const auto& [trip, block] : chain_saved) {
+               packet.push_back(block.jdump());
+            }
+          } else {
+            /** bring peer up to speed */
+            for (const auto& val_trip : cont["val"]) {
+              /** check that valance layer is legit */
 
-        //add blocks received and request missing parents
-        std::unordered_set<std::string> provided_p_hashes;
-        for (auto prompt_block : prompt_blocks_packet) {
+              /** check for highest block */
+
+              /** dump tree beyond valence layer */
+          }
+        } else {
+          std::vector<json> prompt_packet = cont["pack"];
+          /** add blocks received and request missing parents */
+          std::unordered_set<std::string> provided_p_hashes;
+          for (auto prompt_block : prompt_packet) {
             block new_block(prompt_block);
             (this->c)->ExchangeCtx.NewBlocks.push_back(new_block);
             for (auto p_hash : new_block.p_hashes) {
                 provided_p_hashes.insert(p_hash);
             }
-        }
-
-        //collect parents that are not in the chain and need to be requested
-        for (auto p_hash : provided_p_hashes) {
+          }
+          /** collect parents that are not in the chain and need to be requested */
+          for (auto p_hash : provided_p_hashes) {
             if (chain_saved.find(p_hash) == chain_saved.end()) {
                 req_hashes.push_back(p_hash);
             }
-        }
+          }
+        } 
 
-        //see if this concludes the exchange
-        if (req_hashes.size() == 0 && blocks_packet.size() == 0) {
-            this->update_chain();
-            return {{"FLAG", "END"}};
+        /** see if this concludes the exchange */
+        if (req_hashes.size() == 0 && packet.size() == 0) {
+            return this->update_chain();
         }
-
-        //if it doesn't and we have content to send, go ahead and do that
-        json ret = {
+        /** if it doesn't and we have content to send, go ahead and do that */
+        return {
           {"FLAG", "BLOCKS"},
-          {"CONTENT", {
-            {"req", req_hashes},
-            {"pack", blocks_packet}
-          }}
+          {"CONTENT", {{"req", req_hashes}, {"pack", packet}}}
         };
-
-        return ret;
+    } catch (std::exception& e) {
+      std::cout << "[!] " << e.what() << '\n';
     } catch (int err) {
-        return error(err);
+      return error(err);
     }
 }
 
-// the actual HCLC process ends here
+/** the actual HCLC process ends here */
 
 // Keyex
 void hclc::Key_Exchange() {  
-  json _j;
-  _j["FLAG"] = "KE";
-  _j["CONT"] = c->P()->sec.Public();
- 
+  json _j{
+    {"FLAG", "KE"},
+    {"CONTENT", c->P()->sec.Public()}
+  };
+  
   c->P()->RawWrite(_j.dump());
   json _ij = json::parse(c->P()->AwaitRawRead());
 
   if (_ij["FLAG"] == "KE") {
-    c->P()->sec.Peer(_ij["CONT"]);
+    c->P()->sec.Peer(_ij["CONTENT"]);
     c->P()->sec.Gen(); 
   } else {
     std::cout << "First FC wasn't Key Exchange\n";
