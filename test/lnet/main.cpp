@@ -21,7 +21,6 @@ void doExchange(Agent* Alice, Agent* Bob, std::string ttrip) {
   Alice->R()->Open();
   std::cout << "Alice now waiting\n";
   
-
   std::cout << "Bob Contacting\n";
   Bob->Contact("127.0.0.1", 1337);
 

@@ -25,7 +25,7 @@ json hclc::client_open() {
 
       std::vector<std::string> c_valence_hashes;
 
-      for (auto v_hash : valence_hashes) {
+      for (const auto& v_hash : valence_hashes) {
         c_valence_hashes.push_back(v_hash);
       }
 
@@ -52,7 +52,7 @@ json hclc::host_open(json cont) {
     std::vector<std::string> c_valence_hashes = cont["val"];
     std::vector<std::string> req_hashes;
 
-    for (auto c_val_hash : c_valence_hashes) {
+    for (const auto& c_val_hash : c_valence_hashes) {
       if (cached_chain.find(c_val_hash) == cached_chain.end()) {
         req_hashes.push_back(c_val_hash);
       }
@@ -87,34 +87,40 @@ json hclc::transfer_blocks(json cont) {
         std::vector<json> packet;
        
         /** fetch blocks requested */
-        for (auto prompt_req : prompt_req_hashes) {
+        for (const auto& prompt_req : prompt_req_hashes) {
           packet.push_back(cached_chain[prompt_req].jdump());
         }
         
-        std::vector<json> prompt_packet = cont["pack"];
+        /** fill out incoming block packet */
+        std::vector<json> prompt_packet;
+        if (cont.contains(std::string{"pack"})) {
+          for (const auto& prompt_block : cont["pack"]) {
+            prompt_packet.push_back(prompt_block);
+          }
+        }
 
         /** add blocks received and request missing parents */
         std::unordered_set<std::string> potential_req_hashes;
         
-        // blocks in a received valence layer are treated like parent hashes of, in that they need to requested if absent
-        if (cont.contains("val")) {
+        /** blocks in a received valence layer are treated like parent hashes of, in that they need to requested if absent */
+        if (cont.contains(std::string{"val"})) {
           for (std::string val_hash : cont["val"]) {
             potential_req_hashes.insert(val_hash);
           }
         }
 
         // add received blocks, and while doing so record their parent hashes.
-        for (auto prompt_block : prompt_packet) {
+        for (const auto& prompt_block : prompt_packet) {
           block new_block(prompt_block);
           (this->c)->ExchangeCtx.NewBlocks.push_back(new_block);
-          for (auto p_hash : new_block.p_hashes) {
+          for (const auto& p_hash : new_block.p_hashes) {
               potential_req_hashes.insert(p_hash);
           }
         }
 
         /** collect parents that are not in the chain and need to be requested */
-        for (auto p_req_hash : potential_req_hashes) {
-          if (!cached_chain.contains(p_req_hash)) {
+        for (const auto& p_req_hash : potential_req_hashes) {
+          if (!cached_chain.contains(std::string{p_req_hash})) {
             req_hashes.push_back(p_req_hash);
           }
         }
