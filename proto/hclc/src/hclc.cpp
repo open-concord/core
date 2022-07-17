@@ -191,11 +191,9 @@ void hclc::ConnHandle(Conn* _c) {
   }
 
   /** prompt */
-  if (
-      !(c->P()->Flags.Get(Peer::HOST))
-      && !this->chain_trip.empty()
-  ) {
-      c->P()->Write(client_open().dump()); 
+  if (!c->Flags.Get(Conn::ACTIVE) && !(c->P()->Flags.Get(Peer::HOST))) {
+    c->Flags.Set(Conn::ACTIVE, true); 
+    c->P()->Write(client_open().dump());  
   }
 
   json parsed = json::parse(c->P()->AwaitRead());
@@ -218,6 +216,7 @@ void hclc::ConnHandle(Conn* _c) {
     this->ConnHandle(this->c);
   } else {
     (this->c)->Flags.Set(Conn::CLOSE, true);
+    (this->c)->P()->Close();
   }
 }
 

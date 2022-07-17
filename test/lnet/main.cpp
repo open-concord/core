@@ -39,7 +39,7 @@ int main(void) {
   std::cout << "Waiting to Ensure Connection\n";
   std::this_thread::sleep_for(std::chrono::milliseconds(20));
  
-  std::cout << "Adding new block to Alice\n";
+  std::cout << "== Adding new blocks to Alice ==\n";
   // TODO 
   block origin(
       "hello",
@@ -47,7 +47,13 @@ int main(void) {
       3,
       gen::trip("lain")
   );
-  Alice.Graph.Forest[ttrip]->chain_push(origin);
+  block first(
+      "what's up",
+      {origin.hash},
+      3,
+      gen::trip("lain")
+  );
+  Alice.Graph.Forest[ttrip]->batch_push({origin, first});
   std::cout << "== Beginning HCLC Exchange ==\n";
   
   std::cout << "Alice Connection Count: " << Alice.Connections.size() << '\n';
