@@ -15,6 +15,40 @@ struct Agent : public Node {
   }
 };
 
+void doExchange(Agent* Alice, Agent* Bob, std::string ttrip) {
+  hclc ha(ttrip), hb(ttrip);
+  Alice->Lazy(true, false);
+  Alice->R()->Open();
+  std::cout << "Alice now waiting\n";
+  
+
+  std::cout << "Bob Contacting\n";
+  Bob->Contact("127.0.0.1", 1337);
+
+  std::cout << "Waiting to Ensure Connection\n";
+  std::this_thread::sleep_for(std::chrono::milliseconds(20));
+ 
+  std::cout << "== Beginning HCLC Exchange ==\n";
+  
+  std::cout << "Alice Connection Count: " << Alice->Connections.size() << '\n';
+  std::cout << "Bob Connection Count: " << Bob->Connections.size() << '\n';
+
+  std::jthread at(&hclc::ConnHandle, ha, Alice->Connections.back().get());
+  std::jthread bt(&hclc::ConnHandle, ha, Bob->Connections.back().get());
+  
+  at.detach();
+  bt.detach();
+
+  std::cout << "== Waiting for HCLC to complete ==\n";
+  while(!Alice->Connections.back().get()->Flags.Get(Conn::CLOSE)) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+  }
+  /** prune connections */
+  Alice->Connections.pop_back();
+  Bob->Connections.pop_back();
+};
+
+
 int main(void) {
   Forest af, bf;
   std::string ttrip{gen::trip("seed")};
@@ -22,23 +56,10 @@ int main(void) {
   af[ttrip] = new Tree("./achains");
   bf[ttrip] = new Tree("./bchains");
   
-  hclc ha(ttrip), hb(ttrip);
   Agent Alice(1337, std::move(af));
   Agent Bob(1338, std::move(bf));
   
   std::cout << "== Completed intialisation ==\n";
-
-  Alice.Lazy(true, false);   
-  Alice.R()->Open();
-  std::cout << "Alice now waiting\n";
-  
-
-  std::cout << "Bob Contacting\n";
-  Bob.Contact("127.0.0.1", 1337);
-
-  std::cout << "Waiting to Ensure Connection\n";
-  std::this_thread::sleep_for(std::chrono::milliseconds(20));
- 
   std::cout << "== Adding new blocks to Alice ==\n";
   // TODO 
   block origin(
@@ -54,34 +75,24 @@ int main(void) {
       gen::trip("lain")
   );
   Alice.Graph.Forest[ttrip]->batch_push({origin, first});
-  std::cout << "== Beginning HCLC Exchange ==\n";
   
-  std::cout << "Alice Connection Count: " << Alice.Connections.size() << '\n';
-  std::cout << "Bob Connection Count: " << Bob.Connections.size() << '\n';
+  doExchange(&Alice, &Bob, ttrip);
+  
+  std::cout << "== Adding new blocks to Bob ==\n";
+  block wasd(
+      "i'm new here",
+      {origin.hash, first.hash},
+      3,
+      gen::trip("lain")
+  );
+  Bob.Graph.Forest[ttrip]->chain_push(wasd);
 
-  std::jthread at(&hclc::ConnHandle, ha, Alice.Connections.at(0).get());
-  std::jthread bt(&hclc::ConnHandle, ha, Bob.Connections.at(0).get());
-  
-  at.detach();
-  bt.detach();
+  doExchange(&Alice, &Bob, ttrip);
 
-  std::cout << "== Waiting for HCLC to complete ==\n";
-  while(!Alice.Connections.at(0).get()->Flags.Get(Conn::CLOSE)) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(20));
-  }
-  
   std::cout << "Stopping Bob and Alice\n";
   
   Alice.Stop();
   Bob.Stop();
-  
-  std::cout << " == Comparing Chains ==\n";
-
-  for (const auto& [trip, block] : Alice.Graph.Forest[ttrip]->get_chain()) {
-    std::cout << "trip: " << trip << '\n';
-    assert(Bob.Graph.Forest[ttrip]->get_chain().contains(trip));
-    std::cout << block.dump() << "\nFound!\n";
-  } 
 
   std::cout << "All done\n";
 };
