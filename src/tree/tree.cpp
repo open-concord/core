@@ -100,7 +100,7 @@ std::unordered_set<std::string> Tree::find_p_hashes(std::string s_trip, std::uno
     */
     bool require_intra_block = true;
 
-    for (auto bp_hash : p_hashes) {
+    for (const auto& bp_hash : p_hashes) {
         if (get_chain()[bp_hash].s_trip == s_trip) {
             require_intra_block = false;
             break;
@@ -175,7 +175,7 @@ bool Tree::verify_chain() {
         * to fail if there's more than one root
         */
         bool server_connected = false;
-        for (auto ph : _block.p_hashes) {
+        for (const auto& ph : _block.p_hashes) {
             if (get_chain().find(ph) == get_chain().end()) return false; //parent hashes all need to exist in the chain
             if (get_chain()[ph].s_trip == _block.s_trip) server_connected = true;
         }
@@ -198,7 +198,7 @@ bool Tree::is_orphan(block to_check) {
 
 bool Tree::is_intraserver_childless(block to_check) {
     std::string server_trip = to_check.s_trip;
-    for (auto ch : to_check.c_hashes) {
+    for (const auto& ch : to_check.c_hashes) {
         if (get_chain()[ch].s_trip == server_trip) return false;
     }
     return true;
@@ -206,7 +206,7 @@ bool Tree::is_intraserver_childless(block to_check) {
 
 bool Tree::is_intraserver_orphan(block to_check) {
     std::string server_trip = to_check.s_trip;
-    for (auto ch : to_check.p_hashes) {
+    for (const auto& ch : to_check.p_hashes) {
         if (get_chain()[ch].s_trip == server_trip) return false;
     }
     return true;
@@ -215,7 +215,7 @@ bool Tree::is_intraserver_orphan(block to_check) {
 int Tree::intraserver_child_count(block to_check) {
     int result = 0;
     std::string server_trip = to_check.s_trip;
-    for (auto ch : to_check.c_hashes) {
+    for (const auto& ch : to_check.c_hashes) {
         if (get_chain()[ch].s_trip == server_trip) result++;
     }
     return result;
@@ -224,7 +224,7 @@ int Tree::intraserver_child_count(block to_check) {
 int Tree::intraserver_parent_count(block to_check) {
     int result = 0;
     std::string server_trip = to_check.s_trip;
-    for (auto ch : to_check.p_hashes) {
+    for (const auto& ch : to_check.p_hashes) {
         if (get_chain()[ch].s_trip == server_trip) result++;
     }
     return result;
@@ -279,7 +279,7 @@ void Tree::batch_push(std::vector<block> to_push_set, bool save_new) {
 }
 
 void Tree::link_block(block to_link) {
-    for (auto ph : to_link.p_hashes) {
+    for (const auto& ph : to_link.p_hashes) {
         if (get_chain().count(ph) == 0) {
             (this->chain)[ph].p_hashes.erase(ph);
             to_link.p_hashes.erase(ph);
@@ -289,7 +289,7 @@ void Tree::link_block(block to_link) {
     (is_intraserver_orphan(to_link) && (this->server_has_root).contains(to_link.s_trip))
     ) {
         (this->chain).erase(to_link.hash);
-        for (auto ch : to_link.c_hashes) {
+        for (const auto& ch : to_link.c_hashes) {
             if (get_chain()[ch].p_hashes.size() == 1) {
                 (this->chain).erase(ch);
             } else {
@@ -298,7 +298,7 @@ void Tree::link_block(block to_link) {
         }
         return;
     }
-    for (auto ph : to_link.p_hashes) {
+    for (const auto& ph : to_link.p_hashes) {
         (this->chain)[ph].c_hashes.insert(to_link.hash);
     }
     if (to_link.p_hashes.size() == 0 && !(this->has_root)) this->has_root = true;

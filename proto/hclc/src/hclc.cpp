@@ -8,6 +8,7 @@ json hclc::update_chain(json cont = {}) {
   for (const auto& block : (this->c)->ExchangeCtx.NewBlocks) {
     new_block_hashes.insert(block.hash);
   }
+  (this->c)->Flags.Set(Conn::CLOSE, true);
   return {
     {"FLAG", "END"}
   };
@@ -185,7 +186,8 @@ void hclc::ConnHandle(Conn* _c) {
     /** essentially init */
     this->c = _c;
   }
-
+  
+  /** check for shared key */
   if (c->P()->sec.Zero(c->P()->sec.Shared())) { 
     this->Key_Exchange();
   }
@@ -194,6 +196,12 @@ void hclc::ConnHandle(Conn* _c) {
   if (!c->Flags.Get(Conn::ACTIVE) && !(c->P()->Flags.Get(Peer::HOST))) {
     c->Flags.Set(Conn::ACTIVE, true); 
     c->P()->Write(client_open().dump());  
+  }
+  
+  /** check for holds */
+  if (c->Flags.Get(Conn::CLOSE)) {
+    c->P()->Close();
+    return;
   }
 
   json parsed = json::parse(c->P()->AwaitRead());
@@ -205,19 +213,14 @@ void hclc::ConnHandle(Conn* _c) {
 
   // temp return var
   std::string rmsg;
-
   try { 
     rmsg = ((this->next[cmd])(this, cont)).dump();
   } catch (int err) {
     rmsg = error(err).dump();
   }
-  (this->c)->P()->Write(rmsg);
-  if (!((this->c)->Flags.Get(Conn::CLOSE)) && cmd != "END") {
-    this->ConnHandle(this->c);
-  } else {
-    (this->c)->Flags.Set(Conn::CLOSE, true);
-    (this->c)->P()->Close();
-  }
+  c->P()->Write(rmsg);
+
+  this->ConnHandle(this->c);
 }
 
 // TODO: Add a flag in protocol template to show what is handled?
