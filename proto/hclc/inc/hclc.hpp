@@ -26,7 +26,7 @@ private:
     return ret;
   }  
   Conn* c = nullptr;   
-  std::string chain_trip; 
+  std::string chain_trip;
 public:
   json update_chain(json cont); 
   json client_open();
@@ -47,5 +47,6 @@ public:
   
   void ConnHandle(Conn*) override;
   void NodeHandle(Node*) override;
-  hclc(std::string ct) : chain_trip(ct) {}
+  hclc(std::string ct) : chain_trip(ct) {
+  }
 };

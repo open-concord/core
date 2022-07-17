@@ -63,10 +63,19 @@ int main(void) {
   while(!Alice.Connections.at(0).get()->Flags.Get(Conn::CLOSE)) {
     std::this_thread::sleep_for(std::chrono::milliseconds(20));
   }
-
+  
   std::cout << "Stopping Bob and Alice\n";
+  
   Alice.Stop();
   Bob.Stop();
+  
+  std::cout << " == Comparing Chains ==\n";
+
+  for (const auto& [trip, block] : Alice.Graph.Forest[ttrip]->get_chain()) {
+    std::cout << "trip: " << trip << '\n';
+    assert(Bob.Graph.Forest[ttrip]->get_chain().contains(trip));
+    std::cout << block.dump() << "\nFound!\n";
+  } 
 
   std::cout << "All done\n";
 };

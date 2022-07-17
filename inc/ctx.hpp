@@ -13,6 +13,7 @@ namespace Ctx {
     bool complete = false;
     std::vector<block> NewBlocks;
     std::string ChainTrip;
+    Tree* CurrentTree;
   };
   struct Graph {
     std::map<std::string, Tree*> Forest;

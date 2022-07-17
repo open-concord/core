@@ -23,4 +23,4 @@ build:
 	$(CC) $(CFLAG) $(INC) main.cpp -o ln.out $(LNK) -lhclc -lcore -lcryptopp -lpthread -luttu
 
 clean:
-	rm -rf achain/* bchain/* ln.out
+	rm -rf achains/* bchains/* ln.out
