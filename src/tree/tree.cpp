@@ -294,7 +294,7 @@ void Tree::link_block(block to_link) {
         (is_orphan(to_link) && (this->has_root)) ||
         (is_intraserver_orphan(to_link) && (this->rooted_servers).contains(to_link.s_trip))
     ) {
-        recursive_cleanse();
+        recursive_cleanse(to_link.hash);
         return;
     }
 
@@ -313,8 +313,8 @@ void Tree::link_block(block to_link) {
 
 void Tree::recursive_cleanse(std::string target) {
     if (get_chain().count(target) != 0) {
-        (this->chain).erase(to_link.hash);
-        for (const auto& ch : to_link.c_hashes) {
+        (this->chain).erase(get_chain()[target].hash);
+        for (const auto& ch : get_chain()[target].c_hashes) {
             recursive_cleanse(ch);
         }
     }

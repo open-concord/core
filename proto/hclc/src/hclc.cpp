@@ -3,11 +3,6 @@
 // add blocks in context to chain
 json hclc::update_chain(json cont = {}) {
   (this->c)->ExchangeCtx.CurrentTree->batch_push((this->c)->ExchangeCtx.NewBlocks);
-  std::unordered_set<std::string> new_block_hashes;
-  // ^ what is the purpose of this? ~u
-  for (const auto& block : (this->c)->ExchangeCtx.NewBlocks) {
-    new_block_hashes.insert(block.hash);
-  }
   (this->c)->Flags.Set(Conn::CLOSE, true);
   return {
     {"FLAG", "END"}

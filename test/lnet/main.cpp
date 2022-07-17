@@ -34,7 +34,7 @@ void doExchange(Agent* Alice, Agent* Bob, std::string ttrip) {
   std::cout << "Bob Connection Count: " << Bob->Connections.size() << '\n';
 
   std::jthread at(&hclc::ConnHandle, ha, Alice->Connections.back().get());
-  std::jthread bt(&hclc::ConnHandle, ha, Bob->Connections.back().get());
+  std::jthread bt(&hclc::ConnHandle, hb, Bob->Connections.back().get());
   
   at.detach();
   bt.detach();
@@ -93,6 +93,9 @@ int main(void) {
   
   Alice.Stop();
   Bob.Stop();
-
+  
+  for (const auto& [t, b] : Alice.Graph.Forest[ttrip]->get_chain()) {
+    std::cout << t << b.dump() << '\n';
+  }
   std::cout << "All done\n";
 };
