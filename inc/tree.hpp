@@ -106,11 +106,13 @@ class Tree {
 
         bool has_root = false;
 
-        std::map<std::string, bool> server_has_root;
+        std::unordered_set<std::string> rooted_servers;
 
         void save(block to_save);
 
         void link_block(block to_link);
+
+        void recursive_cleanse(std::string target);
     public:
         std::map<std::string, std::function<void(std::string)>> add_block_funcs;
         std::map<std::string, std::function<void(std::unordered_set<std::string>)>> batch_add_funcs;

@@ -279,30 +279,45 @@ void Tree::batch_push(std::vector<block> to_push_set, bool save_new) {
 }
 
 void Tree::link_block(block to_link) {
+    // ensure that all of the parents are in the chain
+    bool has_missing_parents = false;
     for (const auto& ph : to_link.p_hashes) {
-        if (get_chain().count(ph) == 0) {
-            (this->chain)[ph].p_hashes.erase(ph);
-            to_link.p_hashes.erase(ph);
-        }
+        if (get_chain().count(ph) == 0) has_missing_parents = true;
     }
-    if ((is_orphan(to_link) && (this->has_root)) ||
-    (is_intraserver_orphan(to_link) && (this->server_has_root).contains(to_link.s_trip))
+    // three cases where a block has to be purged:
+    // - at least one missing parent
+    // - no parents & chain already has a root
+    // - no intraserver parents & server already has a root
+    // first one means the hash won't match the parent set, second and third would enable multiple roots
+    if (
+        has_missing_parents ||
+        (is_orphan(to_link) && (this->has_root)) ||
+        (is_intraserver_orphan(to_link) && (this->rooted_servers).contains(to_link.s_trip))
     ) {
-        (this->chain).erase(to_link.hash);
-        for (const auto& ch : to_link.c_hashes) {
-            if (get_chain()[ch].p_hashes.size() == 1) {
-                (this->chain).erase(ch);
-            } else {
-                (this->chain)[ch].p_hashes.erase(to_link.hash);
-            }
-        }
+        recursive_cleanse();
         return;
     }
+
+    // add child hashes - derived from parent hashes, just a convenience
     for (const auto& ph : to_link.p_hashes) {
         (this->chain)[ph].c_hashes.insert(to_link.hash);
     }
-    if (to_link.p_hashes.size() == 0 && !(this->has_root)) this->has_root = true;
-    if (is_intraserver_orphan(to_link) && !(this->server_has_root)[to_link.s_trip]) (this->server_has_root)[to_link.s_trip] = true;
+    
+    //update whether chain/server is rooted.
+    if (is_orphan(to_link) && !(this->has_root)) 
+        this->has_root = true;
+
+    if (is_intraserver_orphan(to_link) && !(this->rooted_servers).contains(to_link.s_trip)) 
+        (this->rooted_servers).insert(to_link.s_trip);
+}
+
+void Tree::recursive_cleanse(std::string target) {
+    if (get_chain().count(target) != 0) {
+        (this->chain).erase(to_link.hash);
+        for (const auto& ch : to_link.c_hashes) {
+            recursive_cleanse(ch);
+        }
+    }
 }
 
 void Tree::save(block to_save) {
