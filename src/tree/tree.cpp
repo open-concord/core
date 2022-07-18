@@ -316,7 +316,7 @@ void Tree::recursive_purge(std::string target) {
     if (get_chain().count(target) != 0) {
         (this->chain).erase(target);
         for (const auto& ch : get_chain()[target].c_hashes) {
-            recursive_cleanse(ch);
+            recursive_purge(ch);
         }
     }
 }
