@@ -2,7 +2,9 @@
 
 // add blocks in context to chain
 json hclc::update_chain(json cont = {}) {
-  (this->c)->ExchangeCtx.CurrentTree->batch_push((this->c)->ExchangeCtx.NewBlocks);
+  if (!(this->c)->ExchangeCtx.NewBlocks.empty()) { 
+    (this->c)->ExchangeCtx.CurrentTree->batch_push((this->c)->ExchangeCtx.NewBlocks);
+  }
   (this->c)->Flags.Set(Conn::CLOSE, true);
   return {
     {"FLAG", "END"}
@@ -120,7 +122,7 @@ json hclc::transfer_blocks(json cont) {
 
         /** collect parents that are not in the chain and need to be requested */
         for (const auto& p_req_hash : potential_req_hashes) {
-          if (!cached_chain.contains(std::string{p_req_hash})) {
+          if (!cached_chain.contains(p_req_hash)) {
             req_hashes.push_back(p_req_hash);
           }
         }
@@ -186,6 +188,7 @@ void hclc::ConnHandle(Conn* _c) {
   }
 
   json parsed = json::parse(c->P()->AwaitRead());
+  
   std::cout << "NEW MSG: " << parsed << "\n"; // DEBUG
   
   // message parsing
@@ -200,6 +203,12 @@ void hclc::ConnHandle(Conn* _c) {
     rmsg = error(err).dump();
   }
   c->P()->Write(rmsg);
+ 
+  std::cout << c->P()->Flags.Get(Peer::HOST) << "'s WORKING TREE: \n";
+  for (const auto& [t, b] : c->GraphCtx.Forest[c->ExchangeCtx.ChainTrip]->get_chain()) {
+    std::cout << " - " << t << '\n';
+  }
+
 
   this->ConnHandle(this->c);
 }

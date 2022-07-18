@@ -42,6 +42,7 @@ void doExchange(Agent* Alice, Agent* Bob, std::string ttrip) {
   while(!Alice->Connections.back().get()->Flags.Get(Conn::CLOSE)) {
     std::this_thread::sleep_for(std::chrono::milliseconds(20));
   }
+
   /** prune connections */
   Alice->Connections.pop_back();
   Bob->Connections.pop_back();
