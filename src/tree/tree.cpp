@@ -289,18 +289,23 @@ void Tree::link_block(block to_link) {
     // ensure that all of the parents are in the chain
     bool has_missing_parents = false;
     for (const auto& ph : to_link.p_hashes) {
-        if (get_chain().count(ph) == 0) has_missing_parents = true;
+        if (!get_chain().contains(ph)) has_missing_parents = true;
     }
 
-    // three cases where a block has to be purged:
+    // four cases where a block has to be purged:
     // - at least one missing parent
+    // = invalid (hash is a mismatch for contents)
     // - no parents & chain already has a root
     // - no intraserver parents & server already has a root
-    // first one means the hash won't match the parent set, second and third would enable multiple roots
+    // first one means the hash won't match the parent set, 
+    // second ensures that all hashes are properly assigned,
+    // third and fourth prevent multiple roots
     if (
         has_missing_parents ||
-        (is_orphan(to_link) && (this->has_root)) ||
-        (is_intraserver_orphan(to_link) && (this->rooted_servers).contains(to_link.s_trip))
+        !verify(to_link) ||
+        (is_orphan(to_link) && !(this->chain_root).empty() && this->chain_root != to_link.hash) ||
+        (is_intraserver_orphan(to_link) && !(this->server_roots[to_link.s_trip]).empty() && this->server_roots[to_link.s_trip] == to_link.hash)
+        //server_roots[tO_link.s_trip] == ... initializes the position, but .contains is checked first, so that won't be evaluated if it doesn't contain the s_trip
     ) {
         recursive_purge(to_link.hash);
         return;
@@ -312,15 +317,15 @@ void Tree::link_block(block to_link) {
     }
     
     //update whether chain/server is rooted.
-    if (is_orphan(to_link) && !(this->has_root)) 
+    if (is_orphan(to_link) && (this->chain_root).empty()) 
         this->has_root = true;
 
-    if (is_intraserver_orphan(to_link) && !(this->rooted_servers).contains(to_link.s_trip)) 
+    if (is_intraserver_orphan(to_link) && (this->server_roots[to_link.s_trip]).empty()) 
         (this->rooted_servers).insert(to_link.s_trip);
 }
 
 void Tree::recursive_purge(std::string target) {
-    if (get_chain().count(target) != 0) {
+    if (get_chain().contains(target)) {
         (this->chain).erase(target);
         for (const auto& ch : get_chain()[target].c_hashes) {
             recursive_purge(ch);

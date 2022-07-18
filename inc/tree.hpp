@@ -104,9 +104,9 @@ class Tree {
         int pow = 0;
         bool dir_linked = false;
 
-        bool has_root = false;
+        std::string chain_root;
 
-        std::unordered_set<std::string> rooted_servers;
+        std::map<std::string, std::string> server_roots;
 
         void save(block to_save);
 
