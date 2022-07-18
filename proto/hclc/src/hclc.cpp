@@ -96,7 +96,7 @@ json hclc::transfer_blocks(json cont) {
         /** add blocks received and request missing parents */
         std::unordered_set<std::string> potential_req_hashes;
         
-        //blocks in a received valence layer are treated like parent hashes of, in that they need to requested if absent
+        // blocks in a received valence layer are treated like parent hashes of, in that they need to requested if absent
         if (cont.contains("val")) {
           for (std::string val_hash : cont["val"]) {
             potential_req_hashes.insert(val_hash)
