@@ -321,7 +321,7 @@ void Tree::link_block(block to_link) {
         this->chain_root = to_link.hash;
 
     if (is_intraserver_orphan(to_link) && (this->server_roots[to_link.s_trip]).empty()) 
-        this->rooted_servers[to_link.s_trip] = to_link.hash;
+        this->server_roots[to_link.s_trip] = to_link.hash;
 }
 
 void Tree::recursive_purge(std::string target) {
