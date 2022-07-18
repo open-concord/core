@@ -302,7 +302,7 @@ void Tree::link_block(block to_link) {
     // third and fourth prevent multiple roots
     if (
         has_missing_parents ||
-        !to_link.verify()||
+        !to_link.verify(this->pow)||
         (is_orphan(to_link) && !(this->chain_root).empty() && this->chain_root != to_link.hash) ||
         (is_intraserver_orphan(to_link) && !(this->server_roots[to_link.s_trip]).empty() && this->server_roots[to_link.s_trip] == to_link.hash)
         //server_roots[tO_link.s_trip] == ... initializes the position, but .contains is checked first, so that won't be evaluated if it doesn't contain the s_trip
