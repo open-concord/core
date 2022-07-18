@@ -91,53 +91,30 @@ json hclc::transfer_blocks(json cont) {
           packet.push_back(cached_chain[prompt_req].jdump());
         }
         
-        /** determine if this is a clean pull (e.g. jump start) */
-        if (!cont.contains(std::string{"pack"})) {
-          std::cout << "clean pull\n";
-          /** check the valence layer of peer */
-          if (cont["val"].empty()) {
-            /** dump the valence layer */
-            std::unordered_set<std::string> valence_hashes = 
-              (this->c)->ExchangeCtx.CurrentTree
-                ->get_qualifying_hashes(&Tree::is_childless);
-            
-            for (const auto& trip : valence_hashes) {
-              packet.push_back(cached_chain[trip].jdump());
-            }
-          } else {
-            /** bring peer up to speed */
-            for (const auto& val_trip : cont["val"]) {
-              /** check that we have the valence layer*/
-              if (!cached_chain.contains(val_trip)) {
-                req_hashes.push_back(val_trip);
-              } else {
-                /** add children of valence block to packet */
-                for (const auto& [trip, block] : cached_chain) {
-                  if (block.p_hashes.contains(val_trip)) {
-                    packet.push_back(block.jdump());
-                  }
-                }
-              }
-            }
+        std::vector<json> prompt_packet = cont["pack"];
+
+        /** add blocks received and request missing parents */
+        std::unordered_set<std::string> provided_p_hashes;
+        //blocks in a received valence layer are treated like p_hashes, in that they need to requested if absent
+        if (cont.contains("val")) {
+          for (auto val_hash in cont["val"]) {
+            provided_p_hashes.insert(val_hash)
           }
-        } else {
-          std::vector<json> prompt_packet = cont["pack"];
-          /** add blocks received and request missing parents */
-          std::unordered_set<std::string> provided_p_hashes;
-          for (auto prompt_block : prompt_packet) {
-            block new_block(prompt_block);
-            (this->c)->ExchangeCtx.NewBlocks.push_back(new_block);
-            for (auto p_hash : new_block.p_hashes) {
-                provided_p_hashes.insert(p_hash);
-            }
+        }
+        for (auto prompt_block : prompt_packet) {
+          block new_block(prompt_block);
+          (this->c)->ExchangeCtx.NewBlocks.push_back(new_block);
+          for (auto p_hash : new_block.p_hashes) {
+              provided_p_hashes.insert(p_hash);
           }
-          /** collect parents that are not in the chain and need to be requested */
-          for (auto p_hash : provided_p_hashes) {
-            if (cached_chain.find(p_hash) == cached_chain.end()) {
-              req_hashes.push_back(p_hash);
-            }
+        }
+
+        /** collect parents that are not in the chain and need to be requested */
+        for (auto p_hash : provided_p_hashes) {
+          if (cached_chain.find(p_hash) == cached_chain.end()) {
+            req_hashes.push_back(p_hash);
           }
-        } 
+        }
 
         /** see if this concludes the exchange */
         if (req_hashes.size() == 0 && packet.size() == 0) {
