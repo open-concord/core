@@ -97,7 +97,7 @@ json hclc::transfer_blocks(json cont) {
         std::unordered_set<std::string> provided_p_hashes;
         //blocks in a received valence layer are treated like p_hashes, in that they need to requested if absent
         if (cont.contains("val")) {
-          for (auto val_hash in cont["val"]) {
+          for (auto val_hash : cont["val"]) {
             provided_p_hashes.insert(val_hash)
           }
         }
