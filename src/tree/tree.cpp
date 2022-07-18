@@ -260,18 +260,25 @@ void Tree::chain_push(block to_push) {
 
 void Tree::batch_push(std::vector<block> to_push_set, bool save_new) {
     std::map<std::string, std::unordered_set<std::string>> server_hash_sections;
+    
+    //add all blocks
     for (const auto& to_push_block : to_push_set) {
         (this->chain)[to_push_block.hash] = to_push_block;
         server_hash_sections[to_push_block.s_trip].insert(to_push_block.hash);
     }
-    for (const auto& [hash, block] : get_chain()) {
-        link_block(block);
+
+    //link new blocks after *all* have been added.
+    for (const auto& to_push_block : to_push_set) {
+        link_block(to_push_block);
     }
+
     if (save_new) {
         for (const auto& pushed_block : to_push_set) {
             save(pushed_block);
         }
     }
+
+    
     for (const auto& [s_trip, section] : server_hash_sections) {
         if (!(this->batch_add_funcs).contains(s_trip)) continue;
         (this->batch_add_funcs)[s_trip](section);
