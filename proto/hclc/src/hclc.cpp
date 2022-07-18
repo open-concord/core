@@ -94,25 +94,28 @@ json hclc::transfer_blocks(json cont) {
         std::vector<json> prompt_packet = cont["pack"];
 
         /** add blocks received and request missing parents */
-        std::unordered_set<std::string> provided_p_hashes;
-        //blocks in a received valence layer are treated like p_hashes, in that they need to requested if absent
+        std::unordered_set<std::string> potential_req_hashes;
+        
+        //blocks in a received valence layer are treated like parent hashes of, in that they need to requested if absent
         if (cont.contains("val")) {
-          for (auto val_hash : cont["val"]) {
-            provided_p_hashes.insert(val_hash)
+          for (std::string val_hash : cont["val"]) {
+            potential_req_hashes.insert(val_hash)
           }
         }
+
+        // add received blocks, and while doing so record their parent hashes.
         for (auto prompt_block : prompt_packet) {
           block new_block(prompt_block);
           (this->c)->ExchangeCtx.NewBlocks.push_back(new_block);
           for (auto p_hash : new_block.p_hashes) {
-              provided_p_hashes.insert(p_hash);
+              potential_req_hashes.insert(p_hash);
           }
         }
 
         /** collect parents that are not in the chain and need to be requested */
-        for (auto p_hash : provided_p_hashes) {
-          if (cached_chain.find(p_hash) == cached_chain.end()) {
-            req_hashes.push_back(p_hash);
+        for (auto p_req_hash : potential_req_hashes) {
+          if (!cached_chain.contains(p_req_hash)) {
+            req_hashes.push_back(p_req_hash);
           }
         }
 
