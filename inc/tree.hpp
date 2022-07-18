@@ -112,7 +112,7 @@ class Tree {
 
         void link_block(block to_link);
 
-        void recursive_cleanse(std::string target);
+        void recursive_purge(std::string target);
     public:
         std::map<std::string, std::function<void(std::string)>> add_block_funcs;
         std::map<std::string, std::function<void(std::unordered_set<std::string>)>> batch_add_funcs;

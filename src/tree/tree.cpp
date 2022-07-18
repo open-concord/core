@@ -284,6 +284,7 @@ void Tree::link_block(block to_link) {
     for (const auto& ph : to_link.p_hashes) {
         if (get_chain().count(ph) == 0) has_missing_parents = true;
     }
+
     // three cases where a block has to be purged:
     // - at least one missing parent
     // - no parents & chain already has a root
@@ -294,7 +295,7 @@ void Tree::link_block(block to_link) {
         (is_orphan(to_link) && (this->has_root)) ||
         (is_intraserver_orphan(to_link) && (this->rooted_servers).contains(to_link.s_trip))
     ) {
-        recursive_cleanse(to_link.hash);
+        recursive_purge(to_link.hash);
         return;
     }
 
@@ -311,9 +312,9 @@ void Tree::link_block(block to_link) {
         (this->rooted_servers).insert(to_link.s_trip);
 }
 
-void Tree::recursive_cleanse(std::string target) {
+void Tree::recursive_purge(std::string target) {
     if (get_chain().count(target) != 0) {
-        (this->chain).erase(get_chain()[target].hash);
+        (this->chain).erase(target);
         for (const auto& ch : get_chain()[target].c_hashes) {
             recursive_cleanse(ch);
         }
