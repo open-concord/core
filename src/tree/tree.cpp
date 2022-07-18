@@ -302,7 +302,7 @@ void Tree::link_block(block to_link) {
     // third and fourth prevent multiple roots
     if (
         has_missing_parents ||
-        !verify(to_link) ||
+        !to_link.verify()||
         (is_orphan(to_link) && !(this->chain_root).empty() && this->chain_root != to_link.hash) ||
         (is_intraserver_orphan(to_link) && !(this->server_roots[to_link.s_trip]).empty() && this->server_roots[to_link.s_trip] == to_link.hash)
         //server_roots[tO_link.s_trip] == ... initializes the position, but .contains is checked first, so that won't be evaluated if it doesn't contain the s_trip
@@ -318,10 +318,10 @@ void Tree::link_block(block to_link) {
     
     //update whether chain/server is rooted.
     if (is_orphan(to_link) && (this->chain_root).empty()) 
-        this->has_root = true;
+        this->chain_root = to_link.hash;
 
     if (is_intraserver_orphan(to_link) && (this->server_roots[to_link.s_trip]).empty()) 
-        (this->rooted_servers).insert(to_link.s_trip);
+        this->rooted_servers[to_link.s_trip] = to_link.hash;
 }
 
 void Tree::recursive_purge(std::string target) {
