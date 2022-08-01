@@ -2,7 +2,7 @@
 
 // add blocks in context to chain
 json hclc::update_chain(json cont = {}) {
-  (this->c)->ExchangeCtx.CurrentTree->batch_push((this->c)->ExchangeCtx.NewBlocks);
+  ((this->c)->ExchangeCtx.CurrentTree).multi_push(((this->c)->ExchangeCtx.NewBlocks));
   (this->c)->Flags.Set(Conn::CLOSE, true);
   return {
     {"FLAG", "END"}

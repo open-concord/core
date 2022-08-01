@@ -7,8 +7,11 @@
 #include <array>
 #include <compare>
 #include <filesystem>
+#include <queue>
 #include <nlohmann/json.hpp>
 #include <errno.h>
+#include <atomic>
+#include <mutex>
 #include "crypt.hpp"
 #include "strops.hpp"
 
@@ -102,22 +105,37 @@ class Tree {
         std::string target_dir;
 
         int pow = 0;
+
         bool dir_linked = false;
+
+        bool push_paused = false;
+        
+        std::atomic<bool> push_proc_active = false;
+
+        std::mutex push_proc_mtx;
 
         std::string chain_root;
 
         std::map<std::string, std::string> server_roots;
+
+
+        std::queue<std::pair<std::vector<block>, bool>> awaiting_push_batches;
+        //pairs are <new blocks, whether to save>
 
         void save(block to_save);
 
         void link_block(block to_link);
 
         void recursive_purge(std::string target);
+
+        void batch_push(std::unordered_set<block> to_push, bool save_new = true);
+
+        void queue_batch(std::pair<unordered_set<block>, bool> to_queue);
+
+        void push_proc();
     public:
         std::map<std::string, std::function<void(std::string)>> add_block_funcs;
         std::map<std::string, std::function<void(std::unordered_set<std::string>)>> batch_add_funcs;
-
-        std::unordered_set<std::string> seen_s_trips;
 
         Tree();
 
@@ -157,7 +175,9 @@ class Tree {
 
         bool verify_chain();
         
-        void chain_push(block to_push);
+        void unit_push(block to_push);
 
-        void batch_push(std::vector<block> to_push_set, bool save_new = true);
+        void set_push(std::unordered_set<block> to_push, bool save_new = true);
+
+        void set_push(std::vector<block> to_push, bool save_new = true);
 };

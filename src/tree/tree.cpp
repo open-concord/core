@@ -28,6 +28,87 @@ Tree::Tree(std::string dir) {
     load(dir);
 }
 
+// block pushing
+//---
+
+// the internal push function
+void Tree::batch_push(std::unordered_set<block> to_push_set, bool save_new) {
+    std::map<std::string, std::unordered_set<std::string>> server_hash_sections;
+    
+    //add all blocks
+    for (const auto& to_push_block : to_push_set) {
+        (this->chain)[to_push_block.hash] = to_push_block;
+        server_hash_sections[to_push_block.s_trip].insert(to_push_block.hash);
+    }
+
+    //link new blocks after *all* have been added.
+    for (const auto& to_push_block : to_push_set) {
+        link_block(to_push_block);
+    }
+
+    if (save_new) {
+        for (const auto& pushed_block : to_push_set) {
+            save(pushed_block);
+        }
+    }
+
+    
+    for (const auto& [s_trip, section] : server_hash_sections) {
+        if ((this->batch_add_funcs).contains(s_trip))
+            (this->batch_add_funcs)[s_trip](section);
+    }
+}
+
+//add a block to the queue, ensuring a winner (i.e. processing is only called once)
+void queue_batch(std::pair<unordered_set<block>, bool> to_queue) {
+    awaiting_push_batches.push(to_queue);
+    push_proc_mtx.lock();
+    if (!push_proc_active) {
+        push_proc_active = true;
+        push_proc_mtx.unlock();
+        push_proc();
+    } else {
+        push_proc_mtx.unlock();
+    }
+}
+
+void Tree::push_proc() {
+    while (true) {
+        std::pair<std::vector<block>, bool> to_push;
+        {
+            std::lock_guard<std::mutex> lk(push_proc_mtx);
+            if (awaiting_push_batches.empty()) {
+                push_proc_active = false;
+                return;
+            }
+            to_push = awaiting_push_batches.front();
+            awaiting_push_batches.pop();
+        }
+        batch_push(to_push.first, to_push.second);
+    }
+}
+
+// user-facing options
+void unit_push(block to_push, bool save_new) {
+    std::pair<std::unordered_set<block>, bool> unit_batch;
+    unit_batch.first.insert(to_push);
+    unit_batch.second = save_new;
+    queue_batch(unit_batch);
+}
+
+void multi_push(std::unordered_set<block> to_push, bool save_new) {
+    std::pair<std::unordered_set<block>, bool> multi_batch;
+    multi_batch.first = to_push;
+    multi_batch.second = save_new;
+    queue_batch(multi_batch);
+}
+
+void multi_push(std::vector<block> to_push, bool save_new) {
+    multi_push(std::unordered_set<block>(to_push.begin(), to_push.end(), to_push.size()), save_new);
+}
+//---
+
+
 void Tree::load(std::string dir) {
     this->dir_linked = true;
     this->target_dir = dir;
@@ -45,7 +126,7 @@ void Tree::load(std::string dir) {
 
     std::filesystem::path p(this->target_dir);
 
-    std::vector<block> loaded_blocks;
+    std::unordered_set<block> loaded_blocks;
 
     for(auto& entry : std::filesystem::directory_iterator(p)) {
         std::string path_str = entry.path().string();
@@ -59,11 +140,11 @@ void Tree::load(std::string dir) {
             saved_block.read(&block_data[0], block_data.size());
             saved_block.close();
             block parsed_block(json::parse(block_data));
-            loaded_blocks.push_back(parsed_block);
+            loaded_blocks.insert(parsed_block);
         }
         else continue;
     }
-    batch_push(loaded_blocks, false);
+    multi_push(loaded_blocks, false);
 }
 
 void Tree::set_pow_req(int POW_req) {
@@ -80,7 +161,7 @@ std::string Tree::gen_block(
     assert(c_trip.length() == 24 || c_trip.length() == 0);
     if (p_hashes.size() == 0) p_hashes = find_p_hashes(s_trip);
     block out_block(cont, p_hashes, this->pow, s_trip, set_time, c_trip);
-    chain_push(out_block);
+    unit_push(out_block);
     return out_block.hash;
 }
 
@@ -247,42 +328,6 @@ std::unordered_set<std::string> Tree::get_parent_hash_union(std::unordered_set<s
         }
     }
     return p_hash_union;
-}
-
-void Tree::chain_push(block to_push) {
-    (this->chain)[to_push.hash] = to_push;
-    link_block(to_push);
-    save(to_push);
-    if ((this->add_block_funcs).contains(to_push.s_trip)) {
-        (this->add_block_funcs)[to_push.s_trip](to_push.hash);
-    }
-}
-
-void Tree::batch_push(std::vector<block> to_push_set, bool save_new) {
-    std::map<std::string, std::unordered_set<std::string>> server_hash_sections;
-    
-    //add all blocks
-    for (const auto& to_push_block : to_push_set) {
-        (this->chain)[to_push_block.hash] = to_push_block;
-        server_hash_sections[to_push_block.s_trip].insert(to_push_block.hash);
-    }
-
-    //link new blocks after *all* have been added.
-    for (const auto& to_push_block : to_push_set) {
-        link_block(to_push_block);
-    }
-
-    if (save_new) {
-        for (const auto& pushed_block : to_push_set) {
-            save(pushed_block);
-        }
-    }
-
-    
-    for (const auto& [s_trip, section] : server_hash_sections) {
-        if (!(this->batch_add_funcs).contains(s_trip)) continue;
-        (this->batch_add_funcs)[s_trip](section);
-    }
 }
 
 void Tree::link_block(block to_link) {
