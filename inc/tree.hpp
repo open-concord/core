@@ -128,9 +128,9 @@ class Tree {
 
         void recursive_purge(std::string target);
 
-        void batch_push(std::unordered_set<block> to_push, bool save_new = true);
+        void batch_push(std::vector<block> to_push, bool save_new = true);
 
-        void queue_batch(std::pair<unordered_set<block>, bool> to_queue);
+        void queue_batch(std::pair<std::vector<block>, bool> to_queue);
 
         void push_proc();
     public:
@@ -168,16 +168,14 @@ class Tree {
         std::unordered_set<std::string> get_parent_hash_union(std::unordered_set<std::string> c_hashes);
 
         std::vector<block> search_user(std::string trip = "");
-        void declare_user(user user_, std::string nick = "");
 
+        void declare_user(user user_, std::string nick = "");
 
         //std::vector<json> search(char message_type, std::string target_trip, std::string key, boost::function<bool(json)> filter = no_filter, int start_b = -1, int end_b = -1);
 
         bool verify_chain();
         
-        void unit_push(block to_push);
-
-        void set_push(std::unordered_set<block> to_push, bool save_new = true);
+        void unit_push(block to_push, bool save_new = true);
 
         void set_push(std::vector<block> to_push, bool save_new = true);
 };

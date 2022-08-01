@@ -3,7 +3,9 @@
 *.so
 *.dll
 *.a
-/lib/**
+/lib/*/*.a
+/lib/*/*.hpp
+/lib/*/*.o
 /build/**
 .vscode/*
 .vs/*

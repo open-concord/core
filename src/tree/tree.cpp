@@ -32,7 +32,7 @@ Tree::Tree(std::string dir) {
 //---
 
 // the internal push function
-void Tree::batch_push(std::unordered_set<block> to_push_set, bool save_new) {
+void Tree::batch_push(std::vector<block> to_push_set, bool save_new) {
     std::map<std::string, std::unordered_set<std::string>> server_hash_sections;
     
     //add all blocks
@@ -60,15 +60,15 @@ void Tree::batch_push(std::unordered_set<block> to_push_set, bool save_new) {
 }
 
 //add a block to the queue, ensuring a winner (i.e. processing is only called once)
-void queue_batch(std::pair<unordered_set<block>, bool> to_queue) {
-    awaiting_push_batches.push(to_queue);
-    push_proc_mtx.lock();
+void Tree::queue_batch(std::pair<std::vector<block>, bool> to_queue) {
+    (this->awaiting_push_batches).push(to_queue);
+    (this->push_proc_mtx).lock();
     if (!push_proc_active) {
         push_proc_active = true;
-        push_proc_mtx.unlock();
+        (this->push_proc_mtx).unlock();
         push_proc();
     } else {
-        push_proc_mtx.unlock();
+        (this->push_proc_mtx).unlock();
     }
 }
 
@@ -77,34 +77,30 @@ void Tree::push_proc() {
         std::pair<std::vector<block>, bool> to_push;
         {
             std::lock_guard<std::mutex> lk(push_proc_mtx);
-            if (awaiting_push_batches.empty()) {
-                push_proc_active = false;
+            if ((this->awaiting_push_batches).empty()) {
+                this->push_proc_active = false;
                 return;
             }
             to_push = awaiting_push_batches.front();
-            awaiting_push_batches.pop();
+            (this->awaiting_push_batches).pop();
         }
         batch_push(to_push.first, to_push.second);
     }
 }
 
 // user-facing options
-void unit_push(block to_push, bool save_new) {
-    std::pair<std::unordered_set<block>, bool> unit_batch;
-    unit_batch.first.insert(to_push);
+void Tree::unit_push(block to_push, bool save_new) {
+    std::pair<std::vector<block>, bool> unit_batch;
+    unit_batch.first.push_back(to_push);
     unit_batch.second = save_new;
     queue_batch(unit_batch);
 }
 
-void multi_push(std::unordered_set<block> to_push, bool save_new) {
-    std::pair<std::unordered_set<block>, bool> multi_batch;
-    multi_batch.first = to_push;
-    multi_batch.second = save_new;
-    queue_batch(multi_batch);
-}
-
-void multi_push(std::vector<block> to_push, bool save_new) {
-    multi_push(std::unordered_set<block>(to_push.begin(), to_push.end(), to_push.size()), save_new);
+void Tree::set_push(std::vector<block> to_push, bool save_new) {
+    std::pair<std::vector<block>, bool> set_batch;
+    set_batch.first = to_push;
+    set_batch.second = save_new;
+    queue_batch(set_batch);
 }
 //---
 
@@ -126,7 +122,7 @@ void Tree::load(std::string dir) {
 
     std::filesystem::path p(this->target_dir);
 
-    std::unordered_set<block> loaded_blocks;
+    std::vector<block> loaded_blocks;
 
     for(auto& entry : std::filesystem::directory_iterator(p)) {
         std::string path_str = entry.path().string();
@@ -140,11 +136,11 @@ void Tree::load(std::string dir) {
             saved_block.read(&block_data[0], block_data.size());
             saved_block.close();
             block parsed_block(json::parse(block_data));
-            loaded_blocks.insert(parsed_block);
+            loaded_blocks.push_back(parsed_block);
         }
         else continue;
     }
-    multi_push(loaded_blocks, false);
+    set_push(loaded_blocks, false);
 }
 
 void Tree::set_pow_req(int POW_req) {

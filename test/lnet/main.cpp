@@ -74,7 +74,7 @@ int main(void) {
       3,
       gen::trip("lain")
   );
-  Alice.Graph.Forest[ttrip]->multi_push({origin, first});
+  Alice.Graph.Forest[ttrip]->set_push({origin, first});
   
   doExchange(&Alice, &Bob, ttrip);
   
