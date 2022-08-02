@@ -13,6 +13,7 @@
 #include <crypt.hpp>
 #include <strops.hpp>
 #include <tree.hpp>
+#include <mutex>
 
 #include "birank.hpp"
 #include "bijson.hpp"
@@ -25,7 +26,10 @@ using json = nlohmann::json;
 
 class Server {
   private:
+    bool empty = true;
     user luser;
+    std::mutex add_lock;
+
     std::unordered_set<std::string> constraint_heads, constraint_path_fbs, constraint_path_lbs /** makes fbs search faster */;
 
     std::string s_trip, raw_AES_key, root_fb;
@@ -42,7 +46,6 @@ class Server {
         Tree& parent_tree,
         std::string AES_key,
         user load_user = user(),
-        std::string prev_AES_key = std::string(),
         std::unordered_set<std::string> heads = std::unordered_set<std::string>()
     );
     
@@ -59,6 +62,8 @@ class Server {
         std::string signature,
         std::string content_hash
     );
+
+    void create_root(std::string prev_AES_key = std::string());
 
     std::string send_message(
         user author,

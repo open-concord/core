@@ -45,12 +45,12 @@ struct block {
     std::unordered_set<std::string> c_hashes;
     /** state */
     std::string hash_concat() const;
-    bool verify(int pow) const;
+    bool verify(int pow = 0) const;
     json jdump() const;
     std::string dump() const;
     /** construct */
-    block(json origin);
     block();
+    block(json origin);
     block(
         std::string cont, 
         std::unordered_set<std::string> p_hashes, 
@@ -139,9 +139,11 @@ class Tree {
         std::queue<std::pair<std::unordered_set<block>, bool>> awaiting_push_batches;
         //pairs are <new blocks, whether to save>
 
+        void chain_configure(block root);
+
         void save(block to_save);
 
-        void link_block(block to_link);
+        void link_block(std::string to_link);
 
         void recursive_purge(std::string target);
 
@@ -162,25 +164,27 @@ class Tree {
 
         void set_pow_req(int pow_req);
 
+        int get_pow_req();
+
         std::string gen_block(std::string cont, std::string s_trip, unsigned long long set_time = get_raw_time(), std::unordered_set<std::string> p_hashes = std::unordered_set<std::string>(), std::string c_trip = std::string(24, '='));
 
         std::unordered_set<std::string> find_p_hashes(std::string s_trip, std::unordered_set<std::string> base_p_hashes = std::unordered_set<std::string>(), int p_count = 3);
 
         std::map<std::string, block> get_chain();
 
-        bool is_childless(block to_check);
+        bool is_childless(std::string to_check);
 
-        bool is_orphan(block to_check);
+        bool is_orphan(std::string to_check);
 
-        bool is_intraserver_childless(block to_check);
+        bool is_intraserver_childless(std::string to_check);
 
-        bool is_intraserver_orphan(block to_check);
+        bool is_intraserver_orphan(std::string to_check);
 
-        int intraserver_child_count(block to_check);
+        std::unordered_set<std::string> intraserver_c_hashes(std::string to_check);
 
-        int intraserver_parent_count(block to_check);
+        std::unordered_set<std::string> intraserver_p_hashes(std::string to_check);
 
-        std::unordered_set<std::string> get_qualifying_hashes(std::function<bool(Tree*, block)> qual_func, std::string s_trip = "");
+        std::unordered_set<std::string> get_qualifying_hashes(std::function<bool(Tree*, std::string)> qual_func, std::string s_trip = std::string());
 
         std::unordered_set<std::string> get_parent_hash_union(std::unordered_set<std::string> c_hashes);
 

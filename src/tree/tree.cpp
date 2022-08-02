@@ -50,7 +50,7 @@ void Tree::batch_push(std::unordered_set<block> to_push_set, bool save_new) {
 
     //link new blocks after *all* have been added.
     for (const auto& to_push_block : to_push_set) {
-        link_block(to_push_block);
+        link_block(to_push_block.hash);
     }
 
     //go through blocks that were successfully linked to save and trigger callbacks.
@@ -87,7 +87,7 @@ void Tree::push_proc() {
     while (true) {
         std::pair<std::unordered_set<block>, bool> next_batch;
         {
-            std::lock_guard<std::mutex> lk(push_proc_mtx);
+            std::lock_guard<std::mutex> lk(this->push_proc_mtx);
             if ((this->awaiting_push_batches).empty()) {
                 this->push_proc_active = false;
                 return;
@@ -159,8 +159,27 @@ void Tree::load(std::string dir) {
     set_push(loaded_blocks, false);
 }
 
+void Tree::chain_configure(block root) {
+    //for now, just extract POW threshold
+    json config = json::parse(root.cont);
+    if (config.contains("pow")) {
+        set_pow_req((int) config["pow"]);
+    }
+}
+
 void Tree::set_pow_req(int POW_req) {
+    bool upward_change = (this->pow) < POW_req;
     this->pow = POW_req;
+    if (upward_change) {
+        //blocks could be made invalid, so we need to re-link the entire tree.
+        for (const auto& [hash, block] : (this->chain)) {
+            link_block(hash);
+        }
+    }
+}
+
+int Tree::get_pow_req() {
+    return this->pow;
 }
 
 std::string Tree::gen_block(
@@ -184,7 +203,7 @@ std::unordered_set<std::string> Tree::find_p_hashes(std::string s_trip, std::uno
     */
     std::unordered_set<std::string> p_hashes = base_p_hashes;
 
-    std::unordered_set<std::string> intra_childless_hashes = get_qualifying_hashes(&Tree::is_intraserver_childless);
+    std::unordered_set<std::string> intra_childless_hashes = get_qualifying_hashes(&Tree::is_childless);
 
     /**
     * if the base hashes have an intraserver block,
@@ -281,53 +300,58 @@ bool Tree::verify_chain() {
     return true;
 }
 
-bool Tree::is_childless(block to_check) {
-    return (to_check.c_hashes.size() == 0);
+bool Tree::is_childless(std::string to_check) {
+    return (get_chain()[to_check].c_hashes.size() == 0);
 }
 
-bool Tree::is_orphan(block to_check) {
-    return (to_check.p_hashes.size() == 0);
+bool Tree::is_orphan(std::string to_check) {
+    return (get_chain()[to_check].p_hashes.size() == 0);
 }
 
-bool Tree::is_intraserver_childless(block to_check) {
-    std::string server_trip = to_check.s_trip;
-    for (const auto& ch : to_check.c_hashes) {
+bool Tree::is_intraserver_childless(std::string to_check) {
+    block tc_block = get_chain()[to_check];
+    std::string server_trip = tc_block.s_trip;
+    for (const auto& ch : tc_block.c_hashes) {
         if (get_chain()[ch].s_trip == server_trip) return false;
     }
     return true;
 }
 
-bool Tree::is_intraserver_orphan(block to_check) {
-    std::string server_trip = to_check.s_trip;
-    for (const auto& ch : to_check.p_hashes) {
+bool Tree::is_intraserver_orphan(std::string to_check) {
+    block tc_block = get_chain()[to_check];
+    std::string server_trip = tc_block.s_trip;
+    for (const auto& ch : tc_block.p_hashes) {
         if (get_chain()[ch].s_trip == server_trip) return false;
     }
     return true;
 }
 
-int Tree::intraserver_child_count(block to_check) {
-    int result = 0;
-    std::string server_trip = to_check.s_trip;
-    for (const auto& ch : to_check.c_hashes) {
-        if (get_chain()[ch].s_trip == server_trip) result++;
+
+std::unordered_set<std::string> Tree::intraserver_c_hashes(std::string to_check) {
+    block tc_block = get_chain()[to_check];
+    std::unordered_set<std::string> result;
+    std::string server_trip = tc_block.s_trip;
+    for (const auto& ch : tc_block.c_hashes) {
+        if (get_chain()[ch].s_trip == server_trip) result.insert(ch);
     }
     return result;
 }
 
-int Tree::intraserver_parent_count(block to_check) {
-    int result = 0;
-    std::string server_trip = to_check.s_trip;
-    for (const auto& ch : to_check.p_hashes) {
-        if (get_chain()[ch].s_trip == server_trip) result++;
+std::unordered_set<std::string> Tree::intraserver_p_hashes(std::string to_check) {
+    block tc_block = get_chain()[to_check];
+    std::unordered_set<std::string> result;
+    std::string server_trip = tc_block.s_trip;
+    for (const auto& ph : tc_block.p_hashes) {
+        if (get_chain()[ph].s_trip == server_trip) result.insert(ph);
     }
     return result;
 }
 
-std::unordered_set<std::string> Tree::get_qualifying_hashes(std::function<bool(Tree*, block)> qual_func, std::string s_trip) {
+std::unordered_set<std::string> Tree::get_qualifying_hashes(std::function<bool(Tree*, std::string)> qual_func, std::string s_trip) {
     std::unordered_set<std::string> qualifying_hashes;
     for (const auto& [hash, block] : get_chain()) {
-        if (s_trip != "" && block.s_trip != s_trip) continue;
-        if (qual_func(this, block)) qualifying_hashes.insert(hash);
+        if (!s_trip.empty() && block.s_trip != s_trip) continue;
+        if (qual_func(this, hash)) qualifying_hashes.insert(hash);
     }
     return qualifying_hashes;
 }
@@ -342,43 +366,47 @@ std::unordered_set<std::string> Tree::get_parent_hash_union(std::unordered_set<s
     return p_hash_union;
 }
 
-void Tree::link_block(block to_link) {
+void Tree::link_block(std::string to_link) {
+    if (!get_chain().contains(to_link)) return;
+    block tl_block = get_chain()[to_link];
     // ensure that all of the parents are in the chain
     bool has_missing_parents = false;
-    for (const auto& ph : to_link.p_hashes) {
+    for (const auto& ph : tl_block.p_hashes) {
         if (!get_chain().contains(ph)) has_missing_parents = true;
     }
 
     // four cases where a block has to be purged:
     // - at least one missing parent
     // = invalid (hash is a mismatch for contents)
-    // - no parents & chain already has a root
-    // - no intraserver parents & server already has a root
+    // - no parents & chain already has a different root
+    // - no intraserver parents & server already has a different root
     // first one means the hash won't match the parent set, 
     // second ensures that all hashes are properly assigned,
     // third and fourth prevent multiple roots
     if (
         has_missing_parents ||
-        !to_link.verify(this->pow)||
-        (is_orphan(to_link) && !(this->chain_root).empty() && this->chain_root != to_link.hash) ||
-        (is_intraserver_orphan(to_link) && !(this->server_roots[to_link.s_trip]).empty() && this->server_roots[to_link.s_trip] == to_link.hash)
+        !tl_block.verify(this->pow)||
+        (is_orphan(to_link) && !(this->chain_root).empty() && this->chain_root != to_link) ||
+        (is_intraserver_orphan(to_link) && !(this->server_roots[tl_block.s_trip]).empty() && this->server_roots[tl_block.s_trip] != to_link)
         //server_roots[tO_link.s_trip] == ... initializes the position, but .contains is checked first, so that won't be evaluated if it doesn't contain the s_trip
     ) {
-        recursive_purge(to_link.hash);
+        recursive_purge(to_link);
         return;
     }
 
     // add child hashes - derived from parent hashes, just a convenience
-    for (const auto& ph : to_link.p_hashes) {
-        (this->chain)[ph].c_hashes.insert(to_link.hash);
+    for (const auto& ph : tl_block.p_hashes) {
+        (this->chain)[ph].c_hashes.insert(to_link);
     }
     
     //update whether chain/server is rooted.
-    if (is_orphan(to_link) && (this->chain_root).empty()) 
-        this->chain_root = to_link.hash;
+    if (is_orphan(to_link) && (this->chain_root).empty()) {
+        this->chain_root = to_link;
+        chain_configure(tl_block);
+    }
 
-    if (is_intraserver_orphan(to_link) && (this->server_roots[to_link.s_trip]).empty()) 
-        this->server_roots[to_link.s_trip] = to_link.hash;
+    if (is_intraserver_orphan(to_link) && (this->server_roots[tl_block.s_trip]).empty()) 
+        this->server_roots[tl_block.s_trip] = to_link;
 }
 
 void Tree::recursive_purge(std::string target) {

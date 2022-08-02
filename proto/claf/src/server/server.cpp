@@ -5,7 +5,6 @@ Server::Server(
     Tree& parent_tree, 
     std::string AES_key, 
     user load_user, 
-    std::string prev_AES_key, 
     std::unordered_set<std::string> heads
   ) : tree(parent_tree), luser(load_user), constraint_heads(heads) {
     this->raw_AES_key = b64::decode(AES_key);
@@ -17,6 +16,7 @@ Server::Server(
     tree.batch_add_funcs[(this->s_trip)] = std::bind(&Server::add_batch, this, std::placeholders::_1);
 
     if (root_hashes.size() == 1) {
+        this->empty = false;
         this->root_fb = *(root_hashes.begin());
         for (auto constraint_head : (this->constraint_heads)) {
             //a little hacky, but with no constraint heads there will be no scanning
@@ -25,14 +25,7 @@ Server::Server(
         }
         load_branch_forward(this->root_fb);
     } else if (root_hashes.size() == 0) {
-        json nserv_data = {
-            {"cms", {
-                {"enc_pubk", load_user.pubkeys.RSA},
-                {"sig_pubk", load_user.pubkeys.DSA}
-            }}
-        };
-        if (!prev_AES_key.empty()) nserv_data["prev_key"] = prev_AES_key;
-        this->root_fb = send_message(load_user, nserv_data, 'a', "nserv");
+        this->empty = true;
     }
 }
 
@@ -66,7 +59,7 @@ void Server::backscan_constraint_path(std::string lb_hash) {
         } else {
             (this->constraint_path_fbs).insert(working_hash);
             for (auto p_hash : active_block.p_hashes) {
-                if ((this->constraint_path_lbs).find(p_hash) == (this->constraint_path_lbs).end()) {
+                if (!(this->constraint_path_lbs).contains(p_hash)) {
                     backscan_constraint_path(p_hash);
                 }
             }
@@ -80,7 +73,8 @@ void Server::load_branch_forward(std::string fb_hash) {
     block active_block;
     std::unordered_set<std::string> seed_hashes;
 
-    if (((this->branches).count(fb_hash) > 0) || this->branches[fb_hash].first_hash.empty()) {
+    // if the branch has already been established, remove it as a parent hash from child branches so that they can be re-evaluated.
+    if (((this->branches).contains(fb_hash) && !(this->branches)[fb_hash].first_hash.empty())) {
         for (auto c_fb : (this->branches)[fb_hash].c_branch_fbs) {
             (this->branches)[c_fb].p_branch_fbs.erase(fb_hash);
         }
@@ -134,19 +128,15 @@ void Server::load_branch_forward(std::string fb_hash) {
             //something should go here
         }
         //see if we've reached a head, assuming there are any
-        if (((this->constraint_heads).find(working_hash) != (this->constraint_path_fbs).end())) {
+        if (((this->constraint_heads).contains(working_hash))) {
             //we're done with this branch - cutoff time!
             seed_hashes = std::unordered_set<std::string>(); //empty this
             break;
         }
 
         //see if we're still linear
-        std::unordered_set<std::string> intraserver_c_hashes;
-        for (auto c_hash : active_block.c_hashes) {
-            if ((this->tree).get_chain()[c_hash].s_trip == (this->s_trip)) {
-                intraserver_c_hashes.insert(c_hash);
-            }
-        }
+        std::unordered_set<std::string> intraserver_c_hashes = (this->tree).intraserver_c_hashes(active_block.hash);
+
         if (intraserver_c_hashes.size() == 1) {
             working_hash = *(intraserver_c_hashes.begin());
         } else {
@@ -156,7 +146,7 @@ void Server::load_branch_forward(std::string fb_hash) {
         }
     }
 
-    target_branch.ctx = ctx; //context is established now
+    target_branch.ctx = ctx; //end-of-branch context is established now
     for (auto seed_hash : seed_hashes) {
         if (((this->constraint_heads).size() > 0) && ((this->constraint_path_fbs).find(seed_hash) == (this->constraint_path_fbs).end())) {
             //if there are any constraint heads, we need to make sure that this path will reach one of them.
@@ -164,7 +154,7 @@ void Server::load_branch_forward(std::string fb_hash) {
         }
         branch& seed_branch = (this->branches)[seed_hash];
         //if all the contexts are in, we can load the branch
-        if (seed_branch.p_branch_fbs.size() == (size_t) (this->tree).intraserver_parent_count((this->tree).get_chain()[seed_hash])) {
+        if (seed_branch.p_branch_fbs.size() == (this->tree).intraserver_p_hashes(seed_hash).size()) {
             load_branch_forward(seed_hash);
         }
         target_branch.c_branch_fbs.insert(seed_branch.first_hash);
@@ -174,15 +164,18 @@ void Server::load_branch_forward(std::string fb_hash) {
 
 void Server::add_block(std::string hash) {
     if ((this->constraint_heads).size() != 0) return; //if there are constraints, this should be static.
+    std::lock_guard<std::mutex> lk(this->add_lock);
     std::string working_hash = hash;
-    while (true) {
-        block working_block = (this->tree).get_chain()[working_hash];
-        std::unordered_set<std::string> intraserver_p_hashes;
-        for (auto p_hash : working_block.p_hashes) {
-            if ((this->tree).get_chain()[p_hash].s_trip == (this->s_trip)) {
-                intraserver_p_hashes.insert(p_hash);
-            }
+    if ((this->tree).is_intraserver_orphan(working_hash)) {
+        if (this->empty) {
+            this->root_fb = hash;
+            this->empty = false;
+        } else {
+            return; //we already have a root block
         }
+    }
+    while (true) {
+        std::unordered_set<std::string> intraserver_p_hashes = (this->tree).intraserver_p_hashes(working_hash);
         if (intraserver_p_hashes.size() == 1) {
             working_hash = *(intraserver_p_hashes.begin());
         }
@@ -203,9 +196,21 @@ void Server::add_batch(std::unordered_set<std::string> hashes) {
         if (only_external) extern_only_hashes.insert(h);
     }
     for (auto eh : extern_only_hashes) {
-        //loading forward from these hashes will get the full set
+        //loading forward from these grounded hashes will provide the full set
         add_block(eh);
     }
+}
+
+void Server::create_root(std::string prev_AES_key) {
+    assert((this->root_fb).empty());
+    json nserv_data = {
+        {"cms", {
+            {"enc_pubk", (this->luser).pubkeys.RSA},
+            {"sig_pubk", (this->luser).pubkeys.DSA}
+        }}
+    };
+    if (!prev_AES_key.empty()) nserv_data["prev_key"] = prev_AES_key;
+    this->root_fb = send_message(this->luser, nserv_data, 'a', "nserv");
 }
 
 std::string Server::send_message(
@@ -215,6 +220,7 @@ std::string Server::send_message(
     std::string t,
     std::unordered_set<std::string> p_hashes
     ) {
+    if (this->empty) assert(t == "nserv"); //if we're empty, we can't send messages except for a root
     assert((this->constraint_heads).size() == 0); //if there are constraints, this should be static.
     auto sending_time = get_raw_time();
     std::unordered_set<std::string> target_p_hashes = (this->tree).find_p_hashes(this->s_trip, p_hashes);

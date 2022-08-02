@@ -19,9 +19,7 @@ json hclc::client_open() {
         (this->c)->ExchangeCtx.ChainTrip
       ];
       
-      std::unordered_set<std::string> valence_hashes =
-        (this->c)->ExchangeCtx.CurrentTree
-        ->get_qualifying_hashes(&Tree::is_childless);
+      std::unordered_set<std::string> valence_hashes = (this->c)->ExchangeCtx.CurrentTree->get_qualifying_hashes(&Tree::is_childless);
 
       std::vector<std::string> c_valence_hashes;
 
@@ -80,6 +78,8 @@ json hclc::transfer_blocks(json cont) {
     try {
         /** for comparision */
         std::map<std::string, block> cached_chain = (this->c)->ExchangeCtx.CurrentTree->get_chain();
+        int local_pow = (this->c)->ExchangeCtx.CurrentTree->get_pow_req();
+
         /** pulling from inc content */
         std::vector<std::string> prompt_req_hashes = cont["req"];
         /** frameworking */
@@ -112,7 +112,10 @@ json hclc::transfer_blocks(json cont) {
         // add received blocks, and while doing so record their parent hashes.
         for (const auto& prompt_block : prompt_packet) {
           block new_block(prompt_block);
-          (this->c)->ExchangeCtx.NewBlocks.insert(new_block);
+          
+          // ignore invalid blocks, but try the parents regardless
+          if (new_block.verify(local_pow)) (this->c)->ExchangeCtx.NewBlocks.insert(new_block);
+
           for (const auto& p_hash : new_block.p_hashes) {
               potential_req_hashes.insert(p_hash);
           }

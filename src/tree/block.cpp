@@ -71,5 +71,5 @@ block::block(json input) {
     std::vector<std::string> v_p_hashes = input["p"].get<std::vector<std::string>>();
     for (const auto& ph: v_p_hashes) {
         this->p_hashes.insert(ph);
-    } 
+    }
 }
