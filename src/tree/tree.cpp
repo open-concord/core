@@ -37,8 +37,15 @@ void Tree::batch_push(std::unordered_set<block> to_push_set, bool save_new) {
     
     //add all blocks
     for (const auto& to_push_block : to_push_set) {
+        //reject blocks that are
+        // - already included 
+        // - invalid
+        if (!to_push_block.verify(this->pow) || get_chain().contains(to_push_block.hash)) {
+            to_push_set.erase(to_push_block);
+            continue;
+        }
+        //otherwise, add the block to the chain - it will be removed during linking if it doesn't connect properly.
         (this->chain)[to_push_block.hash] = to_push_block;
-        server_hash_sections[to_push_block.s_trip].insert(to_push_block.hash);
     }
 
     //link new blocks after *all* have been added.
@@ -46,13 +53,17 @@ void Tree::batch_push(std::unordered_set<block> to_push_set, bool save_new) {
         link_block(to_push_block);
     }
 
-    if (save_new) {
-        for (const auto& pushed_block : to_push_set) {
-            save(pushed_block);
-        }
+    //go through blocks that were successfully linked to save and trigger callbacks.
+    for (const auto& to_push_block : to_push_set) {
+        //check that block has made it through linking
+        if (!get_chain().contains(to_push_block.hash)) continue;
+        //save if applicable
+        if (save_new) save(to_push_block);
+        //add hash to batch for server callback
+        server_hash_sections[to_push_block.s_trip].insert(to_push_block.hash);
     }
-
     
+    //trigger server callbacks with collected hashes
     for (const auto& [s_trip, section] : server_hash_sections) {
         if ((this->batch_add_funcs).contains(s_trip))
             (this->batch_add_funcs)[s_trip](section);
