@@ -61,6 +61,23 @@ struct block {
         );
 };
 
+// block hashes are taken on faith to save time
+// verification occurs only when blocks are added to a tree
+
+namespace std {
+    template<> struct hash<block>
+    {
+        std::size_t operator()(const block& b) const noexcept
+        {
+            return std::hash<std::string>{}(b.hash);
+        }
+    };
+}
+
+bool operator== (block a, block b) {
+    return (a.hash == b.hash);
+}
+
 std::vector<std::string> order_hashes(std::unordered_set<std::string> input_hashes);
 
 struct keypair {
@@ -119,7 +136,7 @@ class Tree {
         std::map<std::string, std::string> server_roots;
 
 
-        std::queue<std::pair<std::vector<block>, bool>> awaiting_push_batches;
+        std::queue<std::pair<std::unordered_set<block>, bool>> awaiting_push_batches;
         //pairs are <new blocks, whether to save>
 
         void save(block to_save);
@@ -128,9 +145,9 @@ class Tree {
 
         void recursive_purge(std::string target);
 
-        void batch_push(std::vector<block> to_push, bool save_new = true);
+        void batch_push(std::unordered_set<block> to_push, bool save_new = true);
 
-        void queue_batch(std::pair<std::vector<block>, bool> to_queue);
+        void queue_batch(std::pair<std::unordered_set<block>, bool> to_queue);
 
         void push_proc();
     public:
@@ -167,7 +184,7 @@ class Tree {
 
         std::unordered_set<std::string> get_parent_hash_union(std::unordered_set<std::string> c_hashes);
 
-        std::vector<block> search_user(std::string trip = "");
+        std::unordered_set<block> search_user(std::string trip = "");
 
         void declare_user(user user_, std::string nick = "");
 
@@ -176,6 +193,8 @@ class Tree {
         bool verify_chain();
         
         void unit_push(block to_push, bool save_new = true);
+
+        void set_push(std::unordered_set<block> to_push, bool save_new = true);
 
         void set_push(std::vector<block> to_push, bool save_new = true);
 };

@@ -11,7 +11,7 @@
 namespace Ctx {
   struct Exchange {
     bool complete = false;
-    std::vector<block> NewBlocks;
+    std::unordered_set<block> NewBlocks;
     std::string ChainTrip;
     Tree* CurrentTree;
   };

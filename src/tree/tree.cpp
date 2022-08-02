@@ -32,7 +32,7 @@ Tree::Tree(std::string dir) {
 //---
 
 // the internal push function
-void Tree::batch_push(std::vector<block> to_push_set, bool save_new) {
+void Tree::batch_push(std::unordered_set<block> to_push_set, bool save_new) {
     std::map<std::string, std::unordered_set<std::string>> server_hash_sections;
     
     //add all blocks
@@ -60,7 +60,7 @@ void Tree::batch_push(std::vector<block> to_push_set, bool save_new) {
 }
 
 //add a block to the queue, ensuring a winner (i.e. processing is only called once)
-void Tree::queue_batch(std::pair<std::vector<block>, bool> to_queue) {
+void Tree::queue_batch(std::pair<std::unordered_set<block>, bool> to_queue) {
     (this->awaiting_push_batches).push(to_queue);
     (this->push_proc_mtx).lock();
     if (!push_proc_active) {
@@ -74,34 +74,39 @@ void Tree::queue_batch(std::pair<std::vector<block>, bool> to_queue) {
 
 void Tree::push_proc() {
     while (true) {
-        std::pair<std::vector<block>, bool> to_push;
+        std::pair<std::unordered_set<block>, bool> next_batch;
         {
             std::lock_guard<std::mutex> lk(push_proc_mtx);
             if ((this->awaiting_push_batches).empty()) {
                 this->push_proc_active = false;
                 return;
             }
-            to_push = awaiting_push_batches.front();
+            next_batch = awaiting_push_batches.front();
             (this->awaiting_push_batches).pop();
         }
-        batch_push(to_push.first, to_push.second);
+        batch_push(next_batch.first, next_batch.second);
     }
 }
 
 // user-facing options
 void Tree::unit_push(block to_push, bool save_new) {
-    std::pair<std::vector<block>, bool> unit_batch;
-    unit_batch.first.push_back(to_push);
+    std::pair<std::unordered_set<block>, bool> unit_batch;
+    unit_batch.first.insert(to_push);
     unit_batch.second = save_new;
     queue_batch(unit_batch);
 }
 
-void Tree::set_push(std::vector<block> to_push, bool save_new) {
-    std::pair<std::vector<block>, bool> set_batch;
+void Tree::set_push(std::unordered_set<block> to_push, bool save_new) {
+    std::pair<std::unordered_set<block>, bool> set_batch;
     set_batch.first = to_push;
     set_batch.second = save_new;
     queue_batch(set_batch);
 }
+
+void Tree::set_push(std::vector<block> to_push, bool save_new) {
+    set_push(std::unordered_set<block>(to_push.begin(), to_push.end(), to_push.size()), save_new);
+}
+// end of push functions
 //---
 
 
@@ -122,7 +127,7 @@ void Tree::load(std::string dir) {
 
     std::filesystem::path p(this->target_dir);
 
-    std::vector<block> loaded_blocks;
+    std::unordered_set<block> loaded_blocks;
 
     for(auto& entry : std::filesystem::directory_iterator(p)) {
         std::string path_str = entry.path().string();
@@ -136,7 +141,7 @@ void Tree::load(std::string dir) {
             saved_block.read(&block_data[0], block_data.size());
             saved_block.close();
             block parsed_block(json::parse(block_data));
-            loaded_blocks.push_back(parsed_block);
+            loaded_blocks.insert(parsed_block);
         }
         else continue;
     }
@@ -209,14 +214,14 @@ std::map<std::string, block> Tree::get_chain() {
     return (this->chain);
 }
 
-std::vector<block> Tree::search_user(std::string trip) {
-  std::vector<block> matches; 
+std::unordered_set<block> Tree::search_user(std::string trip) {
+  std::unordered_set<block> matches; 
   for (const auto& [_hash, _block] : this->get_chain()) {
     try {
       json j = json::parse(_block.cont);
       if (!j["d"] || !(_block.verify(this->pow))) {throw;}
       if (j["d"] == trip || trip.empty()) {
-        matches.push_back(_block);
+        matches.insert(_block);
       }
     } catch (...) {continue;} 
   }

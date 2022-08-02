@@ -112,7 +112,7 @@ json hclc::transfer_blocks(json cont) {
         // add received blocks, and while doing so record their parent hashes.
         for (const auto& prompt_block : prompt_packet) {
           block new_block(prompt_block);
-          (this->c)->ExchangeCtx.NewBlocks.push_back(new_block);
+          (this->c)->ExchangeCtx.NewBlocks.insert(new_block);
           for (const auto& p_hash : new_block.p_hashes) {
               potential_req_hashes.insert(p_hash);
           }
