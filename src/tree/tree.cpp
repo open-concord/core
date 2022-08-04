@@ -224,10 +224,10 @@ std::unordered_set<std::string> Tree::find_p_hashes(std::string s_trip, std::uno
         intra_childless_hashes.begin(),
         intra_childless_hashes.end(),
         std::inserter(p_hashes, p_hashes.begin()),
-        std::max((int) (p_count - p_hashes.size()), (int) require_intra_block), //we want at least one block from the server for continuity, but if we already have one we just need to fill the p_count.
+        std::max(p_count - (int) p_hashes.size(), (int) require_intra_block), //we want at least one block from the server for continuity, but if we already have one we just need to fill the p_count.
         std::mt19937{std::random_device{}()}
     );
-    int p_remainder = p_hashes.size() - p_count;
+    int p_remainder = p_count - (int) p_hashes.size();
     if (p_remainder > 0) {
         std::unordered_set<std::string> childless_hashes = get_qualifying_hashes(&Tree::is_childless);
         std::sample(
