@@ -9,6 +9,7 @@
 #include <random>
 #include <iostream>
 #include <filesystem>
+#include <cassert>
 
 #include "../../inc/tree.hpp"
 
@@ -273,7 +274,7 @@ void Tree::declare_user(user user_, std::string nick) {
     f["cont"] = j;
     f["sig"] = sig;
 
-    this->gen_block(f.dump(), j["d"]);
+    gen_block(f.dump(), j["d"]);
 }
 
 bool Tree::verify_chain() {
@@ -364,6 +365,13 @@ std::unordered_set<std::string> Tree::get_parent_hash_union(std::unordered_set<s
         }
     }
     return p_hash_union;
+}
+
+void Tree::create_root() {
+    assert(this->get_chain().size() == 0);
+    json root_msg;
+    root_msg["pow"] = this->pow;
+    this->gen_block(root_msg.dump(), std::string(24, '='));
 }
 
 void Tree::link_block(std::string to_link) {

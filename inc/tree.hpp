@@ -12,6 +12,8 @@
 #include <errno.h>
 #include <atomic>
 #include <mutex>
+#include <cassert>
+
 #include "crypt.hpp"
 #include "strops.hpp"
 
