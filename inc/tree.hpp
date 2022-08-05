@@ -82,40 +82,6 @@ bool operator== (block a, block b) {
 
 std::vector<std::string> order_hashes(std::unordered_set<std::string> input_hashes);
 
-struct keypair {
-    std::string DSA;
-    std::string RSA;
-
-    keypair() {}
-    keypair(std::string dsak, std::string rsak) : DSA(dsak), RSA(rsak) {}
-};
-
-struct user {
-    std::string trip;
-    keypair pubkeys, prikeys;
-    // bool empty = false;
-
-    user() {
-        std::array<std::string, 2> DSA = cDSA::keygen();
-        std::array<std::string, 2> RSA = cRSA::keygen();
-
-        pubkeys = keypair(b64::encode(DSA[1]), b64::encode(RSA[1]));
-        prikeys = keypair(b64::encode(DSA[0]), b64::encode(RSA[0]));
-
-        this->trip = gen::trip(pubkeys.DSA + pubkeys.RSA, 24);
-    }
-
-    user(keypair pubset) : pubkeys(pubset) {
-        this->trip = gen::trip(pubset.DSA + pubset.RSA, 24);
-    }
-
-    user(keypair pubset, keypair priset) : pubkeys(pubset), prikeys(priset) {
-        this->trip = gen::trip(pubset.DSA + pubset.RSA, 24);
-    }
-
-    user(std::string trip, keypair priset) : trip(trip), prikeys(priset) {}
-};
-
 class Tree {
     private:
         //int pow;
@@ -190,9 +156,7 @@ class Tree {
 
         std::unordered_set<std::string> get_parent_hash_union(std::unordered_set<std::string> c_hashes);
 
-        std::unordered_set<block> search_user(std::string trip = "");
-
-        void declare_user(user user_, std::string nick = "");
+        void create_root();
 
         //std::vector<json> search(char message_type, std::string target_trip, std::string key, boost::function<bool(json)> filter = no_filter, int start_b = -1, int end_b = -1);
 

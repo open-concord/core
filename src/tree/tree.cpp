@@ -245,38 +245,6 @@ std::map<std::string, block> Tree::get_chain() {
     return (this->chain);
 }
 
-std::unordered_set<block> Tree::search_user(std::string trip) {
-  std::unordered_set<block> matches; 
-  for (const auto& [_hash, _block] : this->get_chain()) {
-    try {
-      json j = json::parse(_block.cont);
-      if (!j["d"] || !(_block.verify(this->pow))) {throw;}
-      if (j["d"] == trip || trip.empty()) {
-        matches.insert(_block);
-      }
-    } catch (...) {continue;} 
-  }
-  return matches;
-}
-
-void Tree::declare_user(user user_, std::string nick) {
-    json j; 
-    j["d"] = user_.trip;
-    j["keys"]["sig_pubk"] = user_.pubkeys.DSA;
-    j["keys"]["enc_pubk"] = user_.pubkeys.RSA;
-
-    if (!nick.empty()) {
-        j["n"] = nick;
-    }
-    std::string sig = cDSA::sign(user_.prikeys.DSA, j.dump());
-    
-    json f;
-    f["cont"] = j;
-    f["sig"] = sig;
-
-    gen_block(f.dump(), j["d"]);
-}
-
 bool Tree::verify_chain() {
     std::map<std::string, bool> s_trip_seen;
     for (const auto& [_hash, _block] : this->get_chain()) {
