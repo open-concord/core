@@ -27,6 +27,8 @@ OBJ = $(BIN)lockmsg.o \
 	$(BIN)miner.o \
 	$(BIN)time.o \
 	$(BIN)tree.o \
+	$(BIN)tree_load.o \
+	$(BIN)tree_util.o \
 	$(BIN)block.o \
 	$(BIN)b64.o \
 	$(BIN)hexstr.o \
@@ -82,6 +84,10 @@ $(BIN)miner.o: ./inc/strops.hpp
 # chain utils
 $(BIN)tree.o: ./inc/tree.hpp
 	$(CC) $(CFLAGS) ./src/tree/tree.cpp -o $@
+$(BIN)tree_load.o: ./inc/tree.hpp
+	$(CC) $(CFLAGS) ./src/tree/load.cpp -o $@
+$(BIN)tree_util.o: ./inc/tree.hpp
+	$(CC) $(CFLAGS) ./src/tree/util.cpp -o $@
 $(BIN)time.o: ./inc/tree.hpp
 	$(CC) $(CFLAGS) ./src/tree/time_enc.cpp -o $@
 $(BIN)block.o: ./inc/tree.hpp

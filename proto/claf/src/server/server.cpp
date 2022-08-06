@@ -12,8 +12,7 @@ Server::Server(
     std::unordered_set<std::string> root_hashes = (this->tree).get_qualifying_hashes(&Tree::is_intraserver_orphan, this->s_trip);
     assert(root_hashes.size() <= 1); //0 means the server doesn't exist, but still, they could create it. 2+ shouldn't be possible, as there are checks at every level for server connection.
 
-    tree.add_block_funcs[(this->s_trip)] = std::bind(&Server::add_block, this, std::placeholders::_1);
-    tree.batch_add_funcs[(this->s_trip)] = std::bind(&Server::add_batch, this, std::placeholders::_1);
+    tree.server_add_funcs[(this->s_trip)] = std::bind(&Server::add_batch, this, std::placeholders::_1);
 
     if (root_hashes.size() == 1) {
         this->empty = false;
@@ -53,7 +52,7 @@ void Server::backscan_constraint_path(std::string lb_hash) {
     (this->constraint_path_lbs).insert(lb_hash);
 
     while (true) {
-        block active_block = (this->tree).get_chain()[working_hash];
+        block active_block = (this->tree).get_chain()[working_hash].ref;
         if (active_block.p_hashes.size() == 1) {
             working_hash = *active_block.p_hashes.begin();
         } else {
@@ -102,7 +101,7 @@ void Server::load_branch_forward(std::string fb_hash) {
 
     //see how far the linear part goes; we'll stop when there are multiple children
     while (true) {
-        active_block = (this->tree).get_chain()[working_hash];
+        active_block = (this->tree).get_chain()[working_hash].ref;
         //message digestion logic
         try {
             std::array<std::string, 2> raw_unlocked = cMSG::unlock(b64::decode(active_block.cont), false, this->raw_AES_key);
@@ -190,7 +189,7 @@ void Server::add_batch(std::unordered_set<std::string> hashes) {
     std::unordered_set<std::string> extern_only_hashes;
     for (auto h : hashes) {
         bool only_external = true;
-        for (auto ph : (this->tree).get_chain()[h].p_hashes) {
+        for (auto ph : (this->tree).get_chain()[h].ref.p_hashes) {
             if (hashes.count(ph) != 0) only_external = false;
         }
         if (only_external) extern_only_hashes.insert(h);

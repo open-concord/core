@@ -1,16 +1,15 @@
+#pragma once
+
 #include <string>
 #include <vector>
 #include <unordered_set>
 #include <map>
-#include <array>
 #include <compare>
-#include <filesystem>
 #include <queue>
-#include <nlohmann/json.hpp>
-#include <errno.h>
 #include <atomic>
 #include <mutex>
 #include <cassert>
+#include <functional>
 
 // translation model from which protocols are derived (e.g. COBS, CLAF, etc)
 
@@ -48,9 +47,7 @@ class chain_model {
         void queue_batch(std::unordered_set<vertex> to_queue);
 
         void queue_batch(std::vector<vertex> to_queue);
-
-        virtual void chain_configure(vertex root);
-    private:
+    protected:
         std::map<std::string, linked<vertex>> chain;
 
         linked<vertex>* chain_root;
@@ -59,19 +56,21 @@ class chain_model {
 
         std::queue<std::unordered_set<vertex>> awaiting_push_batches;
 
-        std::function<void(std::map<std::string, linked<vertex>>, std::unordered_set<std::string>)> push_callback;
-
         std::atomic<bool> push_proc_active = false;
 
         std::mutex push_proc_mtx;
 
         void link(std::string target);
 
-        void batch_push(std::unordered_set<vertex> to_push);
+        void batch_push(std::unordered_set<vertex> to_push, std::unordered_set<std::string> flags = std::unordered_set<std::string>());
 
         void push_proc();
 
-        virtual std::unordered_set<vertex> get_valid(std::unordered_set<vertex> to_check);
+        std::unordered_set<vertex> get_connected(std::unordered_set<vertex> to_check);
 
-        virtual std::unordered_set<std::string> gen_parents(int ask = 3);
+        virtual void chain_configure(vertex root) = 0;
+
+        virtual std::unordered_set<vertex> get_valid(std::unordered_set<vertex> to_check) = 0;
+
+        virtual void push_response(std::unordered_set<std::string> new_trips, std::unordered_set<std::string> flags = std::unordered_set<std::string>()) = 0;
 };

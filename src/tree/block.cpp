@@ -1,9 +1,3 @@
-#include <nlohmann/json.hpp>
-#include <vector>
-#include <algorithm>
-#include <unordered_set>
-#include <string>
-
 #include "../../inc/tree.hpp"
 #include "../../inc/strops.hpp"
 
@@ -36,6 +30,14 @@ json block::jdump() const {
 
 std::string block::dump() const {
   return this->jdump().dump();
+}
+
+std::string block::trip() {
+    return this->hash;
+}
+
+std::unordered_set<std::string> block::p_trips() {
+    return this->p_hashes;
 }
 
 block::block() {}

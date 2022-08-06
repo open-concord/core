@@ -1,11 +1,12 @@
 #include "../../inc/chain.hpp"
 
 template<class vertex> 
-void chain_model<vertex>::batch_push(std::unordered_set<vertex> to_push_set) {
-    std::unordered_set<vertex> usable_vertices = get_valid(to_push_set);
+void chain_model<vertex>::batch_push(std::unordered_set<vertex> to_push_set, std::unordered_set<std::string> flags) {
+    std::unordered_set<vertex> valid_vertices = get_valid(to_push_set);
+    std::unordered_set<vertex> usable_vertices = get_connected(valid_vertices);
     std::unordered_set<std::string> new_trips;
 
-    //add all blocks, *then* link, and *only then* trigger callbacks once blocks are fully added
+    //add all verts, *then* link, and *only then* trigger callbacks (once verts are integrated)
     for (const auto tp_vert : usable_vertices) {
         linked<vertex> new_vert;
         new_vert.ref = tp_vert;
@@ -18,7 +19,7 @@ void chain_model<vertex>::batch_push(std::unordered_set<vertex> to_push_set) {
     for (const auto tp_vert : usable_vertices) 
         link(tp_vert.trip());
 
-    (this->push_callback)(get_chain(), new_trips);
+    push_response(new_trips, flags);
 }
 
 //queuing (ensure that pushes don't happen simultaneously)
@@ -59,7 +60,7 @@ void chain_model<vertex>::push_proc() {
 
 template<class vertex>
 void chain_model<vertex>::link(std::string to_link) {
-    //unfortunately, it turns out we can't link blocks that *aren't in the chain*
+    //unfortunately, it turns out we can't link verts that *aren't in the chain*
     if (!get_chain().contains(to_link)) return;
 
     linked<vertex> tl_vertex = get_chain()[to_link];
@@ -75,6 +76,7 @@ void chain_model<vertex>::link(std::string to_link) {
     if (get_chain()[to_link].parents.empty() && !(this->rooted)) {
         this->rooted = true;
         this->chain_root = &((this->chain)[to_link]);
+        chain_configure(get_chain()[to_link].ref);
     }
 }
 

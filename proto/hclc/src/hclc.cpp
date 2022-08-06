@@ -2,7 +2,7 @@
 
 // add blocks in context to chain
 json hclc::update_chain(json cont = {}) {
-  (this->c)->ExchangeCtx.CurrentTree->set_push(((this->c)->ExchangeCtx.NewBlocks));
+  (this->c)->ExchangeCtx.CurrentTree->queue_batch(((this->c)->ExchangeCtx.NewBlocks));
   (this->c)->Flags.Set(Conn::CLOSE, true);
   return {
     {"FLAG", "END"}
@@ -45,7 +45,8 @@ json hclc::host_open(json cont) {
   try { 
     (this->c)->ExchangeCtx.ChainTrip = cont["chain"];
     (this->c)->ExchangeCtx.CurrentTree = (this->c)->GraphCtx.Forest[cont["chain"]];
-    std::map<std::string, block> cached_chain = (this->c)->ExchangeCtx.CurrentTree->get_chain();     
+    std::map<std::string, block> cached_chain;
+    for (const auto [hash, lblock] : (this->c)->ExchangeCtx.CurrentTree->get_chain()) cached_chain[hash] = lblock.ref;    
     std::unordered_set<std::string> h_valence_hashes = (this->c)->ExchangeCtx.CurrentTree->get_qualifying_hashes(&Tree::is_childless);
     std::vector<std::string> c_valence_hashes = cont["val"];
     std::vector<std::string> req_hashes;
@@ -77,7 +78,8 @@ json hclc::host_open(json cont) {
 json hclc::transfer_blocks(json cont) {
     try {
         /** for comparision */
-        std::map<std::string, block> cached_chain = (this->c)->ExchangeCtx.CurrentTree->get_chain();
+        std::map<std::string, block> cached_chain;
+        for (const auto [hash, lblock] : (this->c)->ExchangeCtx.CurrentTree->get_chain()) cached_chain[hash] = lblock.ref;    
         int local_pow = (this->c)->ExchangeCtx.CurrentTree->get_pow_req();
 
         /** pulling from inc content */

@@ -16,18 +16,16 @@
 
 #include "crypt.hpp"
 #include "strops.hpp"
+#include "chain.hpp"
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <stdexcept>
+#include <fstream>
 
 using json = nlohmann::json;
 
 #pragma once
-
-bool no_filter(json data);
-
-bool type_filter(char qtype, json data);
-
-json get_continuity_value(std::vector<json> defs,  std::string key);
-
-std::string chain_encrypt(json data, std::string dsa_pri_key, std::string rsa_pub_key, std::string aes_key, char mt);
 
 unsigned long long get_raw_time();
 
@@ -36,6 +34,7 @@ std::string raw_time_to_string(unsigned long long raw_time);
 unsigned long long string_to_raw_time(std::string str_time);
 
 struct block {
+    /* data */
     unsigned long long time;
     std::string nonce;
     std::string s_trip;
@@ -43,13 +42,17 @@ struct block {
     std::string cont;
     std::string hash;
     std::unordered_set<std::string> p_hashes;
-    //these properties are for chain analysis and aren't actually saved
-    std::unordered_set<std::string> c_hashes;
-    /** state */
+
+    /* utility */
     std::string hash_concat() const;
     bool verify(int pow = 0) const;
     json jdump() const;
     std::string dump() const;
+    
+    /* vertex */
+    std::string trip();
+    std::unordered_set<std::string> p_trips();
+
     /** construct */
     block();
     block(json origin);
@@ -82,47 +85,27 @@ bool operator== (block a, block b) {
 
 std::vector<std::string> order_hashes(std::unordered_set<std::string> input_hashes);
 
-class Tree {
-    private:
-        //int pow;
-        std::map<std::string, block> chain;
-
+class Tree : public chain_model<block> {
+    protected:
         std::string target_dir;
 
         int pow = 0;
 
         bool dir_linked = false;
 
-        bool push_paused = false;
-        
-        std::atomic<bool> push_proc_active = false;
+        std::unordered_set<std::string> saved_hashes;
 
-        std::mutex push_proc_mtx;
-
-        std::string chain_root;
-
-        std::map<std::string, std::string> server_roots;
-
-
-        std::queue<std::pair<std::unordered_set<block>, bool>> awaiting_push_batches;
-        //pairs are <new blocks, whether to save>
-
-        void chain_configure(block root);
+        std::map<std::string, linked<block>*> server_roots;
 
         void save(block to_save);
 
-        void link_block(std::string to_link);
+        void chain_configure(block root) override;
 
-        void recursive_purge(std::string target);
+        std::unordered_set<block> get_valid(std::unordered_set<block> to_check) override;
 
-        void batch_push(std::unordered_set<block> to_push, bool save_new = true);
-
-        void queue_batch(std::pair<std::unordered_set<block>, bool> to_queue);
-
-        void push_proc();
+        void push_response(std::unordered_set<std::string> new_trips, std::unordered_set<std::string> flags = std::unordered_set<std::string>()) override;
     public:
-        std::map<std::string, std::function<void(std::string)>> add_block_funcs;
-        std::map<std::string, std::function<void(std::unordered_set<std::string>)>> batch_add_funcs;
+        std::map<std::string, std::function<void(std::unordered_set<std::string>)>> server_add_funcs;
 
         Tree();
 
@@ -137,8 +120,6 @@ class Tree {
         std::string gen_block(std::string cont, std::string s_trip, unsigned long long set_time = get_raw_time(), std::unordered_set<std::string> p_hashes = std::unordered_set<std::string>(), std::string c_trip = std::string(24, '='));
 
         std::unordered_set<std::string> find_p_hashes(std::string s_trip, std::unordered_set<std::string> base_p_hashes = std::unordered_set<std::string>(), int p_count = 3);
-
-        std::map<std::string, block> get_chain();
 
         bool is_childless(std::string to_check);
 
@@ -157,14 +138,4 @@ class Tree {
         std::unordered_set<std::string> get_parent_hash_union(std::unordered_set<std::string> c_hashes);
 
         void create_root();
-
-        //std::vector<json> search(char message_type, std::string target_trip, std::string key, boost::function<bool(json)> filter = no_filter, int start_b = -1, int end_b = -1);
-
-        bool verify_chain();
-        
-        void unit_push(block to_push, bool save_new = true);
-
-        void set_push(std::unordered_set<block> to_push, bool save_new = true);
-
-        void set_push(std::vector<block> to_push, bool save_new = true);
 };
