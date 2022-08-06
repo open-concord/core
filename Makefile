@@ -30,7 +30,9 @@ OBJ = $(BIN)lockmsg.o \
 	$(BIN)block.o \
 	$(BIN)b64.o \
 	$(BIN)hexstr.o \
-	$(BIN)ctx.o	
+	$(BIN)ctx.o	 \
+	$(BIN)cboiler.o \
+	$(BIN)cpush.o
 
 default: static_unix
 
@@ -60,6 +62,12 @@ static_unix: $(OBJ) proto
 	cp -r ./inc ./build/exe/
 	cp $(D)/inc/* ./build/exe/inc
 	@echo "LIBCORE CREATION COMPLETE"
+
+# chain model
+$(BIN)cboiler.o: ./inc/chain.hpp
+	$(CC) $(CFLAGS) ./src/chain/boiler.cpp -o $@
+$(BIN)cpush.o: ./inc/chain.hpp
+	$(CC) $(CFLAGS) ./src/chain/push.cpp -o $@
 
 # string manipulation
 $(BIN)b64.o: ./inc/strops.hpp
