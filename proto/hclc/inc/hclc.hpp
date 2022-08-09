@@ -43,6 +43,10 @@ public:
     {"BLOCKS", &hclc::transfer_blocks},
     {"END", &hclc::update_chain}
   };
+  
+  // suspend/heartbeat
+  void suspend(unsigned int next); 
+
   void Key_Exchange();  
   
   void ConnHandle(Conn*) override;

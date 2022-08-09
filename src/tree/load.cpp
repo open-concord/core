@@ -1,8 +1,6 @@
 #include "../../inc/tree.hpp"
 #include <mutex>
 
-struct stat info;
-
 Tree::Tree(std::string dir) {
     load(dir);
 }
