@@ -59,11 +59,11 @@ void Tree::create_root() {
 std::unordered_set<block> Tree::get_valid(std::unordered_set<block> to_check) {
     bool root_found = check_rooted();
     std::unordered_set<std::string> rooted_servers;
-    for (const auto [s_trip, root] : (this->server_roots)) rooted_servers.insert(s_trip);
+    for (const auto& [s_trip, root] : (this->server_roots)) rooted_servers.insert(s_trip);
     std::map<std::string, std::string> s_trip_by_hash;
-    for (const auto tc_block : to_check) s_trip_by_hash[tc_block.hash] = tc_block.s_trip;
+    for (const auto& tc_block : to_check) s_trip_by_hash[tc_block.hash] = tc_block.s_trip;
 
-    for (const auto tc_block : to_check) {
+    for (const auto& tc_block : to_check) {
         if (!tc_block.verify(get_pow_req())) {
             to_check.erase(tc_block);
             continue;
@@ -75,7 +75,7 @@ std::unordered_set<block> Tree::get_valid(std::unordered_set<block> to_check) {
         }
 
         bool intra_orphan  = true;
-        for (const auto p_hash : tc_block.p_hashes) {
+        for (const auto& p_hash : tc_block.p_hashes) {
             if (
                 (s_trip_by_hash.contains(p_hash) && s_trip_by_hash[p_hash] == tc_block.s_trip) || 
                 (get_chain().contains(p_hash) && get_chain()[p_hash].ref.s_trip == tc_block.s_trip)
@@ -94,7 +94,7 @@ std::unordered_set<block> Tree::get_valid(std::unordered_set<block> to_check) {
 void Tree::push_response(std::unordered_set<std::string> new_trips, std::unordered_set<std::string> flags) {
     bool save_new = !flags.contains("no-save");
     std::map<std::string, std::unordered_set<std::string>> server_batches;
-    for (const auto new_trip : new_trips) {
+    for (const auto& new_trip : new_trips) {
         block new_block = get_chain()[new_trip].ref;
 
         if (is_intraserver_orphan(new_trip)) 
@@ -105,6 +105,6 @@ void Tree::push_response(std::unordered_set<std::string> new_trips, std::unorder
         server_batches[new_block.s_trip].insert(new_trip);
     }
 
-    for (const auto [s_trip, batch] : server_batches)
+    for (const auto& [s_trip, batch] : server_batches)
         server_add_funcs[s_trip](batch);
 }
