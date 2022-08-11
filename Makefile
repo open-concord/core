@@ -4,10 +4,16 @@ SHELL = /bin/sh
 D = ./lib
 
 # cpp standard
-CC = g++ -std=c++20
+CC = g++
 
 # compile-time flags
-CFLAGS = -c -g -Wall -fPIC
+CFLAGS = -std=c++20 -c -g -fPIC
+
+# warn level
+W = -Wall
+
+## gcc chunk ##
+G = $(CC) $(CFLAGS) $(W)
 
 # lib flags
 L = -lcryptopp -pthread 
@@ -67,45 +73,45 @@ static_unix: $(OBJ) proto
 
 # chain model
 $(BIN)cboiler.o: ./inc/chain.hpp
-	$(CC) $(CFLAGS) ./src/chain/boiler.cpp -o $@
+	$(G) ./src/chain/boiler.cpp -o $@
 $(BIN)cpush.o: ./inc/chain.hpp
-	$(CC) $(CFLAGS) ./src/chain/push.cpp -o $@
+	$(G) ./src/chain/push.cpp -o $@
 
 # string manipulation
 $(BIN)b64.o: ./inc/strops.hpp
-	$(CC) $(CFLAGS) ./src/strops/b64.cpp -o $@
+	$(G) ./src/strops/b64.cpp -o $@
 $(BIN)hexstr.o: ./inc/strops.hpp
-	$(CC) $(CFLAGS) ./src/strops/hexstr.cpp -o $@
+	$(G) ./src/strops/hexstr.cpp -o $@
 $(BIN)hash.o: ./inc/strops.hpp
-	$(CC) $(CFLAGS) ./src/strops/hash.cpp -o $@
+	$(G) ./src/strops/hash.cpp -o $@
 $(BIN)miner.o: ./inc/strops.hpp
-	$(CC) $(CFLAGS) ./src/strops/miner.cpp -o $@
+	$(G) ./src/strops/miner.cpp -o $@
 
 # chain utils
 $(BIN)tree.o: ./inc/tree.hpp
-	$(CC) $(CFLAGS) ./src/tree/tree.cpp -o $@
+	$(G) ./src/tree/tree.cpp -o $@
 $(BIN)tree_load.o: ./inc/tree.hpp
-	$(CC) $(CFLAGS) ./src/tree/load.cpp -o $@
+	$(G) ./src/tree/load.cpp -o $@
 $(BIN)tree_util.o: ./inc/tree.hpp
-	$(CC) $(CFLAGS) ./src/tree/util.cpp -o $@
+	$(G) ./src/tree/util.cpp -o $@
 $(BIN)time.o: ./inc/tree.hpp
-	$(CC) $(CFLAGS) ./src/tree/time_enc.cpp -o $@
+	$(G) ./src/tree/time_enc.cpp -o $@
 $(BIN)block.o: ./inc/tree.hpp
-	$(CC) $(CFLAGS) ./src/tree/block.cpp -o $@
+	$(G) ./src/tree/block.cpp -o $@
 
 # nodes
 $(BIN)ctx.o: ./inc/ctx.hpp
-	$(CC) $(CFLAGS) -I$(D)/inc ./src/ctx/node.cpp -o $@
+	$(G) -I$(D)/inc ./src/ctx/node.cpp -o $@
 
 # crypt
 $(BIN)lockmsg.o: ./inc/crypt.hpp
-	$(CC) $(CFLAGS) ./src/crypt/lockmsg.cpp -o $@
+	$(G) ./src/crypt/lockmsg.cpp -o $@
 $(BIN)DSA.o: ./inc/crypt.hpp
-	$(CC) $(CFLAGS) ./src/crypt/DSA.cpp -o $@
+	$(G) ./src/crypt/DSA.cpp -o $@
 $(BIN)RSA.o: ./inc/crypt.hpp
-	$(CC) $(CFLAGS) ./src/crypt/RSA.cpp -o $@
+	$(G) ./src/crypt/RSA.cpp -o $@
 $(BIN)AES.o: ./inc/crypt.hpp
-	$(CC) $(CFLAGS) ./src/crypt/AES.cpp -o $@
+	$(G) ./src/crypt/AES.cpp -o $@
 
 # build protocols
 PDIR = proto
