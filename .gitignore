@@ -3,10 +3,10 @@
 *.so
 *.dll
 *.a
-/lib/**/*.a
-/lib/**/*.hpp
-/lib/**/*.o
-/build/**
+lib/**/*.a
+lib/**/*.hpp
+lib/**/*.o
+build/**
 .vscode/*
 .vs/*
 test/*/**/*.out
