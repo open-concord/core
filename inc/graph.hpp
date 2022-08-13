@@ -15,10 +15,10 @@
 
 /*
 The vertex class, a generic data structure for points on a graph, needs the following:
-- vert.p_trips(), to get parent vert trips
-- vert.trip(), to get the vert trip
-- std::hash(vert)
-- (==)(vert A, vert B)
+std::unordered_set<std::string> - vert.p_trips(), to get parent vert trips
+std::string - vert.trip(), to get the vert trip
+std::size_t - std::hash(vert)
+bool - (==)(vert A, vert B)
 */
 
 template<class vertex>
