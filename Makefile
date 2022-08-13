@@ -39,13 +39,13 @@ OBJ = $(BIN)lockmsg.o \
 	$(BIN)b64.o \
 	$(BIN)hexstr.o \
 	$(BIN)ctx.o	 \
-	$(BIN)cboiler.o \
-	$(BIN)cpush.o
+	$(BIN)gboiler.o \
+	$(BIN)gpush.o
 
-default: static_unix
+default: static_linux
 
-install_unix: shared_unix
-	@echo "INSTALLING FOR UNIX"
+install_linux: shared_linux
+	@echo "INSTALLING FOR LINUX"
 	sudo cp libconcord.so /usr/lib/libconcord.so
 	sudo ldconfig
 	sudo mkdir -p /usr/include/concord
@@ -56,14 +56,14 @@ install_clean: clean
 	sudo ldconfig
 	sudo rm -rf /usr/include/concord
 
-shared_unix: $(OBJ) 
-	@echo "NOW BUILDING (UNIX) | SHARED OBJECT"
+shared_linux: $(OBJ) 
+	@echo "NOW BUILDING (LINUX) | SHARED OBJECT"
 	$(CC) $(SOFLAGS) $(OBJ) $(D)/libuttu.o $(L) -o libconcord.so
 
-static_unix: $(OBJ) 
+static_linux: $(OBJ) 
 	@echo "EXTRACTING FROM UTTU"
 	ar xv $(D)/libuttu.a --output $(BIN)
-	@echo "NOW COMPILING (UNIX) | ARCHIVE"
+	@echo "NOW BUILDING (LINUX) | ARCHIVE"
 	ar cr libcore.a $(wildcard $(BIN)*.o)
 	ranlib libcore.a	 
 	mv libcore.a ./build/exe/
@@ -71,10 +71,10 @@ static_unix: $(OBJ)
 	cp $(D)/inc/* ./build/exe/inc
 	@echo "LIBCORE CREATION COMPLETE"
 
-# chain model
-$(BIN)cboiler.o: ./inc/graph.hpp
+# graph model
+$(BIN)gboiler.o: ./inc/graph.hpp
 	$(G) ./src/graph/boiler.cpp -o $@
-$(BIN)cpush.o: ./inc/graph.hpp
+$(BIN)gpush.o: ./inc/graph.hpp
 	$(G) ./src/graph/push.cpp -o $@
 
 # string manipulation
