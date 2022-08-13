@@ -167,7 +167,7 @@ void hclc::Key_Exchange() {
 }
 
 // apply communication roadmap
-void hclc::ConnHandle(Conn* _c) { 
+void hclc::Handle(Conn* _c) { 
   if (this->c == nullptr) {
     /** essentially init */
     this->c = _c;
@@ -212,12 +212,5 @@ void hclc::ConnHandle(Conn* _c) {
     std::cout << " - " << t << '\n';
   }
 
-
-  this->ConnHandle(this->c);
-}
-
-// TODO: Add a flag in protocol template to show what is handled?
-void hclc::NodeHandle(Node*) {
-  std::cout << "[!] HCLC has no NodeHandle\n";
-  return;
+  this->Handle(this->c);
 }

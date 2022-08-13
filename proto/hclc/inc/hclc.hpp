@@ -7,7 +7,7 @@
 #include <functional>
 
 #include <ctx.hpp>
-#include <proto.hpp>
+#include <graph.hpp>
 #include <strops.hpp>
 #include <crypt.hpp>
 #include <tree.hpp>
@@ -15,7 +15,7 @@
 
 using json = nlohmann::json;
 
-struct hclc : public Protocol {
+struct hclc {
 private:
   // error handler
   json error(int error_code) {
@@ -27,7 +27,7 @@ private:
   }  
   Conn* c = nullptr;   
   std::string chain_trip;
-public:
+
   json update_chain(json cont); 
   json client_open();
   json host_open(json);
@@ -43,14 +43,8 @@ public:
     {"BLOCKS", &hclc::transfer_blocks},
     {"END", &hclc::update_chain}
   };
-  
-  // suspend/heartbeat
-  void suspend(unsigned int next); 
-
-  void Key_Exchange();  
-  
-  void ConnHandle(Conn*) override;
-  void NodeHandle(Node*) override;
-  hclc(std::string ct) : chain_trip(ct) {
-  }
+  void Key_Exchange();   
+public:
+  void Handle(Conn*) override; 
+  hclc(std::string ct) : chain_trip(ct) {}
 };

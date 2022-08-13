@@ -56,11 +56,11 @@ install_clean: clean
 	sudo ldconfig
 	sudo rm -rf /usr/include/concord
 
-shared_unix: $(OBJ) protocols
+shared_unix: $(OBJ) 
 	@echo "NOW BUILDING (UNIX) | SHARED OBJECT"
 	$(CC) $(SOFLAGS) $(OBJ) $(D)/libuttu.o $(L) -o libconcord.so
 
-static_unix: $(OBJ) proto
+static_unix: $(OBJ) 
 	@echo "EXTRACTING FROM UTTU"
 	ar xv $(D)/libuttu.a --output $(BIN)
 	@echo "NOW COMPILING (UNIX) | ARCHIVE"
@@ -113,30 +113,16 @@ $(BIN)RSA.o: ./inc/crypt.hpp
 $(BIN)AES.o: ./inc/crypt.hpp
 	$(G) ./src/crypt/AES.cpp -o $@
 
-# build protocols
-PDIR = proto
-proto: FORCE
-	for p in $(PDIR)/*; do \
-		cd $$p; $(MAKE); cd ../..;	\
-	done
-# clean protocols
-pclean:
-	for p in $(PDIR)/*; do \
-		cd $$p; $(MAKE) clean; cd ../..; \
-		done
-
 # have to force b/c unknown lib type
 clean:
 	rm -f $(BIN)*.o
 	rm -f ./build/exe/inc/*.hpp
 	rm -f ./build/exe/*.a
 	rm -f ./build/exe/*.so
-	for p in $(PDIR)/*; do \
-		cd $$p; rm -f bin/*.o; cd ../..; \
-	done
 
 reset: clean
 	rm -rf ./lib/*
 	touch ./lib/"PLACEHOLDER"
 
+# v huh
 FORCE: ;

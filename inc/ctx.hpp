@@ -3,9 +3,9 @@
 #include <string>
 #include <map>
 #include <functional>
+#include <deque>
 
 #include "tree.hpp"
-#include "proto.hpp"
 #include <uttu.hpp>
 
 namespace Ctx {
@@ -18,7 +18,7 @@ namespace Ctx {
   struct Graph {
     std::map<std::string, Tree*> Forest;
     bool filter, blacklist = false;
-    std::vector<std::string> filtered_trees;
+    std::deque<std::string> filtered_trees;
   };
 }
 
@@ -53,7 +53,7 @@ struct Node {
     CLOSE
   } FLAGS;
   FlagManager Flags; 
-  std::vector<std::unique_ptr<Conn>> Connections;  
+  std::deque<std::unique_ptr<Conn>> Connections;  
   
   Ctx::Graph Graph;
  
