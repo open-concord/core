@@ -2,18 +2,19 @@
 #include <mutex>
 
 Tree::Tree(std::string dir) {
-    load(dir);
+  load(dir);
 }
 
 void Tree::load(std::string dir) {
     this->dir_linked = true;
     this->target_dir = dir;
     if ((this->target_dir).back() != '/') this->target_dir += "/";
-    
+
     struct stat info;
     /** right now, this is hardcoded file dir.
      * TODO: Allow FIFO, socket, etc.
-     */ 
+     */
+
     if ((stat( (this->target_dir).c_str(), &info ) != 0) || (info.st_mode & S_IFMT) != S_IFDIR) {
         int err = errno;
         if (err) {std::cout << "[!] errno: " << err << '\n';}

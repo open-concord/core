@@ -1,7 +1,7 @@
-#include "../../inc/chain.hpp"
+#include "../../inc/graph.hpp"
 
 template<class vertex> 
-void chain_model<vertex>::batch_push(std::unordered_set<vertex> to_push_set, std::unordered_set<std::string> flags) {
+void graph_model<vertex>::batch_push(std::unordered_set<vertex> to_push_set, std::unordered_set<std::string> flags) {
     std::unordered_set<vertex> valid_vertices = get_valid(to_push_set);
     std::unordered_set<vertex> usable_vertices = get_connected(valid_vertices);
     std::unordered_set<std::string> new_trips;
@@ -12,7 +12,7 @@ void chain_model<vertex>::batch_push(std::unordered_set<vertex> to_push_set, std
         new_vert.ref = tp_vert;
         new_vert.trip = tp_vert.trip();
 
-        (this->chain)[tp_vert.trip()] = new_vert;
+        (this->graph)[tp_vert.trip()] = new_vert;
         new_trips.insert(tp_vert.trip());
     }
 
@@ -25,7 +25,7 @@ void chain_model<vertex>::batch_push(std::unordered_set<vertex> to_push_set, std
 //queuing (ensure that pushes don't happen simultaneously)
 
 template<class vertex>
-void chain_model<vertex>::queue_batch(std::unordered_set<vertex> to_queue) {
+void graph_model<vertex>::queue_batch(std::unordered_set<vertex> to_queue) {
     (this->awaiting_push_batches).push(to_queue);
     (this->push_proc_mtx).lock();
     if (!push_proc_active) {
@@ -38,7 +38,7 @@ void chain_model<vertex>::queue_batch(std::unordered_set<vertex> to_queue) {
 }
 
 template<class vertex>
-void chain_model<vertex>::push_proc() {
+void graph_model<vertex>::push_proc() {
     while (true) {
         std::unordered_set<vertex> next_batch;
 
@@ -59,37 +59,37 @@ void chain_model<vertex>::push_proc() {
 //linking (finding parents/children)
 
 template<class vertex>
-void chain_model<vertex>::link(std::string to_link) {
-    //unfortunately, it turns out we can't link verts that *aren't in the chain*
-    if (!get_chain().contains(to_link)) return;
+void graph_model<vertex>::link(std::string to_link) {
+    //unfortunately, it turns out we can't link verts that *aren't in the graph*
+    if (!get_graph().contains(to_link)) return;
 
-    linked<vertex> tl_vertex = get_chain()[to_link];
+    linked<vertex> tl_vertex = get_graph()[to_link];
 
     // add parents by tripcodes, and give those parents the target as a child.
     for (const auto p_trip : tl_vertex.p_trips()) {
-        (this->chain)[to_link].parents.insert(&((this->chain)[p_trip]))
-        (this->chain)[p_trip].children.insert(&((this->chain)[to_link]));
+        (this->graph)[to_link].parents.insert(&((this->graph)[p_trip]))
+        (this->graph)[p_trip].children.insert(&((this->graph)[to_link]));
     }
     
-    //update whether chain/server is rooted.
+    //update whether graph/server is rooted.
     //root ambiguity cannot be handled - if you allow multiple roots, this sets the first to be linked.
-    if (get_chain()[to_link].parents.empty() && !(this->rooted)) {
+    if (get_graph()[to_link].parents.empty() && !(this->rooted)) {
         this->rooted = true;
-        this->chain_root = &((this->chain)[to_link]);
-        chain_configure(get_chain()[to_link].ref);
+        this->graph_root = &((this->graph)[to_link]);
+        graph_configure(get_graph()[to_link].ref);
     }
 }
 
 // outward-facing API extras
 
 template<class vertex>
-void chain_model<vertex>::queue_unit(vertex to_queue) {
+void graph_model<vertex>::queue_unit(vertex to_queue) {
     std::unordered_set<vertex> unit_batch;
     unit_batch.insert(to_queue);
     queue_batch(unit_batch);
 }
 
 template<class vertex>
-void chain_model<vertex>::queue_batch(std::vector<vertex> to_queue) {
+void graph_model<vertex>::queue_batch(std::vector<vertex> to_queue) {
     queue_batch(std::unordered_set<vertex>(to_queue.begin(), to_queue.end(), to_queue.size()));
 }

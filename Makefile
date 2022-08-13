@@ -72,10 +72,10 @@ static_unix: $(OBJ) proto
 	@echo "LIBCORE CREATION COMPLETE"
 
 # chain model
-$(BIN)cboiler.o: ./inc/chain.hpp
-	$(G) ./src/chain/boiler.cpp -o $@
-$(BIN)cpush.o: ./inc/chain.hpp
-	$(G) ./src/chain/push.cpp -o $@
+$(BIN)cboiler.o: ./inc/graph.hpp
+	$(G) ./src/graph/boiler.cpp -o $@
+$(BIN)cpush.o: ./inc/graph.hpp
+	$(G) ./src/graph/push.cpp -o $@
 
 # string manipulation
 $(BIN)b64.o: ./inc/strops.hpp

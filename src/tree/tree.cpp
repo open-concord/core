@@ -7,7 +7,7 @@ Tree::Tree() {
   // nothing here, just needs to be defined for non-dir-linked trees
 }
 
-void Tree::chain_configure(block root) {
+void Tree::graph_configure(block root) {
     //for now, just extract POW threshold
     json config = json::parse(root.cont);
     if (config.contains("pow")) {
@@ -22,10 +22,10 @@ void Tree::set_pow_req(int POW_req) {
         //blocks could be made invalid, so we need to re-build the entire tree.
         std::lock_guard lk(this->push_proc_mtx);
         std::unordered_set<block> known_blocks;
-        for (const auto& [hash, l_block] : get_chain()) {
+        for (const auto& [hash, l_block] : get_graph()) {
             known_blocks.insert(l_block.ref);
         }
-        (this->chain).clear();
+        (this->graph).clear();
         std::queue<std::unordered_set<block>>().swap((this->awaiting_push_batches));
         batch_push(known_blocks);
     }
@@ -50,7 +50,7 @@ std::string Tree::gen_block(
 }
 
 void Tree::create_root() {
-    assert(this->get_chain().empty());
+    assert(this->get_graph().empty());
     json root_msg;
     root_msg["pow"] = this->pow;
     this->gen_block(root_msg.dump(), std::string(24, '='));
@@ -78,7 +78,7 @@ std::unordered_set<block> Tree::get_valid(std::unordered_set<block> to_check) {
         for (const auto& p_hash : tc_block.p_hashes) {
             if (
                 (s_trip_by_hash.contains(p_hash) && s_trip_by_hash[p_hash] == tc_block.s_trip) || 
-                (get_chain().contains(p_hash) && get_chain()[p_hash].ref.s_trip == tc_block.s_trip)
+                (get_graph().contains(p_hash) && get_graph()[p_hash].ref.s_trip == tc_block.s_trip)
             ) intra_orphan = false;
         }
 
@@ -95,10 +95,10 @@ void Tree::push_response(std::unordered_set<std::string> new_trips, std::unorder
     bool save_new = !flags.contains("no-save");
     std::map<std::string, std::unordered_set<std::string>> server_batches;
     for (const auto& new_trip : new_trips) {
-        block new_block = get_chain()[new_trip].ref;
+        block new_block = get_graph()[new_trip].ref;
 
         if (is_intraserver_orphan(new_trip)) 
-            (this->server_roots)[new_block.s_trip] = &((this->chain)[new_trip]);
+            (this->server_roots)[new_block.s_trip] = &((this->graph)[new_trip]);
         if (save_new) 
             save(new_block);
 

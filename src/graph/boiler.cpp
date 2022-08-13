@@ -1,27 +1,27 @@
-#include "../../inc/chain.hpp"
+#include "../../inc/graph.hpp"
 
 template<class vertex>
-chain_model<vertex>::chain_model() {
+graph_model<vertex>::graph_model() {
     return;
 }
 
 template<class vertex>
-linked<vertex> chain_model<vertex>::get_root() {
-    return *(this->chain_root);
+linked<vertex> graph_model<vertex>::get_root() {
+    return *(this->graph_root);
 }
 
 template<class vertex>
-bool chain_model<vertex>::check_rooted() {
+bool graph_model<vertex>::check_rooted() {
     return this->rooted;
 }
 
 template<class vertex>
-std::map<std::string, linked<vertex>> chain_model<vertex>::get_chain() {
-    return this->chain;
+std::map<std::string, linked<vertex>> graph_model<vertex>::get_graph() {
+    return this->graph;
 }
 
 template<class vertex>
-std::unordered_set<vertex> chain_model<vertex>::get_connected(std::unordered_set<vertex> to_check) {
+std::unordered_set<vertex> graph_model<vertex>::get_connected(std::unordered_set<vertex> to_check) {
     std::map<std::string, std::unordered_set<std::string>> parents_ref;
     std::unordered_set<std::string> conn_trips;
     std::unordered_set<vertex> conn_vertices;
@@ -34,7 +34,7 @@ std::unordered_set<vertex> chain_model<vertex>::get_connected(std::unordered_set
         for (const auto p_trip : parents_ref.at(target)) {
             if (conn_trips.contains(p_trip)) continue;
             if (parents_ref.contains(p_trip) && is_supported(p_trip)) continue;
-            if ((this->chain).contains(p_trip)) continue;
+            if ((this->graph).contains(p_trip)) continue;
             return false;
         }
         conn_trips.insert(target);

@@ -19,7 +19,7 @@ std::unordered_set<std::string> Tree::find_p_hashes(std::string s_trip, std::uno
     bool require_intra_block = true;
 
     for (const auto& bp_hash : p_hashes) {
-        if (get_chain()[bp_hash].ref.s_trip == s_trip) {
+        if (get_graph()[bp_hash].ref.s_trip == s_trip) {
             require_intra_block = false;
             break;
         }
@@ -47,15 +47,15 @@ std::unordered_set<std::string> Tree::find_p_hashes(std::string s_trip, std::uno
 }
 
 bool Tree::is_childless(std::string to_check) {
-    return (get_chain()[to_check].children.empty());
+    return (get_graph()[to_check].children.empty());
 }
 
 bool Tree::is_orphan(std::string to_check) {
-    return (get_chain()[to_check].parents.empty());
+    return (get_graph()[to_check].parents.empty());
 }
 
 bool Tree::is_intraserver_childless(std::string to_check) {
-    linked<block> tcl_block = get_chain()[to_check];
+    linked<block> tcl_block = get_graph()[to_check];
     std::string server_trip = tcl_block.ref.s_trip;
     for (const auto& child : tcl_block.children) {
         if (child->ref.s_trip == server_trip) return false;
@@ -64,7 +64,7 @@ bool Tree::is_intraserver_childless(std::string to_check) {
 }
 
 bool Tree::is_intraserver_orphan(std::string to_check) {
-    linked<block> tcl_block = get_chain()[to_check];
+    linked<block> tcl_block = get_graph()[to_check];
     std::string server_trip = tcl_block.ref.s_trip;
     for (const auto& parent : tcl_block.parents) {
         if (parent->ref.s_trip == server_trip) return false;
@@ -74,7 +74,7 @@ bool Tree::is_intraserver_orphan(std::string to_check) {
 
 
 std::unordered_set<std::string> Tree::intraserver_c_hashes(std::string to_check) {
-    linked<block> tcl_block = get_chain()[to_check];
+    linked<block> tcl_block = get_graph()[to_check];
     std::unordered_set<std::string> result;
     std::string server_trip = tcl_block.ref.s_trip;
     for (const auto& child : tcl_block.children) {
@@ -84,7 +84,7 @@ std::unordered_set<std::string> Tree::intraserver_c_hashes(std::string to_check)
 }
 
 std::unordered_set<std::string> Tree::intraserver_p_hashes(std::string to_check) {
-    linked<block> tcl_block = get_chain()[to_check];
+    linked<block> tcl_block = get_graph()[to_check];
     std::unordered_set<std::string> result;
     std::string server_trip = tcl_block.ref.s_trip;
     for (const auto& parent : tcl_block.parents) {
@@ -95,7 +95,7 @@ std::unordered_set<std::string> Tree::intraserver_p_hashes(std::string to_check)
 
 std::unordered_set<std::string> Tree::get_qualifying_hashes(std::function<bool(Tree*, std::string)> qual_func, std::string s_trip) {
     std::unordered_set<std::string> qualifying_hashes;
-    for (const auto& [hash, block] : get_chain()) {
+    for (const auto& [hash, block] : get_graph()) {
         if (!s_trip.empty() && block.ref.s_trip != s_trip) continue;
         if (qual_func(this, hash)) qualifying_hashes.insert(hash);
     }
@@ -105,7 +105,7 @@ std::unordered_set<std::string> Tree::get_qualifying_hashes(std::function<bool(T
 std::unordered_set<std::string> Tree::get_parent_hash_union(std::unordered_set<std::string> c_hashes) {
     std::unordered_set<std::string> p_hash_union;
     for (const auto& ch: c_hashes) {
-        for (const auto& parent : get_chain()[ch].parents) {
+        for (const auto& parent : get_graph()[ch].parents) {
             p_hash_union.insert(parent->trip);
         }
     }

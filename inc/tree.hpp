@@ -16,7 +16,7 @@
 
 #include "crypt.hpp"
 #include "strops.hpp"
-#include "chain.hpp"
+#include "graph.hpp"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -85,7 +85,7 @@ bool operator== (block a, block b) {
 
 std::vector<std::string> order_hashes(std::unordered_set<std::string> input_hashes);
 
-class Tree : public chain_model<block> {
+class Tree : public graph_model<block> {
     protected:
         std::string target_dir;
 
@@ -99,7 +99,7 @@ class Tree : public chain_model<block> {
 
         void save(block to_save);
 
-        void chain_configure(block root) override;
+        void graph_configure(block root) override;
 
         std::unordered_set<block> get_valid(std::unordered_set<block> to_check) override;
 

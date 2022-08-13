@@ -30,17 +30,23 @@ struct linked {
 };
 
 template<class vertex>
-class chain_model {
+class graph_model {
     public:
-        chain_model();
+        graph_model();
 
         linked<vertex> get_root();
 
         bool check_rooted();
 
-        std::map<std::string, linked<vertex>> get_chain();
+        std::map<std::string, linked<vertex>> get_graph();
 
-        void set_push_callback(std::function<void(std::map<std::string, linked<vertex>>, std::unordered_set<std::string>)> callback);
+        void set_push_callback(
+            std::function<void(
+              std::map<
+                std::string, 
+                linked<vertex>>, 
+              std::unordered_set<std::string>
+            )> callback);
 
         void queue_unit(vertex to_queue);
 
@@ -48,9 +54,9 @@ class chain_model {
 
         void queue_batch(std::vector<vertex> to_queue);
     protected:
-        std::map<std::string, linked<vertex>> chain;
+        std::map<std::string, linked<vertex>> graph;
 
-        linked<vertex>* chain_root;
+        linked<vertex>* graph_root;
 
         bool rooted;
 
@@ -68,7 +74,7 @@ class chain_model {
 
         std::unordered_set<vertex> get_connected(std::unordered_set<vertex> to_check);
 
-        virtual void chain_configure(vertex root) = 0;
+        virtual void graph_configure(vertex root) = 0;
 
         virtual std::unordered_set<vertex> get_valid(std::unordered_set<vertex> to_check) = 0;
 
