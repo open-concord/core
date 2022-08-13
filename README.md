@@ -8,9 +8,10 @@ Concord is a system of distributed protocols on top of a block graph. Concord ut
 
 ### Roadmap
 - [x] graph
-- [ ] circling
-- [ ] lambda calc
-- [ ] homomorphic encryption
+- [ ] PoW
+  - [x] Hash Spam (Yuck)
+  - [ ] Lambda Calc (Clear)
+  - [ ] Homomorphic (Opaque)
 - [ ] bootstrappable ctx
 
 Register to become a beta tester; shoot either maintainer an email
