@@ -25,13 +25,13 @@
 
 using json = nlohmann::json;
 
-#pragma once
+namespace timeh {
+  unsigned long long raw();
 
-unsigned long long get_raw_time();
+  std::string to_string(unsigned long long raw_time);
 
-std::string raw_time_to_string(unsigned long long raw_time);
-
-unsigned long long string_to_raw_time(std::string str_time);
+  unsigned long long from_string(std::string str_time);
+};
 
 struct block {
     /* data */
@@ -61,7 +61,7 @@ struct block {
         std::unordered_set<std::string> p_hashes, 
         int pow, 
         std::string s_trip, 
-        unsigned long long set_time = get_raw_time(), 
+        unsigned long long set_time = timeh::raw(), 
         std::string c_trip = ""
         );
 };
@@ -117,7 +117,13 @@ class Tree : public graph_model<block> {
 
         int get_pow_req();
 
-        std::string gen_block(std::string cont, std::string s_trip, unsigned long long set_time = get_raw_time(), std::unordered_set<std::string> p_hashes = std::unordered_set<std::string>(), std::string c_trip = std::string(24, '='));
+        std::string gen_block(
+            std::string cont, 
+            std::string s_trip, 
+            unsigned long long set_time = timeh::raw(), 
+            std::unordered_set<std::string> p_hashes = std::unordered_set<std::string>(), 
+            std::string c_trip = std::string{24, '='}
+        );
 
         std::unordered_set<std::string> find_p_hashes(std::string s_trip, std::unordered_set<std::string> base_p_hashes = std::unordered_set<std::string>(), int p_count = 3);
 

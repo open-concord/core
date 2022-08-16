@@ -4,6 +4,7 @@
 #include <map>
 #include <functional>
 #include <deque>
+#include <unordered_set>
 
 #include "tree.hpp"
 #include <uttu.hpp>
