@@ -76,7 +76,7 @@ struct Node {
     /** reserve tape */
     this->Flags.Reserve(0, 2);
     this->Flags.Fill(false);
-    (this->r.get())->Embed([this](std::unique_ptr<Peer> p) -> void {
+    this->R()->Embed([this](std::unique_ptr<Peer> p) -> void {
         this->Connections.push_back(std::make_unique<Conn>(
           this->Graph,
           std::move(p)
