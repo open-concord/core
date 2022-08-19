@@ -1,7 +1,7 @@
 SHELL = /bin/sh
 
 # local path for the lib folder *Change Based on Env*
-D = ./lib
+D = ./lib/uttu
 
 # cpp standard
 CC = g++
