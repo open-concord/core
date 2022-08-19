@@ -1,41 +1,42 @@
 #include "../../inc/ctx.hpp"
+#include <thread>
 
 void Node::Lazy(bool state, bool blocking) {
   if (state) {
-    this->R()->Lazy(blocking);
+    this->Relay::Lazy(blocking);
   } else {
-    this->R()->Flags.Set(Relay::LAZY, state, 1);
+    this->Flags.Set(Relay::LAZY, state, 1);
   }
 }
 
 void Node::Contact(std::string ip, unsigned int port) {
-  Peer p(std::nullopt);
+  Peer&& p = Peer(std::nullopt);
   p.Connect(ip, port); 
   this->Connections.push_back(
     std::make_unique<Conn>(     
       this->Graph,
-      std::make_unique<Peer>(p) 
+      std::move(p) 
     )
   );  
 }
 
 void Node::Stop() {
-  (this->r.get())->Close();
+  this->Relay::Close();
   unsigned int ht; // highest timeout
   for (auto& c: this->Connections) {
-    auto cv = c.get();
-    ht = (ht < (cv->P())->tout) ? (cv->P())->tout : ht;
-    cv->Flags.Set(Conn::CLOSE, true); 
+    auto cp = c.get();
+    ht = (ht < cp->Peer::tout) ? cp->Peer::tout : ht;
+    cp->Flags.Set(Conn::CLOSE, true, 1); 
   }
-  std::jthread st([] (Node* n, unsigned int t) -> void {
+  std::jthread st([this, ht]() -> void {
     try {
-      while (!n->Connections.empty()) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(t));
+      while (!this->Connections.empty()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(ht));
       }
-    } catch (...) {
-      // TODO lmao
+    } catch (std::exception& e) {
+      debug.bump("[!!] ", e.what());
       return;
     }
-  }, this, ht);
+  });
   st.detach();
 }
