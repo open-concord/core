@@ -6,7 +6,13 @@ void graph_model<vertex>::batch_push(std::unordered_set<vertex> to_push_set, std
     std::unordered_set<vertex> usable_vertices = get_connected(valid_vertices);
     std::unordered_set<std::string> new_trips;
 
-    //add all verts, *then* link, and *only then* trigger callbacks (once verts are integrated)
+    // if there's a new root, we deal with it first
+    // we can add and link it later - the graph just needs to be configured before the full push.
+    for (const auto tp_vert : usable_vertices)
+        if (tp_vert.p_hashes().empty())
+            graph_configure(get_graph()[to_link].ref);
+
+    // add all verts, *then* link, and *only then* trigger callbacks (once verts are integrated)
     for (const auto tp_vert : usable_vertices) {
         linked<vertex> new_vert;
         new_vert.ref = tp_vert;
@@ -70,13 +76,11 @@ void graph_model<vertex>::link(std::string to_link) {
         (this->graph)[to_link].parents.insert(&((this->graph)[p_trip]))
         (this->graph)[p_trip].children.insert(&((this->graph)[to_link]));
     }
-    
-    //update whether graph/server is rooted.
-    //root ambiguity cannot be handled - if you allow multiple roots, this sets the first to be linked.
-    if (get_graph()[to_link].parents.empty() && !(this->rooted)) {
+
+    // set up root references
+    if (tl_vertex.ref.p_hashes().empty() && !this->rooted) {
         this->rooted = true;
         this->graph_root = &((this->graph)[to_link]);
-        graph_configure(get_graph()[to_link].ref);
     }
 }
 
