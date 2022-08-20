@@ -1,7 +1,10 @@
 #include "../../inc/graph.hpp"
 
 template<class vertex> 
-void graph_model<vertex>::batch_push(std::unordered_set<vertex> to_push_set, std::unordered_set<std::string> flags) {
+void graph_model<vertex>::batch_push(
+    std::unordered_set<vertex> to_push_set, 
+    std::unordered_set<std::string> flags
+  ) {
     std::unordered_set<vertex> valid_vertices = get_valid(to_push_set);
     std::unordered_set<vertex> usable_vertices = get_connected(valid_vertices);
     std::unordered_set<std::string> new_trips;
@@ -10,7 +13,7 @@ void graph_model<vertex>::batch_push(std::unordered_set<vertex> to_push_set, std
     // we can add and link it later - the graph just needs to be configured before the full push.
     for (const auto tp_vert : usable_vertices)
         if (tp_vert.p_hashes().empty())
-            graph_configure(get_graph()[to_link].ref);
+            graph_configure(get_graph()[tp_vert].ref);
 
     // add all verts, *then* link, and *only then* trigger callbacks (once verts are integrated)
     for (const auto tp_vert : usable_vertices) {
