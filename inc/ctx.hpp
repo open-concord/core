@@ -7,7 +7,9 @@
 #include <unordered_set>
 
 #include "tree.hpp"
-#include <uttu.hpp>
+#include <peer.hpp>
+#include <relay.hpp>
+#include <debug.hpp>
 
 namespace Ctx {
   struct Exchange {
@@ -23,42 +25,35 @@ namespace Ctx {
   };
 }
 
-struct Conn {
+struct Conn : public Peer {
   enum {
     ACTIVE,
     HALTED,
     COMPLETE,
     CLOSE
   } FLAGS;
-  FlagManager Flags;
-  std::unique_ptr<Peer> p;
   
   Ctx::Exchange ExchangeCtx;
   Ctx::Graph GraphCtx;
-  Peer* P() {return this->p.get();} 
+ 
   Conn (
       Ctx::Graph g,
-      std::unique_ptr<Peer> p
-      ) : p(std::move(p)), GraphCtx(g) {
+      Peer&& p
+  ) : Peer(p), GraphCtx(g) {
     /** reserve tape */
-    this->Flags.Reserve(0, 5);
-    this->Flags.Fill(false);
+    this->Flags.Reserve(1, 5);
+    this->Flags.Fill(false, 1);
   }
 };
 
-struct Node {
-  std::unique_ptr<Relay> r;
-
+struct Node : public Relay {
   enum {
-    OPEN, 
-    CLOSE
+    ACTIVE
   } FLAGS;
-  FlagManager Flags; 
-  std::deque<std::unique_ptr<Conn>> Connections;  
   
+  std::deque<std::unique_ptr<Conn>> Connections;   
   Ctx::Graph Graph;
  
-  Relay* R() {return this->r.get();}
   void Lazy(bool state, bool blocking);
   void Contact(std::string ip, unsigned int port);
   void Stop();
@@ -68,19 +63,14 @@ struct Node {
       unsigned int timeout = 3000,
       std::optional<np*> n = std::nullopt
       ) : 
-    r(
-        std::make_unique<Relay>( 
-            n, port, timeout, queueLimit
-        )
-    ) {
-    /** reserve tape */
-    this->Flags.Reserve(0, 2);
-    this->Flags.Fill(false);
-    (this->r.get())->Embed([this](std::unique_ptr<Peer> p) -> void {
-        this->Connections.push_back(std::make_unique<Conn>(
-          this->Graph,
-          std::move(p)
-        ));
-      });
+      Relay(n, port, timeout, queueLimit)
+  {
+    /** embed w/ conn modifier */ 
+    this->Relay::Embed([this](Peer&& p) -> void {
+      this->Connections.push_back(std::make_unique<Conn>(
+        this->Graph,
+        std::move(p)
+      ));
+    });
   }
 };
