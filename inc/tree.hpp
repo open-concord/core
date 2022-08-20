@@ -78,10 +78,10 @@ namespace std {
         }
     };
 }
-inline bool operator== (block a, block b) {
-  return (a.hash == b.hash);
-}
 
+bool operator== (block a, block b) {
+    return (a.hash == b.hash);
+}
 
 std::vector<std::string> order_hashes(std::unordered_set<std::string> input_hashes);
 
