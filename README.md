@@ -1,7 +1,7 @@
 # Concord/Core
 <hr>
 
-**WIP**, please do not run without explicit support.
+**[WIP]**; please do not run without explicit support.
 
 
 Concord is a system of distributed protocols on top of a block graph. Concord utilises non-wasteful PoW to promote meaningful and considerate computing.
