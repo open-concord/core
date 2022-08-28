@@ -10,7 +10,7 @@ void Node::Lazy(bool state, bool blocking) {
 }
 
 void Node::Contact(std::string ip, unsigned int port) {
-  Peer&& p = Peer(std::nullopt);
+  Peer&& p = Peer(); // FAIL, while working out kinks in uttu
   p.Connect(ip, port); 
   this->Connections.push_back(
     std::make_unique<Conn>(     

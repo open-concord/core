@@ -59,10 +59,10 @@ struct Node : public Relay {
   void Stop();
   Node(
       unsigned short int port,
+      np& n,
       unsigned short queueLimit = 15,
-      unsigned int timeout = 3000,
-      std::optional<np*> n = std::nullopt
-      ) : 
+      unsigned int timeout = 3000
+    ) :
       Relay(n, port, timeout, queueLimit)
   {
     /** embed w/ conn modifier */ 
