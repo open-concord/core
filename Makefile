@@ -42,28 +42,23 @@ OBJ = $(BIN)lockmsg.o \
 	$(BIN)gboiler.o \
 	$(BIN)gpush.o
 
-default: static_linux
+default: static
 
-install_linux: shared_linux
-	@echo "INSTALLING FOR LINUX"
+install: shared
+	@echo "-- INSTALLING --"
 	sudo cp libconcord.so /usr/lib/libconcord.so
 	sudo ldconfig
 	sudo mkdir -p /usr/include/concord
 	sudo cp ./inc/* /usr/include/concord
 
-install_clean: clean
-	sudo rm -f /usr/lib/libconcord.so
-	sudo ldconfig
-	sudo rm -rf /usr/include/concord
-
-shared_linux: $(OBJ) 
-	@echo "NOW BUILDING (LINUX) | SHARED OBJECT"
+shared: $(OBJ) 
+	@echo "-- NOW BUILDING | SHARED OBJECT --"
 	$(CC) $(SOFLAGS) $(OBJ) $(D)/libuttu.o $(L) -o libconcord.so
 
-static_linux: $(OBJ) 
+static: $(OBJ) 
 	@echo "EXTRACTING FROM UTTU"
 	ar xv $(D)/libuttu.a --output $(BIN)
-	@echo "NOW BUILDING (LINUX) | ARCHIVE"
+	@echo "-- NOW BUILDING | ARCHIVE --"
 	ar cr libcore.a $(wildcard $(BIN)*.o)
 	ranlib libcore.a	 
 	mv libcore.a ./build/exe/
