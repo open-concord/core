@@ -3,7 +3,7 @@
 
 **[WIP] unexpected things are expected.
 
-please do not dogfood without explicit support.
+**please** do not dogfood without explicit support.
 
 
 Concord is a system of distributed protocols on top of a block graph. Concord utilises non-wasteful PoW to promote meaningful and considerate computing.
