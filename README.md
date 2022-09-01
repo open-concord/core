@@ -1,7 +1,7 @@
 # Concord/Core
 <hr>
 
-**[WIP] unexpected things are expected.
+**[WIP] unexpected things are expected.**
 
 **please** do not dogfood without explicit support.
 
