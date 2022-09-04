@@ -9,6 +9,14 @@ void Node::Lazy(bool state, bool blocking) {
   }
 }
 
+void Node::Absorb(Conn&& c) {
+  this->Connections.push_back(
+    std::make_unique<Conn>(
+      std::move(c)
+    )
+  );
+}
+
 void Node::Stop() {
   this->Relay::Close();
   unsigned int ht; // highest timeout

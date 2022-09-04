@@ -55,6 +55,8 @@ struct Node : public Relay {
   Ctx::Graph Graph;
  
   void Lazy(bool state, bool blocking);
+  void Absorb(Conn&& c);
+
   void Stop();
   Node(
       unsigned short int port,
