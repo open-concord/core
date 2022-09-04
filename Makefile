@@ -82,7 +82,7 @@ $(BIN)hash.o: ./inc/strops.hpp
 $(BIN)miner.o: ./inc/strops.hpp
 	$(G) ./src/strops/miner.cpp -o $@
 
-# chain utils
+# graph utils
 $(BIN)tree.o: ./inc/tree.hpp
 	$(G) ./src/tree/tree.cpp -o $@
 $(BIN)tload.o: ./inc/tree.hpp
