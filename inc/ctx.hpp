@@ -58,14 +58,7 @@ struct Node : public Relay {
   void Absorb(Conn&& c);
 
   void Stop();
-  Node(
-      unsigned short int port,
-      np& n,
-      unsigned short queueLimit = 15,
-      unsigned int timeout = 3000
-    ) :
-      Relay(n, port, timeout, queueLimit)
-  {
+  Node(Relay&& r) : Relay(r) {
     /** embed w/ conn modifier */ 
     this->Relay::Embed([this](Peer&& p) -> void {
       this->Connections.push_back(std::make_unique<Conn>(

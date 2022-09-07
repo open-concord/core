@@ -56,7 +56,7 @@ shared: $(OBJ)
 	$(CC) $(SOFLAGS) $(OBJ) $(D)/libuttu.o $(L) -o libconcord.so
 
 static: $(OBJ) 
-	@echo "EXTRACTING FROM UTTU"
+	@echo "-- EXTRACTING | UTTU --"
 	ar xv $(D)/libuttu.a --output $(BIN)
 	@echo "-- NOW BUILDING | ARCHIVE --"
 	ar cr libcore.a $(wildcard $(BIN)*.o)
