@@ -1,48 +1,37 @@
-SHELL = /bin/sh
+default: static
 
 # local path for the lib folder *Change Based on Env*
-D = ./lib/uttu
+D = ./lib/uttu/
 
 # cpp standard
-CC = g++
-
-# compile-time flags
-CFLAGS = -std=c++20 -c -g -fPIC
+G = g++
 
 # warn level
 W = -Wall
 
+# compile-time flags
+CF = -std=c++20 $(W) -c -fPIC -MMD -MP
+
 ## gcc chunk ##
-G = $(CC) $(CFLAGS) $(W)
+CC = $(G) $(CF) -I$(D)inc
 
 # lib flags
 L = -lcryptopp -pthread 
-
-# object file dump
-BIN = ./build/bin/
 
 # .so args
 SOFLAGS = -shared -Wl,-soname,libconcord.so
 
 # objects
-OBJ = $(BIN)lockmsg.o \
-	$(BIN)AES.o \
-	$(BIN)RSA.o \
-	$(BIN)DSA.o \
-	$(BIN)hash.o \
-	$(BIN)miner.o \
-	$(BIN)time.o \
-	$(BIN)tree.o \
-	$(BIN)tload.o \
-	$(BIN)tutil.o \
-	$(BIN)block.o \
-	$(BIN)b64.o \
-	$(BIN)hexstr.o \
-	$(BIN)ctx.o	 \
-	$(BIN)gboiler.o \
-	$(BIN)gpush.o
+SRC = $(wildcard src/**/*.cpp)
+HDR = $(wildcard inc/*.hpp)
+B = ./build/bin/
 
-default: static
+OBUILD:
+	@echo "-- BUILDING SRC --"
+	$(foreach f,$(SRC),\
+		$(CC) $(CF) $f -o $(B)$(lastword $(subst /, , $(basename $f))).o $(L); \
+		echo "Built - $f"; \
+	)
 
 install: shared
 	@echo "-- INSTALLING --"
@@ -51,66 +40,24 @@ install: shared
 	sudo mkdir -p /usr/include/concord
 	sudo cp ./inc/* /usr/include/concord
 
-shared: $(OBJ) 
+shared: OBUILD 
 	@echo "-- NOW BUILDING | SHARED OBJECT --"
 	$(CC) $(SOFLAGS) $(OBJ) $(D)/libuttu.o $(L) -o libconcord.so
 
-static: $(OBJ) 
+static: OBUILD 
 	@echo "-- EXTRACTING | UTTU --"
-	ar xv $(D)/libuttu.a --output $(BIN)
+	ar xv $(D)/libuttu.a --output $(B)
 	@echo "-- NOW BUILDING | ARCHIVE --"
-	ar cr libcore.a $(wildcard $(BIN)*.o)
+	ar cr libcore.a $(wildcard $(B)*.o)
 	ranlib libcore.a	 
 	mv libcore.a ./build/exe/
 	cp -r ./inc ./build/exe/
 	cp $(D)/inc/* ./build/exe/inc
 	@echo "LIBCORE CREATION COMPLETE"
 
-# graph model
-$(BIN)gboiler.o: ./inc/graph.hpp
-	$(G) ./src/graph/boiler.cpp -o $@
-$(BIN)gpush.o: ./inc/graph.hpp
-	$(G) ./src/graph/push.cpp -o $@
-
-# string manipulation
-$(BIN)b64.o: ./inc/strops.hpp
-	$(G) ./src/strops/b64.cpp -o $@
-$(BIN)hexstr.o: ./inc/strops.hpp
-	$(G) ./src/strops/hexstr.cpp -o $@
-$(BIN)hash.o: ./inc/strops.hpp
-	$(G) ./src/strops/hash.cpp -o $@
-$(BIN)miner.o: ./inc/strops.hpp
-	$(G) ./src/strops/miner.cpp -o $@
-
-# graph utils
-$(BIN)tree.o: ./inc/tree.hpp
-	$(G) ./src/tree/tree.cpp -o $@
-$(BIN)tload.o: ./inc/tree.hpp
-	$(G) ./src/tree/load.cpp -o $@
-$(BIN)tutil.o: ./inc/tree.hpp
-	$(G) ./src/tree/util.cpp -o $@
-$(BIN)time.o: ./inc/tree.hpp
-	$(G) ./src/tree/time_enc.cpp -o $@
-$(BIN)block.o: ./inc/tree.hpp
-	$(G) ./src/tree/block.cpp -o $@
-
-# nodes
-$(BIN)ctx.o: ./inc/ctx.hpp
-	$(G) -I$(D)/inc ./src/ctx/node.cpp -o $@
-
-# crypt
-$(BIN)lockmsg.o: ./inc/crypt.hpp
-	$(G) ./src/crypt/lockmsg.cpp -o $@
-$(BIN)DSA.o: ./inc/crypt.hpp
-	$(G) ./src/crypt/DSA.cpp -o $@
-$(BIN)RSA.o: ./inc/crypt.hpp
-	$(G) ./src/crypt/RSA.cpp -o $@
-$(BIN)AES.o: ./inc/crypt.hpp
-	$(G) ./src/crypt/AES.cpp -o $@
-
 # have to force b/c unknown lib type
 clean:
-	rm -f $(BIN)*.o
+	rm -f $(B)*.o
 	rm -f ./build/exe/inc/*.hpp
 	rm -f ./build/exe/*.a
 	rm -f ./build/exe/*.so

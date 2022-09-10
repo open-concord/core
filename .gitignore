@@ -3,6 +3,7 @@
 *.so
 *.dll
 *.a
+*.d
 lib/**/*.a
 lib/**/*.hpp
 lib/**/*.o
