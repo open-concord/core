@@ -16,7 +16,7 @@ CF = -std=c++20 $(W) -c -fPIC -MMD -MP
 CC = $(G) $(CF) -I$(D)inc
 
 # lib flags
-L = -lcryptopp -pthread 
+L = -lcryptopp -pthread
 
 # .so args
 SOFLAGS = -shared -Wl,-soname,libconcord.so
@@ -27,8 +27,8 @@ HDR = $(wildcard inc/*.hpp)
 B = ./build/bin/
 
 OBUILD:
-	@echo "-- BUILDING SRC --"
-	$(foreach f,$(SRC),\
+	@echo "-- BUILDING SRC --";
+	$(foreach f,$(SRC), \
 		$(CC) $(CF) $f -o $(B)$(lastword $(subst /, , $(basename $f))).o $(L); \
 		echo "Built - $f"; \
 	)
