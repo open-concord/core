@@ -42,17 +42,15 @@ install: shared
 
 shared: OBUILD 
 	@echo "-- NOW BUILDING | SHARED OBJECT --"
-	$(CC) $(SOFLAGS) $(OBJ) $(D)/libuttu.o $(L) -o libconcord.so
+	$(CC) $(SOFLAGS) $(OBJ) $(D)libuttu.o $(L) -o libconcord.so
 
-static: OBUILD 
-	@echo "-- EXTRACTING | UTTU --"
-	ar xv $(D)/libuttu.a --output $(B)
+static: OBUILD 	
 	@echo "-- NOW BUILDING | ARCHIVE --"
 	ar cr libcore.a $(wildcard $(B)*.o)
 	ranlib libcore.a	 
 	mv libcore.a ./build/exe/
 	cp -r ./inc ./build/exe/
-	cp $(D)/inc/* ./build/exe/inc
+	cp $(D)inc/* ./build/exe/inc
 	@echo "LIBCORE CREATION COMPLETE"
 
 # have to force b/c unknown lib type
