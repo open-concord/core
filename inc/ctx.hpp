@@ -1,12 +1,11 @@
 #pragma once
 #include <vector>
 #include <string>
+#include <deque>
 #include <map>
-#include <functional>
 #include <unordered_set>
 
 #include "tree.hpp"
-#include <debug.hpp>
 
 namespace Ctx {
   struct Exchange {
