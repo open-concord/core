@@ -18,4 +18,4 @@ Core is moving towards pure storage abstraction functionality; gradually all cry
   - [\] ~~Lambda Calc (Clear)~~ (shelved to focus 100% on hme)
   - [\] Homomorphic (Opaque) (moved to [tamuz](https://git.openconcord.org/tamuz))
 
-Register to become a beta tester; shoot either maintainer an email
+Register to become a beta tester; shoot either maintainer an email.
