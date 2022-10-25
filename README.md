@@ -9,7 +9,7 @@ Functionality
 ----
 Concord is a system of distributed protocols on top of a block graph. Concord utilises non-wasteful PoW to promote meaningful and considerate computing.
 
-Core is moving towards pure storage abstraction functionality; gradually all cryptographic functions will be removed. We recomend using the excellent [CryptoPP](https://cryptopp.com) library.
+Core is moving towards pure storage abstraction functionality; gradually all cryptographic functions strictly pertaining to cryptography will be removed. We recomend using the excellent [CryptoPP](https://cryptopp.com) library.
 
 ### Roadmap
 - [x] graph
