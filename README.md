@@ -10,7 +10,7 @@ Concord is a system of distributed protocols on top of a block graph. Concord ut
 
 Core is moving towards pure storage abstraction functionality. To see a more complete overview of how to use concord, please see [structure](https://openconcord.org/structure).
 
-Documentation is located [at] <https://docs.openconcord.org/core>
+Documentation is located [at] [docs.openconcord.org](https://docs.openconcord.org/group__Core.html)
 ### Roadmap
 - [x] graph
 - [ ] PoW
