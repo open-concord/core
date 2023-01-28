@@ -1,3 +1,8 @@
+/**
+ * \addtogroup Core
+ * \{
+ */
+
 #pragma once
 #include <string>
 #include <iostream>
@@ -53,3 +58,6 @@ namespace cMSG {
       std::string rsa_pri_key = ""
   );
 }
+/**
+ * \}
+ */

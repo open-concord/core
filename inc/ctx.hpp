@@ -1,3 +1,8 @@
+/**
+ * \addtogroup Core
+ * \{
+ */
+
 #pragma once
 #include <vector>
 #include <string>
@@ -11,7 +16,7 @@ namespace Ctx {
   struct Exchange {
     bool complete = false;
     std::unordered_set<block> NewBlocks;
-    std::string ChainTrip;
+    std::string GraphTrip;
     Tree* CurrentTree;
   };
   struct Graph {
@@ -20,3 +25,6 @@ namespace Ctx {
     std::deque<std::string> filtered_trees;
   };
 }
+/**
+ * \}
+ */

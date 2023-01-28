@@ -1,3 +1,8 @@
+/**
+ * \addtogroup Core
+ * \{
+ */
+
 #pragma once
 #include <string>
 #include <array>
@@ -41,3 +46,7 @@ class Miner {
     // genning nonce satisfying pow
     std::array<std::string, 2> generate_valid_nonce(bool debug_info, std::string content);
 };
+
+/**
+ * \}
+ */

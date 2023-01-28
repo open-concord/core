@@ -1,5 +1,4 @@
 # Concord/Core
-<hr>
 
 Notice(s)
 ----
@@ -9,8 +8,9 @@ Functionality
 ----
 Concord is a system of distributed protocols on top of a block graph. Concord utilises non-wasteful PoW to promote meaningful and considerate computing.
 
-Core is moving towards pure storage abstraction functionality; gradually all cryptographic functions strictly pertaining to cryptography will be removed. We recomend using the excellent [CryptoPP](https://cryptopp.com) library.
+Core is moving towards pure storage abstraction functionality. To see a more complete overview of how to use concord, please see [structure](https://openconcord.org/structure).
 
+Documentation is located [at] <https://docs.openconcord.org/core>
 ### Roadmap
 - [x] graph
 - [ ] PoW
@@ -18,4 +18,3 @@ Core is moving towards pure storage abstraction functionality; gradually all cry
   - [\] ~~Lambda Calc (Clear)~~ (shelved to focus 100% on hme)
   - [\] Homomorphic (Opaque) (moved to [tamuz](https://git.openconcord.org/tamuz))
 
-Register to become a beta tester; shoot either maintainer an email.

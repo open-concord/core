@@ -28,7 +28,7 @@ B = ./build/bin/
 
 OBUILD:
 	@echo "-- BUILDING SRC --";
-	$(foreach f,$(SRC), \
+	@$(foreach f,$(SRC), \
 		$(CC) $(CF) $f -o $(B)$(lastword $(subst /, , $(basename $f))).o $(L); \
 		echo "Built - $f"; \
 	)
@@ -46,7 +46,7 @@ shared: OBUILD
 
 static: OBUILD 	
 	@echo "-- NOW BUILDING | ARCHIVE --"
-	ar cr libcore.a $(wildcard $(B)*.o)
+	@ar cr libcore.a $(wildcard $(B)*.o)
 	ranlib libcore.a	 
 	mv libcore.a ./build/exe/
 	cp -r ./inc ./build/exe/
