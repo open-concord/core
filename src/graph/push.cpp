@@ -15,14 +15,14 @@ graph_model<vertex>::batch_push(
   for (const auto tp_vert : usable_vertices)
     if (tp_vert.p_hashes().empty()) graph_configure(get_graph()[tp_vert].ref);
 
-    // add all verts, *then* link, and *only then* trigger callbacks (once verts are integrated)
-    for (const auto tp_vert : usable_vertices) {
-      linked<vertex> new_vert;
-      new_vert.ref = tp_vert;
-      new_vert.trip = tp_vert.trip();
+  // add all verts, *then* link, and *only then* trigger callbacks (once verts are integrated)
+  for (const auto tp_vert : usable_vertices) {
+    linked<vertex> new_vert;
+    new_vert.ref = tp_vert;
+    new_vert.trip = tp_vert.trip();
 
-      (this->graph)[tp_vert.trip()] = new_vert;
-      new_trips.insert(tp_vert.trip());
+    (this->graph)[tp_vert.trip()] = new_vert;
+    new_trips.insert(tp_vert.trip());
   }
 
   for (const auto tp_vert : usable_vertices) link(tp_vert.trip());
