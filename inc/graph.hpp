@@ -52,7 +52,7 @@ public:
   
   /**
    * \brief Check if the graph is rooted
-   * \returns Truth statement
+   * \returns Truth state
    */
   bool check_rooted();
   
@@ -124,10 +124,30 @@ protected:
    * \returns All connected vertices (depth +/- 1)
    */
   std::unordered_set<vertex> get_connected(std::unordered_set<vertex> to_check);
-
+  
+  /**
+   * \brief Called whenever we encounter a new root
+   * \param root Root vertex
+   *
+   * Called in graph_model<vertext>::batch_push
+   */
   virtual void graph_configure(vertex root) = 0;
+  
+  /**
+   * \brief Arbitrarily qualify vertices as valid
+   * \param to_check Verticies to evaluate 
+   *
+   * Called in graph_model<vertex>::batch_push
+   */
   virtual std::unordered_set<vertex> get_valid(std::unordered_set<vertex> to_check) = 0;
-
+ 
+  /**
+   * \brief Apply new block callbacks
+   * \param new_trips Tripcode of new blocks
+   * \param flags Arbitrary flags to pass
+   *
+   * Called every time there are new evaluated blocks
+   */
   virtual void push_response(
       std::unordered_set<std::string> new_trips,
       std::unordered_set<std::string> flags = std::unordered_set<std::string>()

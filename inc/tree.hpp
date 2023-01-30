@@ -97,21 +97,11 @@ std::vector<std::string> order_hashes(std::unordered_set<std::string> input_hash
 class Tree : public graph_model<block> {
 protected:
   /**
-   * \brief Optionally Tree's monitored directory.
-   */
-  std::string target_dir;
-
-  /**
    * \brief Proof of work requirement.
    *
    * Blocks under this limit will be rejected.
    */
   int pow = 0;
-
-  /**
-   * \brief Status of Tree::target_dir
-   */
-  bool dir_linked = false;
 
   // FIXME Not sure where we use this -- not referenced anywhere in Tree::
   //std::unordered_set<std::string> saved_hashes;
@@ -122,12 +112,6 @@ protected:
    * We maintain an index of 'server' roots so that we can easily ensure that intraserver blocks always reference at least one intraserver parent
    */
   std::map<std::string, linked<block>*> server_roots;
-
-  /**
-   * \brief Write block to Tree::target_dir
-   * \param to_save Block to save
-   */
-  void save(block to_save);
 
   /**
    * \brief Interprets an established graph
@@ -162,23 +146,6 @@ public:
   std::map<std::string, std::function<void(std::unordered_set<std::string>)>> server_add_funcs;
 
   /**
-   * \brief Initialisation for non-directory linked Trees
-   */
-  Tree();      
-  
-  /**
-   * \brief Functionally equivlant to Tree::load.
-   * \param dir Directory to monitor.
-   */
-  Tree(std::string dir);
-  
-  /**
-   * \brief Loads a file descriptor for storage.
-   * \param dir Directory to target
-   */
-  void load(std::string dir);
-
-  /**
    * \brief Updates a Tree's Proof of Work requirement. 
    * \param pow_req New proof of work requirement.
    *
@@ -191,7 +158,20 @@ public:
    * \returns Tree's proof of work requirement
    */
   int get_pow_req();
- 
+
+  /**
+   * \brief Save a block to some storage
+   * \param block block data 
+   */
+  virtual void save(block) = 0;
+
+  /**
+   * \brief Load an initial storage state
+   *
+   * Virtual templates aren't allowed as per std, so you'll need to override with the relvant information in your derived Tree types.
+   */
+  virtual void load() = 0;
+
   /**
    * \brief Generates a new block and applies to tree. 
    * \param cont String content to be included in the block. This is publicily visible. 
@@ -287,6 +267,8 @@ public:
    * Only valid in new Trees.
    */
   void create_root();
+
+  Tree();         
 };
 
 /**
