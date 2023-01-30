@@ -1,9 +1,15 @@
-/** addtogroup Core \{ */
+/** 
+ * \addtogroup Core
+ * \{ 
+ */
 #pragma once
 
 #include "tree.hpp"
 
-struct FileTree : public Tree {
+/**
+ * \brief Filesystem extension of Tree
+ */
+class FileTree : public Tree {
 protected:
   /**
    * \brief FileTree's monitored directory.
@@ -16,8 +22,7 @@ protected:
    */
   void save(block to_save) override;
 
-public:
- 
+public: 
   /**
    * \brief Loads a file descriptor for storage.
    * \param dir Directory to target
@@ -25,7 +30,7 @@ public:
   void load(std::string dir);
 
   /**
-   * \brief Functionally equivlant to FileTree::load.
+   * \brief Functionally equivalant to FileTree::load.
    * \param dir Directory to monitor.
    */
   FileTree(std::string fpath);
