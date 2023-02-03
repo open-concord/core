@@ -43,3 +43,13 @@ FileTree::save(block to_save) {
   block_file << block_string;
   block_file.close();
 }
+
+void
+FileTree::apply(std::string path) {
+  // Read + Verify + Apply Block //
+  std::ifstream f(path);
+  block b(json::parse(f)); // get the block data
+  std::unordered_set<block> valid = get_valid({b}); // validate block
+  if (valid.empty()) printf("Could not verify block %s \n", b.hash.c_str());
+  push_response({valid.begin()->hash}, {}); // push to tree
+}

@@ -174,7 +174,7 @@ public:
 
   /**
    * \brief Generates a new block and applies to tree. 
-   * \param cont String content to be included in the block. This is publicily visible. 
+   * \param cont String content to be included in the block. This is publicly visible. 
    * \param s_trip Self-identified 'server' trip. Cannot be enforced or verified; used by services to filter content.
    * \param c_trip Optional tripcode of graph-identified user to connect to block.
    * \param set_time The time of block creation. Current time by default.
