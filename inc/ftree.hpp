@@ -45,7 +45,7 @@ public:
    * \brief Apply a new block
    * \param path Path to new block
    */
-  void apply(std::string path); 
+  void apply(std::unordered_set<std::string> path); 
 
   /**
    * \brief Storage directory. Contained blocks are gospel.

@@ -45,11 +45,13 @@ FileTree::save(block to_save) {
 }
 
 void
-FileTree::apply(std::string path) {
-  // Read + Verify + Apply Block //
-  std::ifstream f(path);
-  block b(json::parse(f)); // get the block data
-  std::unordered_set<block> valid = get_valid({b}); // validate block
-  if (valid.empty()) printf("Could not verify block %s \n", b.hash.c_str());
-  push_response({valid.begin()->hash}, {}); // push to tree
+FileTree::apply(std::unordered_set<std::string> paths) {
+  std::unordered_set<block> to_check;
+  for (const auto& path : paths) { // read blocks
+    std::ifstream f(path);
+    to_check.insert(block(json::parse(f)));
+  }
+  std::unordered_set<block> valid = get_valid(to_check);
+  queue_batch(valid);
+  // TODO Either loop over valid blocks, or overload push_reponses to take a set of blocks
 }

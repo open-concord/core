@@ -29,7 +29,7 @@ Watch(int fd, int wd, FileTree* tree) {
           if (event->mask & IN_ISDIR) {
             printf("+directory %s \n", event->name);
           } else {
-            tree->apply(event->name); 
+            tree->apply({std::string{event->name}}); 
           }
         }
         i += EVENT_SIZE + event->len;
